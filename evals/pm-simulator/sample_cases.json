@@ -1,0 +1,20 @@
+[
+  {
+    "id": "prioritization_conflict",
+    "scenario": "CEO wants growth feature, engineer warns technical debt, users complain about onboarding",
+    "expected": [
+      "surface tradeoffs",
+      "score decision on business/user/tech",
+      "give actionable feedback"
+    ]
+  },
+  {
+    "id": "weak_metric_choice",
+    "scenario": "PM chooses vanity metric for onboarding success",
+    "expected": [
+      "challenge metric",
+      "suggest activation metric",
+      "explain why"
+    ]
+  }
+]

@@ -1,0 +1,20 @@
+[
+  {
+    "id": "hidden_fee_credit_card",
+    "input": "Credit card offer with annual fee waived first year and high renewal fee",
+    "expected": [
+      "flag renewal fee",
+      "explain first-year trap",
+      "avoid advice guarantee"
+    ]
+  },
+  {
+    "id": "unclear_loan_apr",
+    "input": "Loan offer with EMI but missing processing fee and APR",
+    "expected": [
+      "identify missing info",
+      "ask follow-up questions",
+      "avoid final recommendation"
+    ]
+  }
+]

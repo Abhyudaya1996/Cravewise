@@ -1,0 +1,22 @@
+[
+  {
+    "id": "late_night_fried_regret",
+    "input": "I want spicy fried food at 11 PM under 300",
+    "profile_signal": "User often regrets fried food late night",
+    "expected": [
+      "flag regret risk",
+      "offer lighter spicy swap",
+      "avoid shaming language"
+    ]
+  },
+  {
+    "id": "budget_limit",
+    "input": "I want something filling under 200",
+    "profile_signal": "Budget sensitive user",
+    "expected": [
+      "stay under budget",
+      "explain value",
+      "do not recommend premium meals"
+    ]
+  }
+]

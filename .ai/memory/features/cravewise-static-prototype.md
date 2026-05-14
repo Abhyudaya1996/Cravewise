@@ -81,7 +81,7 @@ Users often know they are hungry but do not know what will feel satisfying, affo
 - Used a minimal Next App Router + TypeScript app with plain CSS.
 - Did not add Tailwind or shadcn yet to avoid extra setup during the static prototype.
 - Kept data local in `apps/cravewise/data/sampleData.ts`.
-- Added deterministic local functions instead of AI calls: `interpretCravingStatic`, `scoreRecommendationStatic`, `classifyFeedbackStatic`, and `generateInsightsStatic`.
+- Added deterministic local functions instead of AI calls: `interpretCravingStatic`, `scoreRecommendationStatic`, `classifyFeedbackStatic`, and `getPersonaInsightsStatic`.
 - Componentized the static prototype in `apps/cravewise/app/page.tsx` with product-level components such as `MobileShell`, `ProgressStepper`, `PersonaCard`, `TasteMemoryPanel`, `CravingInputPanel`, `RecommendationHeroCard`, feedback controls, and insight cards.
 - Normalized visible price copy to `Rs.` strings to avoid symbol encoding issues in the static prototype.
 

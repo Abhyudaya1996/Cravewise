@@ -1,3 +1,15 @@
+import {
+  BudgetFitSignal,
+  BudgetSignal,
+  ContextSignal,
+  Cuisine,
+  DishType,
+  NegativeConstraint,
+  PreferenceSignal,
+  RegretRiskFlag,
+  ReliabilityFlag,
+} from "./dishTaxonomy";
+
 export type ExplorationIntent = "safe" | "somewhat_new" | "surprise_me";
 export type Heaviness = "light" | "medium" | "heavy";
 export type BudgetBand = "Under Rs.250" | "Rs.250-400" | "Rs.400-600" | "Rs.600+" | "Custom";
@@ -33,9 +45,17 @@ export type MenuItem = {
   id: string;
   restaurantName: string;
   dishName: string;
-  cuisine: string;
+  cuisine: Cuisine;
   price: number;
   tags: string[];
+  dishType: DishType;
+  preferenceTags: PreferenceSignal[];
+  contextFit: ContextSignal[];
+  regretRiskFlags: RegretRiskFlag[];
+  reliabilityTags: ReliabilityFlag[];
+  avoidIf: NegativeConstraint[];
+  budgetTier: BudgetFitSignal;
+  priceComfortBand: BudgetFitSignal;
   spiceLevel: "low" | "medium" | "high";
   heaviness: Heaviness;
   bestFor: Occasion[];
@@ -62,17 +82,24 @@ export type DecisionContext = {
 };
 
 export type CravingInterpretation = {
-  craving_type: string[];
-  cuisine_hint: string | null;
-  dish_hint: string | null;
-  avoid: string[];
-  budget_max: number | null;
+  explicitDishIntents: DishType[];
+  cuisineIntents: Cuisine[];
+  contextSignals: ContextSignal[];
+  preferenceSignals: PreferenceSignal[];
+  negativeConstraints: NegativeConstraint[];
+  budgetSignal: BudgetSignal | null;
+  rawInput: string;
   occasion: string | null;
   heaviness: Heaviness | null;
   exploration_intent: ExplorationIntent;
   confidence: "low" | "medium" | "high";
   needs_clarification: boolean;
 };
+
+type RawMenuItem = Omit<
+  MenuItem,
+  "dishType" | "preferenceTags" | "contextFit" | "regretRiskFlags" | "reliabilityTags" | "avoidIf" | "budgetTier" | "priceComfortBand"
+>;
 
 export type Recommendation = {
   item: MenuItem;
@@ -83,6 +110,33 @@ export type Recommendation = {
   reason: string;
   avoidedNote: string;
   tradeoff: string;
+  memoryNotes: string[];
+  scoreBreakdown: ScoreBreakdown;
+};
+
+export type ScoreBreakdown = {
+  explicitDishIntentScore: number;
+  cuisineIntentScore: number;
+  contextFitScore: number;
+  preferenceMatchScore: number;
+  negativeConstraintPenalty: number;
+  personaPreferenceScore: number;
+  feedbackMemoryScore: number;
+  reliabilityScore: number;
+  budgetScore: number;
+  explorationScore: number;
+  heavinessScore: number;
+  regretRiskPenalty: number;
+  finalScore: number;
+};
+
+export type FallbackState = {
+  type: "clarification_needed" | "budget_too_low" | "limited_match" | "high_regret_avoided" | "static_data_limitation" | "none";
+  severity: "info" | "warning" | "blocking";
+  title: string;
+  message: string;
+  shouldSuppressPrimaryRecommendation: boolean;
+  suggestedActions?: string[];
 };
 
 export type FeedbackClassification = {
@@ -92,8 +146,63 @@ export type FeedbackClassification = {
   heaviness: Heaviness | null;
   regret_level: "low" | "medium" | "high";
   reorder_intent: "yes" | "maybe" | "no";
-  failure_reasons: string[];
+  failure_reasons: FailureReasonCode[];
   learning: string;
+};
+
+export type FailureReasonCode =
+  | "too_oily"
+  | "too_bland"
+  | "too_expensive"
+  | "portion_issue"
+  | "too_heavy"
+  | "delivery_issue"
+  | "reliability_issue"
+  | "wrong_craving_match"
+  | "bad_personalization"
+  | "would_reorder"
+  | "would_not_reorder"
+  | "not_fresh"
+  | "static_data_limitation";
+
+export type ScoringFeedbackMemory = {
+  personaId: string;
+  decisionContext: {
+    rawCraving: string;
+    occasion: string;
+    availableTime?: string;
+    upcomingConstraint?: string;
+  };
+  selectedRecommendation: {
+    dishName: string;
+    restaurantName: string;
+    price: number;
+  };
+  feedback: {
+    sentiment: "loved" | "meh" | "disappointing" | "skipped";
+  };
+  classification: {
+    sentiment: "positive" | "mixed" | "negative";
+    regretLevel: "low" | "medium" | "high";
+    failureReasons: string[];
+    reorderIntent: "yes" | "maybe" | "no";
+  };
+};
+
+export const feedbackReasonLabels: Record<FailureReasonCode, string> = {
+  too_oily: "Too oily",
+  too_bland: "Too bland",
+  too_expensive: "Too expensive",
+  portion_issue: "Portion issue",
+  too_heavy: "Too heavy",
+  delivery_issue: "Delivery issue",
+  reliability_issue: "Reliability issue",
+  wrong_craving_match: "Ignored my craving",
+  bad_personalization: "Bad personalization",
+  would_reorder: "Would reorder",
+  would_not_reorder: "Would not reorder",
+  not_fresh: "Not fresh",
+  static_data_limitation: "Static data limitation",
 };
 
 export const cravingExamples = [
@@ -120,6 +229,9 @@ export const feedbackReasons = [
   "Portion issue",
   "Not fresh",
   "Wrong craving match",
+  "Ignored my craving",
+  "Delivery issue",
+  "Reliability issue",
   "Too heavy",
   "Would reorder",
   "Would not reorder",
@@ -308,7 +420,7 @@ export const personas: Persona[] = [
   },
 ];
 
-export const menuCatalog: MenuItem[] = [
+const rawMenuCatalog: RawMenuItem[] = [
   {
     id: "urban-wok-chilli-garlic-noodles",
     restaurantName: "Urban Wok House",
@@ -321,7 +433,7 @@ export const menuCatalog: MenuItem[] = [
     bestFor: ["Weekend dinner", "Post-work"],
     personaFit: ["persona_abhyudaya_weekend_foodie"],
     regretRisk: "low",
-    reorderSignal: "high",
+    reorderSignal: "medium",
     novelty: "somewhat_new",
     estimatedDeliveryMin: 28,
     estimatedDeliveryMax: 36,
@@ -361,7 +473,7 @@ export const menuCatalog: MenuItem[] = [
     bestFor: ["Group order", "Weekend dinner"],
     personaFit: ["persona_pransih_group_ordering", "persona_abhyudaya_weekend_foodie"],
     regretRisk: "medium",
-    reorderSignal: "medium",
+    reorderSignal: "high",
     novelty: "somewhat_new",
     estimatedDeliveryMin: 32,
     estimatedDeliveryMax: 42,
@@ -407,6 +519,26 @@ export const menuCatalog: MenuItem[] = [
     estimatedDeliveryMax: 45,
     deliveryReliabilityScore: 73,
     weekdayLunchFit: false,
+    meetingSafe: false,
+  },
+  {
+    id: "slice-street-thin-crust-veggie-pizza",
+    restaurantName: "Slice Street",
+    dishName: "Thin Crust Veggie Pizza",
+    cuisine: "Pizza",
+    price: 460,
+    tags: ["pizza", "italian", "light_cheese", "comfort", "not_too_heavy"],
+    spiceLevel: "low",
+    heaviness: "medium",
+    bestFor: ["Weekend dinner", "Weekday lunch"],
+    personaFit: ["persona_piyush_deal_led_explorer", "persona_simran_budget_office"],
+    regretRisk: "low",
+    reorderSignal: "medium",
+    novelty: "somewhat_new",
+    estimatedDeliveryMin: 30,
+    estimatedDeliveryMax: 40,
+    deliveryReliabilityScore: 78,
+    weekdayLunchFit: true,
     meetingSafe: false,
   },
   {
@@ -469,10 +601,540 @@ export const menuCatalog: MenuItem[] = [
     weekdayLunchFit: false,
     meetingSafe: false,
   },
+  {
+    id: "steam-house-chilli-garlic-dim-sums",
+    restaurantName: "Steam House",
+    dishName: "Chilli Garlic Steamed Dim Sums",
+    cuisine: "Asian",
+    price: 340,
+    tags: ["spicy", "asian", "fried_snack", "light", "fresh", "not_too_heavy"],
+    spiceLevel: "high",
+    heaviness: "light",
+    bestFor: ["Late night", "Weekend dinner"],
+    personaFit: ["persona_abhyudaya_weekend_foodie"],
+    regretRisk: "low",
+    reorderSignal: "medium",
+    novelty: "somewhat_new",
+    estimatedDeliveryMin: 22,
+    estimatedDeliveryMax: 30,
+    deliveryReliabilityScore: 88,
+    weekdayLunchFit: false,
+    meetingSafe: true,
+  },
+  {
+    id: "crispy-corner-fried-momos",
+    restaurantName: "Crispy Corner",
+    dishName: "Fried Momos",
+    cuisine: "Street Food",
+    price: 220,
+    tags: ["fried", "oily", "greasy", "fried_snack", "deal_trap"],
+    spiceLevel: "medium",
+    heaviness: "heavy",
+    bestFor: ["Late night"],
+    personaFit: ["persona_abhyudaya_weekend_foodie", "persona_piyush_deal_led_explorer"],
+    regretRisk: "high",
+    reorderSignal: "low",
+    novelty: "familiar",
+    estimatedDeliveryMin: 30,
+    estimatedDeliveryMax: 44,
+    deliveryReliabilityScore: 66,
+    weekdayLunchFit: false,
+    meetingSafe: false,
+  },
+  {
+    id: "crispy-corner-schezwan-momos",
+    restaurantName: "Crispy Corner",
+    dishName: "Schezwan Fried Momos",
+    cuisine: "Chinese",
+    price: 280,
+    tags: ["spicy", "fried", "oily", "fried_snack", "late_night"],
+    spiceLevel: "high",
+    heaviness: "medium",
+    bestFor: ["Late night", "Weekend dinner"],
+    personaFit: ["persona_abhyudaya_weekend_foodie", "persona_piyush_deal_led_explorer"],
+    regretRisk: "medium",
+    reorderSignal: "high",
+    novelty: "familiar",
+    estimatedDeliveryMin: 26,
+    estimatedDeliveryMax: 38,
+    deliveryReliabilityScore: 72,
+    weekdayLunchFit: false,
+    meetingSafe: false,
+  },
+  {
+    id: "south-tiffin-masala-dosa",
+    restaurantName: "South Tiffin House",
+    dishName: "Masala Dosa",
+    cuisine: "South Indian",
+    price: 210,
+    tags: ["south indian", "budget", "value", "weekday_rush", "reliable"],
+    spiceLevel: "medium",
+    heaviness: "medium",
+    bestFor: ["Weekday lunch", "Weekday Rush"],
+    personaFit: ["persona_simran_budget_office"],
+    regretRisk: "low",
+    reorderSignal: "high",
+    novelty: "familiar",
+    estimatedDeliveryMin: 18,
+    estimatedDeliveryMax: 25,
+    deliveryReliabilityScore: 90,
+    weekdayLunchFit: true,
+    meetingSafe: true,
+  },
+  {
+    id: "south-tiffin-idli-sambar",
+    restaurantName: "South Tiffin House",
+    dishName: "Idli Sambar Combo",
+    cuisine: "South Indian",
+    price: 180,
+    tags: ["south indian", "budget", "light", "value", "fast_delivery", "reliable"],
+    spiceLevel: "low",
+    heaviness: "light",
+    bestFor: ["Weekday lunch", "Weekday Rush"],
+    personaFit: ["persona_simran_budget_office", "persona_kartik_health_inconsistent"],
+    regretRisk: "low",
+    reorderSignal: "medium",
+    novelty: "familiar",
+    estimatedDeliveryMin: 16,
+    estimatedDeliveryMax: 24,
+    deliveryReliabilityScore: 91,
+    weekdayLunchFit: true,
+    meetingSafe: true,
+  },
+  {
+    id: "homely-bowls-chole-rice",
+    restaurantName: "Homely Bowls",
+    dishName: "Chole Rice Bowl",
+    cuisine: "North Indian",
+    price: 260,
+    tags: ["budget", "value", "filling", "comfort", "weekday_rush"],
+    spiceLevel: "medium",
+    heaviness: "medium",
+    bestFor: ["Weekday lunch", "Weekday Rush"],
+    personaFit: ["persona_simran_budget_office"],
+    regretRisk: "low",
+    reorderSignal: "medium",
+    novelty: "familiar",
+    estimatedDeliveryMin: 22,
+    estimatedDeliveryMax: 30,
+    deliveryReliabilityScore: 87,
+    weekdayLunchFit: true,
+    meetingSafe: true,
+  },
+  {
+    id: "budget-wok-veg-fried-rice",
+    restaurantName: "Budget Wok",
+    dishName: "Veg Fried Rice",
+    cuisine: "Chinese",
+    price: 240,
+    tags: ["chinese", "budget", "value", "comfort", "weekday_rush"],
+    spiceLevel: "medium",
+    heaviness: "medium",
+    bestFor: ["Weekday lunch", "Weekday Rush"],
+    personaFit: ["persona_simran_budget_office"],
+    regretRisk: "medium",
+    reorderSignal: "medium",
+    novelty: "familiar",
+    estimatedDeliveryMin: 20,
+    estimatedDeliveryMax: 31,
+    deliveryReliabilityScore: 82,
+    weekdayLunchFit: true,
+    meetingSafe: false,
+  },
+  {
+    id: "fit-bowl-premium-protein-bowl",
+    restaurantName: "Fit Bowl Co.",
+    dishName: "Premium Protein Bowl",
+    cuisine: "Healthy Bowls",
+    price: 560,
+    tags: ["healthy", "light", "fresh", "expensive"],
+    spiceLevel: "low",
+    heaviness: "medium",
+    bestFor: ["Weekday lunch", "Post-work"],
+    personaFit: ["persona_kartik_health_inconsistent", "persona_simran_budget_office"],
+    regretRisk: "medium",
+    reorderSignal: "medium",
+    novelty: "somewhat_new",
+    estimatedDeliveryMin: 28,
+    estimatedDeliveryMax: 38,
+    deliveryReliabilityScore: 78,
+    weekdayLunchFit: true,
+    meetingSafe: true,
+  },
+  {
+    id: "bowl-theory-paneer-protein-bowl",
+    restaurantName: "Bowl Theory",
+    dishName: "Paneer Protein Bowl",
+    cuisine: "Healthy Bowls",
+    price: 420,
+    tags: ["healthy", "light", "fresh", "comfort", "not_too_heavy"],
+    spiceLevel: "medium",
+    heaviness: "medium",
+    bestFor: ["Post-work", "Weekday lunch"],
+    personaFit: ["persona_kartik_health_inconsistent"],
+    regretRisk: "low",
+    reorderSignal: "high",
+    novelty: "familiar",
+    estimatedDeliveryMin: 24,
+    estimatedDeliveryMax: 32,
+    deliveryReliabilityScore: 84,
+    weekdayLunchFit: true,
+    meetingSafe: true,
+  },
+  {
+    id: "comfort-curry-creamy-paneer-butter-masala",
+    restaurantName: "Comfort Curry Co.",
+    dishName: "Creamy Paneer Butter Masala Combo",
+    cuisine: "North Indian",
+    price: 430,
+    tags: ["comfort", "heavy", "creamy", "filling"],
+    spiceLevel: "medium",
+    heaviness: "heavy",
+    bestFor: ["Post-work", "Weekend dinner"],
+    personaFit: ["persona_kartik_health_inconsistent"],
+    regretRisk: "medium",
+    reorderSignal: "medium",
+    novelty: "familiar",
+    estimatedDeliveryMin: 30,
+    estimatedDeliveryMax: 40,
+    deliveryReliabilityScore: 80,
+    weekdayLunchFit: false,
+    meetingSafe: false,
+  },
+  {
+    id: "snack-garage-loaded-cheese-fries",
+    restaurantName: "Snack Garage",
+    dishName: "Loaded Cheese Fries",
+    cuisine: "Street Food",
+    price: 290,
+    tags: ["fried", "oily", "cheese_heavy", "heavy", "deal_trap"],
+    spiceLevel: "medium",
+    heaviness: "heavy",
+    bestFor: ["Late night"],
+    personaFit: ["persona_kartik_health_inconsistent", "persona_piyush_deal_led_explorer"],
+    regretRisk: "high",
+    reorderSignal: "low",
+    novelty: "familiar",
+    estimatedDeliveryMin: 34,
+    estimatedDeliveryMax: 48,
+    deliveryReliabilityScore: 63,
+    weekdayLunchFit: false,
+    meetingSafe: false,
+  },
+  {
+    id: "baja-bowl-veggie-burrito-bowl",
+    restaurantName: "Baja Bowl Co.",
+    dishName: "Veggie Burrito Bowl",
+    cuisine: "Mexican",
+    price: 360,
+    tags: ["mexican", "burrito", "healthy", "fresh", "weekday_rush", "fast_delivery", "reliable"],
+    spiceLevel: "medium",
+    heaviness: "medium",
+    bestFor: ["Weekday Rush", "Weekday lunch"],
+    personaFit: ["persona_kushagra_reorder_power_user", "persona_kartik_health_inconsistent"],
+    regretRisk: "low",
+    reorderSignal: "medium",
+    novelty: "somewhat_new",
+    estimatedDeliveryMin: 17,
+    estimatedDeliveryMax: 25,
+    deliveryReliabilityScore: 92,
+    weekdayLunchFit: true,
+    meetingSafe: true,
+  },
+  {
+    id: "taco-yard-loaded-burrito",
+    restaurantName: "Taco Yard",
+    dishName: "Loaded Chicken Burrito",
+    cuisine: "Mexican",
+    price: 440,
+    tags: ["mexican", "burrito", "heavy", "low_reliability"],
+    spiceLevel: "high",
+    heaviness: "heavy",
+    bestFor: ["Weekend dinner"],
+    personaFit: ["persona_kushagra_reorder_power_user"],
+    regretRisk: "medium",
+    reorderSignal: "medium",
+    novelty: "somewhat_new",
+    estimatedDeliveryMin: 38,
+    estimatedDeliveryMax: 55,
+    deliveryReliabilityScore: 64,
+    weekdayLunchFit: false,
+    meetingSafe: false,
+  },
+  {
+    id: "quick-comfort-chicken-kathi-roll",
+    restaurantName: "Quick Comfort Co.",
+    dishName: "Chicken Kathi Roll",
+    cuisine: "North Indian",
+    price: 310,
+    tags: ["comfort", "weekday_rush", "fast_delivery", "reliable", "spicy"],
+    spiceLevel: "medium",
+    heaviness: "medium",
+    bestFor: ["Weekday Rush", "Weekday lunch", "Post-work"],
+    personaFit: ["persona_kushagra_reorder_power_user", "persona_abhyudaya_weekend_foodie"],
+    regretRisk: "low",
+    reorderSignal: "high",
+    novelty: "familiar",
+    estimatedDeliveryMin: 16,
+    estimatedDeliveryMax: 24,
+    deliveryReliabilityScore: 90,
+    weekdayLunchFit: true,
+    meetingSafe: true,
+  },
+  {
+    id: "slice-street-value-margherita",
+    restaurantName: "Slice Street",
+    dishName: "Value Margherita Pizza",
+    cuisine: "Pizza",
+    price: 320,
+    tags: ["pizza", "italian", "value", "comfort", "light_cheese"],
+    spiceLevel: "low",
+    heaviness: "medium",
+    bestFor: ["Weekend dinner", "Weekday lunch"],
+    personaFit: ["persona_piyush_deal_led_explorer", "persona_simran_budget_office"],
+    regretRisk: "low",
+    reorderSignal: "medium",
+    novelty: "familiar",
+    estimatedDeliveryMin: 26,
+    estimatedDeliveryMax: 34,
+    deliveryReliabilityScore: 84,
+    weekdayLunchFit: true,
+    meetingSafe: false,
+  },
+  {
+    id: "pasta-patio-arrabbiata-pasta",
+    restaurantName: "Pasta Patio",
+    dishName: "Arrabbiata Pasta",
+    cuisine: "Italian",
+    price: 480,
+    tags: ["italian", "pasta", "spicy", "comfort", "not_too_heavy"],
+    spiceLevel: "medium",
+    heaviness: "medium",
+    bestFor: ["Weekend dinner", "Group order"],
+    personaFit: ["persona_pransih_group_ordering", "persona_piyush_deal_led_explorer"],
+    regretRisk: "low",
+    reorderSignal: "medium",
+    novelty: "somewhat_new",
+    estimatedDeliveryMin: 30,
+    estimatedDeliveryMax: 40,
+    deliveryReliabilityScore: 81,
+    weekdayLunchFit: false,
+    meetingSafe: true,
+  },
+  {
+    id: "budget-bites-discount-momos-combo",
+    restaurantName: "Budget Bites",
+    dishName: "Discount Momos Combo",
+    cuisine: "Street Food",
+    price: 190,
+    tags: ["fried", "oily", "greasy", "deal_trap", "fried_snack"],
+    spiceLevel: "medium",
+    heaviness: "heavy",
+    bestFor: ["Late night"],
+    personaFit: ["persona_piyush_deal_led_explorer"],
+    regretRisk: "high",
+    reorderSignal: "low",
+    novelty: "surprising",
+    estimatedDeliveryMin: 35,
+    estimatedDeliveryMax: 52,
+    deliveryReliabilityScore: 58,
+    weekdayLunchFit: false,
+    meetingSafe: false,
+  },
+  {
+    id: "nawab-box-paneer-tikka-platter",
+    restaurantName: "Nawab Box",
+    dishName: "Paneer Tikka Platter",
+    cuisine: "North Indian",
+    price: 560,
+    tags: ["group_safe", "group", "comfort", "spicy", "sharing"],
+    spiceLevel: "medium",
+    heaviness: "medium",
+    bestFor: ["Group order", "Weekend dinner"],
+    personaFit: ["persona_pransih_group_ordering"],
+    regretRisk: "low",
+    reorderSignal: "medium",
+    novelty: "familiar",
+    estimatedDeliveryMin: 32,
+    estimatedDeliveryMax: 42,
+    deliveryReliabilityScore: 84,
+    weekdayLunchFit: false,
+    meetingSafe: true,
+  },
+  {
+    id: "steam-house-asian-sharing-box",
+    restaurantName: "Steam House",
+    dishName: "Asian Sharing Box",
+    cuisine: "Asian",
+    price: 740,
+    tags: ["group_safe", "group", "asian", "fresh", "sharing", "exploratory"],
+    spiceLevel: "medium",
+    heaviness: "medium",
+    bestFor: ["Group order", "Weekend dinner"],
+    personaFit: ["persona_pransih_group_ordering"],
+    regretRisk: "low",
+    reorderSignal: "medium",
+    novelty: "somewhat_new",
+    estimatedDeliveryMin: 34,
+    estimatedDeliveryMax: 44,
+    deliveryReliabilityScore: 83,
+    weekdayLunchFit: false,
+    meetingSafe: true,
+  },
+  {
+    id: "new-thai-box-experimental-curry",
+    restaurantName: "New Thai Box",
+    dishName: "Experimental Thai Curry",
+    cuisine: "Asian",
+    price: 520,
+    tags: ["asian", "exploratory", "polarizing", "low_reliability"],
+    spiceLevel: "high",
+    heaviness: "medium",
+    bestFor: ["Weekend dinner", "Group order"],
+    personaFit: ["persona_pransih_group_ordering", "persona_kushagra_reorder_power_user"],
+    regretRisk: "high",
+    reorderSignal: "low",
+    novelty: "surprising",
+    estimatedDeliveryMin: 42,
+    estimatedDeliveryMax: 58,
+    deliveryReliabilityScore: 60,
+    weekdayLunchFit: false,
+    meetingSafe: false,
+  },
+  {
+    id: "family-table-comfort-platter",
+    restaurantName: "Family Table",
+    dishName: "Comfort Sharing Platter",
+    cuisine: "North Indian",
+    price: 680,
+    tags: ["group_safe", "group", "comfort", "sharing", "value"],
+    spiceLevel: "medium",
+    heaviness: "medium",
+    bestFor: ["Group order", "Weekend dinner"],
+    personaFit: ["persona_pransih_group_ordering"],
+    regretRisk: "low",
+    reorderSignal: "high",
+    novelty: "familiar",
+    estimatedDeliveryMin: 30,
+    estimatedDeliveryMax: 40,
+    deliveryReliabilityScore: 86,
+    weekdayLunchFit: false,
+    meetingSafe: true,
+  },
 ];
+
+export const menuCatalog: MenuItem[] = rawMenuCatalog.map(enrichMenuItem);
 
 export function getPersona(id: string): Persona {
   return personas.find((persona) => persona.id === id) ?? personas[0];
+}
+
+function enrichMenuItem(item: RawMenuItem): MenuItem {
+  const dishType = inferDishType(item);
+  const preferenceTags = inferPreferenceTags(item);
+  const contextFit = inferContextFit(item);
+  const regretRiskFlags = inferRegretRiskFlags(item);
+  const reliabilityTags = inferReliabilityTags(item);
+  const avoidIf = inferAvoidIf(item, regretRiskFlags);
+  const budgetTier = inferBudgetTier(item.price);
+
+  return {
+    ...item,
+    dishType,
+    preferenceTags,
+    contextFit,
+    regretRiskFlags,
+    reliabilityTags,
+    avoidIf,
+    budgetTier,
+    priceComfortBand: budgetTier,
+  };
+}
+
+function inferDishType(item: RawMenuItem): DishType {
+  const text = `${item.dishName} ${item.tags.join(" ")}`.toLowerCase();
+  if (/biryani/.test(text)) return "biryani";
+  if (/burger/.test(text)) return "burger";
+  if (/burrito/.test(text)) return "burrito";
+  if (/curry|dal|makhani|rajma|butter chicken/.test(text)) return "curry";
+  if (/dim sum|dimsum/.test(text)) return "dim_sum";
+  if (/dosa/.test(text)) return "dosa";
+  if (/momo|momos/.test(text)) return "momos";
+  if (/noodle|hakka/.test(text)) return "noodles";
+  if (/pasta|alfredo/.test(text)) return "pasta";
+  if (/pizza/.test(text)) return "pizza";
+  if (/platter/.test(text)) return "platter";
+  if (/roll|kathi/.test(text)) return "roll";
+  if (/salad/.test(text)) return "salad";
+  if (/wrap/.test(text)) return "wrap";
+  if (/snack|fries|potato|pakora/.test(text)) return "snack";
+  return "bowl";
+}
+
+function inferPreferenceTags(item: RawMenuItem): PreferenceSignal[] {
+  const tags = item.tags.join(" ").toLowerCase();
+  const values: PreferenceSignal[] = [];
+  if (item.spiceLevel === "high" || /spicy|chilli|schezwan|chatpata/.test(tags)) values.push("spicy");
+  if (/comfort|reorder|homely|filling/.test(tags) || item.reorderSignal === "high") values.push("comfort");
+  if (/filling|protein|platter|combo/.test(tags) || item.heaviness === "heavy") values.push("filling");
+  if (/light|salad|healthy|lean|not_too_heavy/.test(tags) || item.heaviness === "light") values.push("light");
+  if (/healthy|protein|lean|bowl/.test(tags) || item.cuisine === "Healthy Bowls" || item.cuisine === "Mediterranean") values.push("healthy");
+  if (/fresh|not oily|not_oily/.test(tags)) values.push("fresh");
+  if (/group|sharing|group_safe/.test(tags) || item.bestFor.includes("Group order")) values.push("group_safe");
+  if (/deal|value|budget/.test(tags)) values.push("deal", "value");
+  if (/reorder/.test(tags) || item.reorderSignal === "high") values.push("reorder");
+  if (/meeting safe|meeting_safe/.test(tags) || item.meetingSafe) values.push("meeting_safe");
+  if (item.novelty === "familiar") values.push("familiar");
+  if (item.novelty !== "familiar") values.push("exploratory");
+  return uniqueSignals(values);
+}
+
+function inferContextFit(item: RawMenuItem): ContextSignal[] {
+  return uniqueSignals(item.bestFor.flatMap(occasionToContextSignals));
+}
+
+function inferRegretRiskFlags(item: RawMenuItem): RegretRiskFlag[] {
+  const text = `${item.dishName} ${item.tags.join(" ")}`.toLowerCase();
+  const values: RegretRiskFlag[] = [];
+  if (/fried|greasy|fries|momo|momos|potato/.test(text) || (/oily/.test(text) && !/not oily/.test(text))) values.push("fried_oily");
+  if (/cheese burst|loaded cheese|extra cheese|cheese_overloaded/.test(text)) values.push("cheese_heavy");
+  if (/creamy|alfredo/.test(text) || (item.heaviness === "heavy" && item.cuisine === "Italian")) values.push("creamy_heavy");
+  if (/deal|discount|budget bites|cheap/.test(text) && item.regretRisk !== "low") values.push("deal_trap");
+  if (item.price > 600 && item.regretRisk !== "low") values.push("expensive_average");
+  if (item.heaviness === "heavy") values.push("heavy_meal");
+  if (/low quality|low-rated/.test(text)) values.push("low_quality");
+  if (/portion/.test(text)) values.push("portion_risk");
+  return uniqueSignals(values);
+}
+
+function inferReliabilityTags(item: RawMenuItem): ReliabilityFlag[] {
+  const values: ReliabilityFlag[] = [];
+  if (item.estimatedDeliveryMax <= 30) values.push("fast_eta");
+  if (item.estimatedDeliveryMax > 35) values.push("slow_eta");
+  if (item.deliveryReliabilityScore >= 85) values.push("high_reliability");
+  if (item.deliveryReliabilityScore < 78) values.push("low_reliability");
+  if (item.weekdayLunchFit) values.push("weekday_lunch_fit");
+  if (item.meetingSafe) values.push("meeting_safe");
+  if (item.tags.some((tag) => ["fresh", "salad", "wrap"].includes(tag))) values.push("freshness_sensitive");
+  return uniqueSignals(values);
+}
+
+function inferAvoidIf(item: RawMenuItem, regretRiskFlags: RegretRiskFlag[]): NegativeConstraint[] {
+  const values: NegativeConstraint[] = [];
+  if (regretRiskFlags.includes("fried_oily")) values.push("avoid_oily");
+  if (regretRiskFlags.includes("cheese_heavy")) values.push("avoid_cheese_heavy");
+  if (regretRiskFlags.includes("creamy_heavy")) values.push("avoid_creamy", "avoid_heavy");
+  if (item.heaviness === "heavy") values.push("avoid_heavy");
+  if (item.price > 600) values.push("avoid_expensive");
+  if (item.estimatedDeliveryMax > 35 || item.deliveryReliabilityScore < 78) values.push("avoid_slow_delivery");
+  return uniqueSignals(values);
+}
+
+function inferBudgetTier(price: number): BudgetFitSignal {
+  if (price <= 250) return "budget";
+  if (price <= 450) return "comfort";
+  if (price <= 650) return "premium";
+  return "splurge";
 }
 
 export function parseBudgetMax(context: DecisionContext, persona: Persona): number {
@@ -484,35 +1146,168 @@ export function parseBudgetMax(context: DecisionContext, persona: Persona): numb
   return parsed ? Number(parsed) : persona.budgetMax;
 }
 
+function matchDishIntents(text: string): DishType[] {
+  const values: DishType[] = [];
+  if (/biryani/.test(text)) values.push("biryani");
+  if (/bowl|rice bowl|protein bowl/.test(text)) values.push("bowl");
+  if (/burger/.test(text)) values.push("burger");
+  if (/burrito/.test(text)) values.push("burrito");
+  if (/curry|dal|rajma|butter chicken/.test(text)) values.push("curry");
+  if (/dim sum|dimsum/.test(text)) values.push("dim_sum");
+  if (/dosa/.test(text)) values.push("dosa");
+  if (/momo|momos/.test(text)) values.push("momos");
+  if (/noodle|noodles|hakka/.test(text)) values.push("noodles");
+  if (/pasta|alfredo/.test(text)) values.push("pasta");
+  if (/pizza/.test(text)) values.push("pizza");
+  if (/platter/.test(text)) values.push("platter");
+  if (/roll|kathi/.test(text)) values.push("roll");
+  if (/salad/.test(text)) values.push("salad");
+  if (/snack|fries|pakora|potato/.test(text)) values.push("snack");
+  if (/wrap/.test(text)) values.push("wrap");
+  return values;
+}
+
+function matchCuisineIntents(text: string): Cuisine[] {
+  const values: Cuisine[] = [];
+  if (/asian|thai|dim sum|dimsum/.test(text)) values.push("Asian");
+  if (/burger/.test(text)) values.push("Burgers");
+  if (/chinese|noodle|hakka|schezwan|chilli garlic/.test(text)) values.push("Chinese");
+  if (/healthy|protein bowl|salad/.test(text)) values.push("Healthy Bowls");
+  if (/italian|pasta/.test(text)) values.push("Italian");
+  if (/mediterranean/.test(text)) values.push("Mediterranean");
+  if (/mexican|burrito/.test(text)) values.push("Mexican");
+  if (/north indian|dal|rajma|butter chicken|biryani/.test(text)) values.push("North Indian");
+  if (/pizza/.test(text)) values.push("Pizza");
+  if (/south indian|dosa/.test(text)) values.push("South Indian");
+  if (/street food|momo|momos|roll|snack|pakora/.test(text)) values.push("Street Food");
+  return values;
+}
+
+function matchContextSignals(text: string): ContextSignal[] {
+  const values: ContextSignal[] = [];
+  if (/group|team|friends|sharing/.test(text)) values.push("group_order");
+  if (/late night|11 pm|midnight|after 10|night/.test(text)) values.push("late_night");
+  if (/meeting|call/.test(text)) values.push("meeting_soon");
+  if (/post work|after work|after gym/.test(text)) values.push("post_work");
+  if (/weekday lunch|lunch/.test(text)) values.push("weekday_lunch");
+  if (/rush|20 mins|20 min|quick|fast|asap/.test(text)) values.push("weekday_rush");
+  if (/weekend|dinner/.test(text)) values.push("weekend_dinner");
+  return values;
+}
+
+function matchPreferenceSignals(text: string): PreferenceSignal[] {
+  const values: PreferenceSignal[] = [];
+  if (/spicy|spicyy|chatpata|schezwan|chilli/.test(text)) values.push("spicy");
+  if (/comfort|mast|accha|good|satisfying/.test(text)) values.push("comfort");
+  if (/deal|discount|cheap/.test(text)) values.push("deal");
+  if (/explore|new|surprise/.test(text)) values.push("exploratory");
+  if (/familiar|safe|usual/.test(text)) values.push("familiar");
+  if (/filling|full|satisfying/.test(text)) values.push("filling");
+  if (/fresh/.test(text)) values.push("fresh");
+  if (/group safe|safe for group|sharing/.test(text)) values.push("group_safe");
+  if (/healthy|balanced/.test(text)) values.push("healthy");
+  if (/light|lighttt|not heavy|sleepy/.test(text)) values.push("light");
+  if (/meeting safe|meeting/.test(text)) values.push("meeting_safe");
+  if (/reorder|repeat/.test(text)) values.push("reorder");
+  if (/value|budget|worth/.test(text)) values.push("value");
+  return values;
+}
+
+function matchNegativeConstraints(text: string): NegativeConstraint[] {
+  const values: NegativeConstraint[] = [];
+  if (/cheese overloaded|too much cheese|too cheesy|cheesy|cheese heavy|loaded cheese/.test(text)) values.push("avoid_cheese_heavy");
+  if (/creamy|cream/.test(text)) values.push("avoid_creamy");
+  if (/expensive|overpriced|not worth|under|budget|not above/.test(text)) values.push("avoid_expensive");
+  // "sleepy" is treated as a heaviness constraint because the user is asking to avoid a meal that may feel too heavy for the context.
+  if (/too heavy|not heavy|sleepy|light/.test(text)) values.push("avoid_heavy");
+  if (/oily|oil|greasy/.test(text)) values.push("avoid_oily");
+  if (/slow delivery|late delivery|quick|fast|20 mins|20 min/.test(text)) values.push("avoid_slow_delivery");
+  return values;
+}
+
+function occasionToContextSignals(occasion: Occasion): ContextSignal[] {
+  if (occasion === "Group order") return ["group_order"];
+  if (occasion === "Late night") return ["late_night"];
+  if (occasion === "Post-work") return ["post_work"];
+  if (occasion === "Weekday lunch") return ["weekday_lunch"];
+  if (occasion === "Weekday Rush") return ["weekday_rush"];
+  return ["weekend_dinner"];
+}
+
+function uniqueSignals<T extends string>(values: T[]): T[] {
+  return Array.from(new Set(values));
+}
+
+function createEmptyScoreBreakdown(): ScoreBreakdown {
+  return {
+    explicitDishIntentScore: 0,
+    cuisineIntentScore: 0,
+    contextFitScore: 0,
+    preferenceMatchScore: 0,
+    negativeConstraintPenalty: 0,
+    personaPreferenceScore: 0,
+    feedbackMemoryScore: 0,
+    reliabilityScore: 0,
+    budgetScore: 0,
+    explorationScore: 0,
+    heavinessScore: 0,
+    regretRiskPenalty: 0,
+    finalScore: 0,
+  };
+}
+
+function calculateFinalScore(breakdown: ScoreBreakdown): number {
+  return breakdown.explicitDishIntentScore +
+    breakdown.cuisineIntentScore +
+    breakdown.contextFitScore +
+    breakdown.preferenceMatchScore +
+    breakdown.negativeConstraintPenalty +
+    breakdown.personaPreferenceScore +
+    breakdown.feedbackMemoryScore +
+    breakdown.reliabilityScore +
+    breakdown.budgetScore +
+    breakdown.explorationScore +
+    breakdown.heavinessScore +
+    breakdown.regretRiskPenalty;
+}
+
 export function interpretCravingStatic(context: DecisionContext): CravingInterpretation {
   const text = context.cravingText.toLowerCase();
-  const craving_type: string[] = [];
-  const avoid: string[] = [];
-  let cuisine_hint: string | null = null;
-  let dish_hint: string | null = null;
-
-  if (/spicy|spicyy|mast|chatpata/.test(text)) craving_type.push("spicy");
-  if (/comfort|mast|accha|good/.test(text)) craving_type.push("comfort");
-  if (/light|lighttt|sleepy/.test(text)) craving_type.push("light");
-  if (/italian/.test(text)) cuisine_hint = "Italian";
-  if (/pizza/.test(text)) {
-    cuisine_hint = "Pizza";
-    dish_hint = "pizza";
-  }
-  if (/mexican|burrito/.test(text)) {
-    cuisine_hint = "Mexican";
-    dish_hint = "burrito";
-  }
-  if (/oily|oil/.test(text)) avoid.push("oily");
-  if (/cheese overloaded|too much cheese/.test(text)) avoid.push("cheese overloaded");
+  const explicitDishIntents = uniqueSignals<DishType>([
+    ...matchDishIntents(text),
+  ]);
+  const cuisineIntents = uniqueSignals<Cuisine>([
+    ...matchCuisineIntents(text),
+    ...(explicitDishIntents.includes("pizza") ? ["Pizza" as Cuisine] : []),
+    ...(explicitDishIntents.includes("burrito") ? ["Mexican" as Cuisine] : []),
+  ]);
+  const contextSignals = uniqueSignals<ContextSignal>([
+    ...occasionToContextSignals(context.occasion),
+    ...matchContextSignals(text),
+    ...(context.upcomingConstraint === "Meeting soon" ? ["meeting_soon" as ContextSignal] : []),
+  ]);
+  const preferenceSignals = uniqueSignals<PreferenceSignal>([
+    ...matchPreferenceSignals(text),
+    ...(normalizeHeaviness(context.heaviness) === "light" ? ["light" as PreferenceSignal] : []),
+    ...(normalizeHeaviness(context.heaviness) === "heavy" ? ["filling" as PreferenceSignal] : []),
+  ]);
+  const negativeConstraints = uniqueSignals<NegativeConstraint>([
+    ...matchNegativeConstraints(text),
+    ...(context.upcomingConstraint === "Can't feel sleepy" || context.upcomingConstraint === "Need light meal" ? ["avoid_heavy" as NegativeConstraint] : []),
+  ]);
+  const parsedBudget = text.match(/\d+/)?.[0];
+  const budgetSignal = /not above|under|around|budget/.test(text) && parsedBudget
+    ? { max: Number(parsedBudget), source: "custom_text" as const }
+    : null;
   if (/not above|under|around|budget/.test(text)) {
-    const amount = text.match(/\d+/)?.[0];
-    if (amount) return {
-      craving_type: craving_type.length ? craving_type : ["comfort"],
-      cuisine_hint,
-      dish_hint,
-      avoid,
-      budget_max: Number(amount),
+    if (budgetSignal) return {
+      explicitDishIntents,
+      cuisineIntents,
+      contextSignals,
+      preferenceSignals: preferenceSignals.length ? preferenceSignals : ["comfort"],
+      negativeConstraints,
+      budgetSignal,
+      rawInput: context.cravingText,
       occasion: context.occasion,
       heaviness: normalizeHeaviness(context.heaviness),
       exploration_intent: context.explorationIntent,
@@ -523,87 +1318,138 @@ export function interpretCravingStatic(context: DecisionContext): CravingInterpr
 
   const vague = text.trim().length < 8 || /^(kuch accha|something good|idk)$/i.test(text.trim());
   return {
-    craving_type: craving_type.length ? craving_type : ["comfort"],
-    cuisine_hint,
-    dish_hint,
-    avoid,
-    budget_max: null,
+    explicitDishIntents,
+    cuisineIntents,
+    contextSignals,
+    preferenceSignals: preferenceSignals.length ? preferenceSignals : ["comfort"],
+    negativeConstraints,
+    budgetSignal,
+    rawInput: context.cravingText,
     occasion: context.occasion,
     heaviness: normalizeHeaviness(context.heaviness),
     exploration_intent: context.explorationIntent,
-    confidence: vague ? "low" : cuisine_hint || craving_type.length > 1 ? "high" : "medium",
+    confidence: vague ? "low" : cuisineIntents.length || explicitDishIntents.length || preferenceSignals.length > 1 ? "high" : "medium",
     needs_clarification: vague,
   };
 }
 
-export function scoreRecommendationStatic(persona: Persona, context: DecisionContext): Recommendation[] {
+export function scoreRecommendationStatic(persona: Persona, context: DecisionContext, feedbackMemory: ScoringFeedbackMemory[] = []): Recommendation[] {
   const interpretation = interpretCravingStatic(context);
-  const budgetMax = interpretation.budget_max ?? parseBudgetMax(context, persona);
+  const budgetMax = interpretation.budgetSignal?.max ?? parseBudgetMax(context, persona);
   const isRush = context.occasion === "Weekday Rush";
+  const hasExplicitIntent = Boolean(interpretation.explicitDishIntents.length || interpretation.cuisineIntents.length);
+  const activeMemory = feedbackMemory.filter((memory) => memory.personaId === persona.id && memory.feedback.sentiment !== "skipped");
 
+  // Scoring weights are raw ranking heuristics, not probabilities:
+  // - Explicit dish intent: +70 match / -90 miss; explicit cuisine: +50 match / -70 miss.
+  // - Budget: +15 within 110% of max / -20 above; context fit: +12 per fit, +24 group-safe boost.
+  // - Persona fit: +25 normally or +12 when explicit intent leads; high reorder signal adds +18 safe / +10 otherwise.
+  // - Preference match: +30; exploration: +12 for requested novelty fit; heaviness match: +8.
+  // - Regret risk: -35 high / -10 medium; Weekday Rush reliability can add +20 fast ETA, +15 reliable, +12 lunch fit, +10 meeting-safe.
+  // - Feedback memory is active-persona-only and applied through feedbackMemoryScore.
+  // - Negative constraints are hard user boundaries, so matching items are filtered instead of receiving a hidden penalty.
   const scored = menuCatalog
     .filter((item) => !persona.regretPatterns.some((pattern) => item.tags.some((tag) => pattern.includes(tag) && item.regretRisk === "high")))
     .map((item) => {
-      let score = 0;
-      if (item.personaFit.includes(persona.id)) score += 25;
-      if (item.price <= budgetMax * 1.1) score += 15;
-      else score -= 20;
-      if (item.bestFor.includes(context.occasion)) score += 12;
-      if (interpretation.cuisine_hint && item.cuisine.toLowerCase().includes(interpretation.cuisine_hint.toLowerCase())) score += 16;
-      if (interpretation.dish_hint && item.dishName.toLowerCase().includes(interpretation.dish_hint)) score += 18;
-      if (interpretation.craving_type.some((craving) => item.tags.includes(craving))) score += 30;
-      if (item.reorderSignal === "high") score += context.explorationIntent === "safe" ? 18 : 10;
-      if (context.explorationIntent === "somewhat_new" && item.novelty === "somewhat_new") score += 12;
-      if (context.explorationIntent === "surprise_me" && item.novelty !== "familiar") score += 12;
-      if (normalizeHeaviness(context.heaviness) === item.heaviness) score += 8;
-      if (item.regretRisk === "high") score -= 35;
-      if (item.regretRisk === "medium") score -= 10;
+      const memoryAdjustment = getLocalMemoryScoreAdjustment(item, persona, context, interpretation, activeMemory);
+      const dishMatches = itemMatchesDishIntent(item, interpretation);
+      const cuisineMatches = itemMatchesCuisineIntent(item, interpretation);
+      const breakdown = createEmptyScoreBreakdown();
+
+      if (interpretation.explicitDishIntents.length) breakdown.explicitDishIntentScore += dishMatches ? 70 : -90;
+      if (interpretation.cuisineIntents.length) breakdown.cuisineIntentScore += cuisineMatches ? 50 : -70;
+      breakdown.budgetScore += item.price <= budgetMax * 1.1 ? 15 : -20;
+      if (item.bestFor.includes(context.occasion)) breakdown.contextFitScore += 12;
+      if (item.contextFit.some((signal) => interpretation.contextSignals.includes(signal))) breakdown.contextFitScore += 12;
+      if (interpretation.contextSignals.includes("group_order") && item.preferenceTags.includes("group_safe")) breakdown.contextFitScore += 24;
+      if (item.personaFit.includes(persona.id)) breakdown.personaPreferenceScore += hasExplicitIntent ? 12 : 25;
+      if (item.preferenceTags.some((signal) => interpretation.preferenceSignals.includes(signal))) breakdown.preferenceMatchScore += 30;
+      if (item.reorderSignal === "high") breakdown.personaPreferenceScore += context.explorationIntent === "safe" ? 18 : 10;
+      if (context.explorationIntent === "somewhat_new" && item.novelty === "somewhat_new") breakdown.explorationScore += 12;
+      if (context.explorationIntent === "surprise_me" && item.novelty !== "familiar") breakdown.explorationScore += 12;
+      if (normalizeHeaviness(context.heaviness) === item.heaviness) breakdown.heavinessScore += 8;
+      if (item.regretRisk === "high") breakdown.regretRiskPenalty -= 35;
+      if (item.regretRisk === "medium") breakdown.regretRiskPenalty -= 10;
       if (isRush) {
-        if (item.estimatedDeliveryMax <= 30) score += 20;
-        if (item.deliveryReliabilityScore >= 85) score += 15;
-        if (item.weekdayLunchFit) score += 12;
-        if (context.upcomingConstraint === "Meeting soon" && item.meetingSafe) score += 10;
-        if (item.novelty === "familiar") score += 12;
-        if (item.novelty === "surprising") score -= 12;
+        if (item.estimatedDeliveryMax <= 30) breakdown.reliabilityScore += 20;
+        if (item.deliveryReliabilityScore >= 85) breakdown.reliabilityScore += 15;
+        if (item.weekdayLunchFit) breakdown.reliabilityScore += 12;
+        if (context.upcomingConstraint === "Meeting soon" && item.meetingSafe) breakdown.reliabilityScore += 10;
+        if (item.novelty === "familiar") breakdown.explorationScore += 12;
+        if (item.novelty === "surprising") breakdown.explorationScore -= 12;
       }
-      return { item, score };
+      breakdown.feedbackMemoryScore += memoryAdjustment.score;
+      breakdown.finalScore = calculateFinalScore(breakdown);
+      return { item, score: breakdown.finalScore, memoryNotes: memoryAdjustment.notes, scoreBreakdown: breakdown };
     })
     .filter(({ item }) => item.regretRisk !== "high")
+    .filter(({ item }) => !hasExplicitIntent || itemMatchesExplicitIntent(item, interpretation))
+    .filter(({ item }) => !interpretation.negativeConstraints.some((constraint) => itemMatchesNegativeConstraint(item, constraint)))
     .sort((a, b) => b.score - a.score);
 
-  const primary = scored[0];
-  const safe = scored.find(({ item }) => item.novelty === "familiar" && item.id !== primary?.item.id) ?? scored[1];
-  const explore = scored.find(({ item }) => item.novelty !== "familiar" && item.id !== primary?.item.id) ?? scored[2] ?? scored[1];
+  const fallbackScored = scored.length ? scored : menuCatalog
+    .filter((item) => item.regretRisk !== "high")
+    .map((item) => {
+      const memoryAdjustment = getLocalMemoryScoreAdjustment(item, persona, context, interpretation, activeMemory);
+      const breakdown = createEmptyScoreBreakdown();
+      breakdown.feedbackMemoryScore = memoryAdjustment.score;
+      breakdown.finalScore = -25 + memoryAdjustment.score;
+      return { item, score: breakdown.finalScore, memoryNotes: memoryAdjustment.notes, scoreBreakdown: breakdown };
+    })
+    .sort((a, b) => b.score - a.score);
+
+  const primary = fallbackScored[0];
+  const safe = fallbackScored.find(({ item }) => item.novelty === "familiar" && item.id !== primary?.item.id);
+  const explore = fallbackScored.find(({ item }) =>
+    item.novelty !== "familiar" && item.id !== primary?.item.id && item.id !== safe?.item.id
+  );
 
   return [
-    makeRecommendation(primary.item, primary.score, "primary", persona, context, interpretation, budgetMax),
-    makeRecommendation(safe.item, safe.score, "safe", persona, context, interpretation, budgetMax),
-    makeRecommendation(explore.item, explore.score, "explore", persona, context, interpretation, budgetMax),
-  ];
+    primary ? makeRecommendation(primary.item, primary.score, "primary", persona, context, interpretation, budgetMax, primary.memoryNotes, primary.scoreBreakdown) : null,
+    safe ? makeRecommendation(safe.item, safe.score, "safe", persona, context, interpretation, budgetMax, safe.memoryNotes, safe.scoreBreakdown) : null,
+    explore ? makeRecommendation(explore.item, explore.score, "explore", persona, context, interpretation, budgetMax, explore.memoryNotes, explore.scoreBreakdown) : null,
+  ].filter((recommendation): recommendation is Recommendation => Boolean(recommendation));
 }
 
 export function classifyFeedbackStatic(sentiment: "Loved it" | "Meh" | "Disappointing" | "Skipped" | "", reasons: string[], note: string): FeedbackClassification {
-  const negativeReasons = reasons.filter((reason) => !["Would reorder"].includes(reason));
+  const wrongCravingMatch = reasons.some((reason) => ["Wrong craving match", "Ignored my craving"].includes(reason)) ||
+    /wanted|asked|crav|showing me|instead|ignored|not what i wanted|wrong/i.test(note);
+  const normalizedReasons = normalizeFailureReasonCodes([
+    ...reasons,
+    ...(wrongCravingMatch ? ["wrong_craving_match"] : []),
+    ...(/delivery|late|cold|arrived/i.test(note) ? ["delivery_issue"] : []),
+    ...(/unreliable|eta|too long/i.test(note) ? ["reliability_issue"] : []),
+  ]);
+  const negativeReasons = normalizedReasons.filter((reason) => reason !== "would_reorder");
   const wouldReorder = reasons.includes("Would reorder");
-  const wouldNotReorder = reasons.includes("Would not reorder");
+  const wouldNotReorder = reasons.includes("Would not reorder") || wrongCravingMatch;
   const tooHeavy = reasons.includes("Too heavy") || /heavy|sleepy/i.test(note);
   return {
-    sentiment: sentiment === "Loved it" ? "positive" : sentiment === "Disappointing" ? "negative" : "mixed",
+    sentiment: sentiment === "Loved it" && !wrongCravingMatch ? "positive" : sentiment === "Disappointing" ? "negative" : "mixed",
     taste_rating: sentiment === "Loved it" ? 5 : sentiment === "Disappointing" ? 2 : sentiment ? 3 : null,
-    value_rating: reasons.includes("Too expensive") ? 2 : sentiment ? 4 : null,
+    value_rating: normalizedReasons.includes("too_expensive") ? 2 : sentiment ? 4 : null,
     heaviness: tooHeavy ? "heavy" : reasons.includes("Too oily") ? "medium" : null,
     regret_level: sentiment === "Disappointing" || reasons.includes("Would not reorder") ? "high" : sentiment === "Meh" || negativeReasons.length ? "medium" : "low",
     reorder_intent: wouldReorder ? "yes" : wouldNotReorder ? "no" : sentiment === "Loved it" ? "yes" : sentiment === "Disappointing" ? "no" : "maybe",
     failure_reasons: negativeReasons,
-    learning: negativeReasons.length
-      ? `Remember: ${negativeReasons.join(", ")} affected this meal.`
+    learning: wrongCravingMatch
+      ? "Explicit dish or cuisine intent was ignored; future logic should prioritize craving match before persona defaults."
+      : negativeReasons.length
+      ? `Remember: ${negativeReasons.map((reason) => feedbackReasonLabels[reason]).join(", ")} affected this meal.`
       : wouldReorder
         ? "This meal should strengthen the reorder pattern."
         : "No strong negative learning captured yet.",
   };
 }
 
-export function generateInsightsStatic(persona: Persona): string[] {
+export function normalizeFailureReasonCodes(reasons: string[]): FailureReasonCode[] {
+  const normalized = reasons
+    .map((reason) => normalizeFailureReasonCode(reason))
+    .filter((reason): reason is FailureReasonCode => Boolean(reason));
+  return Array.from(new Set(normalized));
+}
+
+export function getPersonaInsightsStatic(persona: Persona): string[] {
   return [
     persona.insights.taste,
     persona.insights.regret,
@@ -614,11 +1460,55 @@ export function generateInsightsStatic(persona: Persona): string[] {
   ];
 }
 
-export function getFallbackState(context: DecisionContext, recommendations: Recommendation[], interpretation: CravingInterpretation): string {
-  if (interpretation.needs_clarification) return "Vague craving: show clarification chips before pretending confidence.";
-  if (parseBudgetMax(context, personas[0]) < 250) return "Budget too low: offer budget-safe options or ask to increase budget.";
-  if (recommendations[0]?.score < 60) return "No strong match: show safer backups with limited-confidence copy.";
-  return "High-regret options are filtered out as primary; show what CraveWise avoided.";
+export function getFallbackState(persona: Persona, context: DecisionContext, recommendations: Recommendation[], interpretation: CravingInterpretation): FallbackState {
+  const budgetMax = parseBudgetMax(context, persona);
+  if (interpretation.needs_clarification) {
+    return {
+      type: "clarification_needed",
+      severity: "blocking",
+      title: "One more craving signal needed",
+      message: "This craving is too vague for a confident recommendation. Add a signal like spicy, comforting, light, or surprise me.",
+      shouldSuppressPrimaryRecommendation: true,
+      suggestedActions: ["Add a craving detail", "Use a quick chip"],
+    };
+  }
+  if (budgetMax < persona.budgetMin) {
+    return {
+      type: "budget_too_low",
+      severity: "blocking",
+      title: "Budget is below this taste profile",
+      message: `This budget is below ${persona.name}'s usual low-regret range. Increase budget or choose a budget-safe option before trusting a primary pick.`,
+      shouldSuppressPrimaryRecommendation: true,
+      suggestedActions: ["Increase budget", "Show budget-safe options"],
+    };
+  }
+  if (interpretation.explicitDishIntents.includes("pizza") && !recommendations.some((recommendation) => recommendation.item.dishType === "pizza" && !recommendation.item.avoidIf.includes("avoid_cheese_heavy"))) {
+    return {
+      type: "static_data_limitation",
+      severity: "blocking",
+      title: "No strong non-cheese-heavy pizza match",
+      message: "I do not have a strong non-cheese-heavy pizza match in this prototype. Want a lighter Italian option or a budget-safe comfort meal?",
+      shouldSuppressPrimaryRecommendation: true,
+      suggestedActions: ["Try lighter Italian", "See budget-safe comfort"],
+    };
+  }
+  if (recommendations[0]?.score < 60) {
+    return {
+      type: "limited_match",
+      severity: "warning",
+      title: "Limited confidence",
+      message: "No strong match is available in the dummy catalog. Treat this as a low-confidence static suggestion, not a trusted primary answer.",
+      shouldSuppressPrimaryRecommendation: false,
+      suggestedActions: ["Review backups", "Add more context"],
+    };
+  }
+  return {
+    type: "high_regret_avoided",
+    severity: "info",
+    title: "High-regret options avoided",
+    message: "High-regret options are filtered out as primary; review what CraveWise avoided before deciding.",
+    shouldSuppressPrimaryRecommendation: false,
+  };
 }
 
 function makeRecommendation(
@@ -629,12 +1519,19 @@ function makeRecommendation(
   context: DecisionContext,
   interpretation: CravingInterpretation,
   budgetMax: number,
+  memoryNotes: string[],
+  scoreBreakdown: ScoreBreakdown,
 ): Recommendation {
   const isRush = context.occasion === "Weekday Rush";
   const budgetFit = item.price <= budgetMax ? `within ${context.budgetBand}` : `slightly above ${context.budgetBand}`;
+  const explicitIntentCopy = getExplicitIntentCopy(interpretation);
+  const constraintCopy = interpretation.negativeConstraints.length ? interpretation.negativeConstraints.map(formatNegativeConstraint).join(", ") : persona.topRegretPattern;
+  const preferenceCopy = interpretation.preferenceSignals.join(", ");
   const reason = isRush && item.id === "baja-bowl-classic-chicken-burrito"
     ? `${item.dishName} fits because ${persona.name} has a comfort reorder pattern for burritos, the dummy ETA is ${item.estimatedDeliveryMin}-${item.estimatedDeliveryMax} mins, and it is meeting-safe for "${context.upcomingConstraint}".`
-    : `${item.dishName} fits because ${persona.name} has ${persona.primaryMode} behavior, likes ${persona.topCuisines.slice(0, 2).join(" and ")}, and this matches ${interpretation.craving_type.join(", ")} without triggering ${persona.topRegretPattern}.`;
+    : explicitIntentCopy
+      ? `${item.dishName} fits the explicit ${explicitIntentCopy} craving, stays ${budgetFit}, and avoids ${constraintCopy}. Persona defaults are secondary for this pick.`
+    : `${item.dishName} fits because ${persona.name} has ${persona.primaryMode} behavior, likes ${persona.topCuisines.slice(0, 2).join(" and ")}, and this matches ${preferenceCopy} without triggering ${persona.topRegretPattern}.`;
   return {
     item,
     score,
@@ -650,11 +1547,191 @@ function makeRecommendation(
         : item.novelty === "familiar"
           ? "Optimized for reliability over discovery."
           : "Balances craving fit with controlled exploration.",
+    memoryNotes,
+    scoreBreakdown,
   };
+}
+
+function getLocalMemoryScoreAdjustment(
+  item: MenuItem,
+  persona: Persona,
+  context: DecisionContext,
+  interpretation: CravingInterpretation,
+  memories: ScoringFeedbackMemory[],
+): { score: number; notes: string[] } {
+  let score = 0;
+  const notes = new Set<string>();
+  const contextLateNight = isLateNightContext(context, interpretation);
+  const friedSnackIntent = hasFriedSnackIntent(context, interpretation);
+  const meetingContext = context.upcomingConstraint === "Meeting soon" || /meeting/i.test(context.cravingText);
+  const explicitIntent = Boolean(interpretation.explicitDishIntents.length || interpretation.cuisineIntents.length);
+  const highCustomBudget = context.budgetBand === "Custom" && parseBudgetMax(context, persona) > persona.budgetMax;
+
+  memories.forEach((memory) => {
+    const reasons = normalizeFailureReasonCodes(memory.classification.failureReasons);
+    const negative = memory.feedback.sentiment === "disappointing" || memory.classification.sentiment === "negative" || memory.classification.regretLevel !== "low";
+    const itemWasRejected = item.dishName === memory.selectedRecommendation.dishName ||
+      item.restaurantName === memory.selectedRecommendation.restaurantName;
+
+    if (negative && reasons.includes("too_oily") && (itemWasRejected || itemIsOilyFried(item))) {
+      const penalty = contextLateNight || friedSnackIntent ? 34 : 18;
+      score -= penalty;
+      notes.add("You previously marked oily food as disappointing, so similar oily/fried options were penalized in this browser.");
+    }
+
+    if (negative && reasons.includes("too_oily") && friedSnackIntent && !itemIsOilyFried(item) && item.preferenceTags.includes("spicy")) {
+      score += 6;
+      notes.add("You previously marked oily food as disappointing, so lower-oil spicy options were preferred in this browser.");
+    }
+
+    if (negative && reasons.includes("too_heavy") && item.heaviness === "heavy") {
+      const penalty = contextLateNight || context.occasion === "Weekday Rush" || meetingContext ? 28 : 16;
+      score -= penalty;
+      notes.add("You previously marked a meal as too heavy, so heavy options were penalized for this context.");
+    }
+
+    if (negative && reasons.includes("too_expensive") && !highCustomBudget && (item.price > memory.selectedRecommendation.price || item.price > persona.budgetMax)) {
+      score -= 18;
+      notes.add("You previously flagged value or price, so above-comfort-budget items were penalized.");
+    }
+
+    if (negative && reasons.includes("wrong_craving_match") && explicitIntent && !itemMatchesExplicitIntent(item, interpretation)) {
+      score -= 45;
+      notes.add("You previously flagged an ignored craving, so explicit dish/cuisine intent was weighted more strongly.");
+    }
+
+    if (negative && (reasons.includes("delivery_issue") || reasons.includes("reliability_issue")) && (item.deliveryReliabilityScore < 82 || item.estimatedDeliveryMax > 35)) {
+      const penalty = context.occasion === "Weekday Rush" || meetingContext ? 30 : 16;
+      score -= penalty;
+      notes.add("You previously flagged delivery or reliability, so slower or lower-reliability options were penalized.");
+    }
+
+    if (negative && (reasons.includes("delivery_issue") || reasons.includes("reliability_issue")) && (context.occasion === "Weekday Rush" || meetingContext) && item.deliveryReliabilityScore >= 88 && item.estimatedDeliveryMax <= 30) {
+      score += 6;
+      notes.add("You previously flagged delivery or reliability, so faster high-reliability options were preferred in this local demo.");
+    }
+
+    if (memory.classification.reorderIntent === "yes" || reasons.includes("would_reorder")) {
+      if (item.dishName === memory.selectedRecommendation.dishName) {
+        score += 18;
+        notes.add("A previous local reorder signal modestly boosted this same dish.");
+      } else if (item.restaurantName === memory.selectedRecommendation.restaurantName) {
+        score += 12;
+        notes.add("A previous local reorder signal modestly boosted this restaurant.");
+      } else if (!explicitIntent && similarToMemoryContext(item, memory)) {
+        score += 8;
+        notes.add("A previous local reorder signal modestly boosted similar options.");
+      }
+    }
+
+    if (negative && (memory.classification.reorderIntent === "no" || reasons.includes("would_not_reorder"))) {
+      if (item.dishName === memory.selectedRecommendation.dishName) {
+        score -= 16;
+        notes.add("You previously said you would not reorder this dish, so it was modestly penalized.");
+      } else if (item.restaurantName === memory.selectedRecommendation.restaurantName) {
+        score -= 10;
+        notes.add("You previously said you would not reorder from this restaurant, so it was modestly penalized.");
+      }
+    }
+
+    if (negative && reasons.includes("not_fresh")) {
+      if (item.restaurantName === memory.selectedRecommendation.restaurantName) {
+        score -= 14;
+        notes.add("You previously flagged freshness, so the same restaurant was modestly penalized.");
+      }
+      if ((context.occasion === "Weekday Rush" || meetingContext) && (item.deliveryReliabilityScore < 85 || item.estimatedDeliveryMax > 35)) {
+        score -= 10;
+        notes.add("You previously flagged freshness, so reliability-sensitive options were treated more cautiously.");
+      }
+    }
+  });
+
+  return { score, notes: Array.from(notes).slice(0, 2) };
 }
 
 function normalizeHeaviness(value: DecisionContext["heaviness"]): Heaviness {
   if (value === "Light") return "light";
   if (value === "Filling") return "heavy";
   return "medium";
+}
+
+function getExplicitIntentCopy(interpretation: CravingInterpretation): string {
+  const dish = interpretation.explicitDishIntents.map((value) => value.replace("_", " "));
+  const cuisine = interpretation.cuisineIntents;
+  return [...dish, ...cuisine].join(" / ");
+}
+
+function formatNegativeConstraint(constraint: NegativeConstraint): string {
+  const labels: Record<NegativeConstraint, string> = {
+    avoid_cheese_heavy: "cheese-heavy options",
+    avoid_creamy: "creamy-heavy options",
+    avoid_expensive: "above-budget options",
+    avoid_heavy: "heavy options",
+    avoid_oily: "oily/fried options",
+    avoid_slow_delivery: "slow or unreliable options",
+  };
+  return labels[constraint];
+}
+
+function itemMatchesExplicitIntent(item: MenuItem, interpretation: CravingInterpretation): boolean {
+  const dishMatches = interpretation.explicitDishIntents.length ? itemMatchesDishIntent(item, interpretation) : true;
+  const cuisineMatches = interpretation.cuisineIntents.length ? itemMatchesCuisineIntent(item, interpretation) : true;
+  return dishMatches || cuisineMatches;
+}
+
+function itemMatchesDishIntent(item: MenuItem, interpretation: CravingInterpretation): boolean {
+  return interpretation.explicitDishIntents.some((dishType) => {
+    if (dishType === "snack") return ["snack", "momos", "roll", "dim_sum"].includes(item.dishType);
+    return item.dishType === dishType || item.tags.includes(dishType);
+  });
+}
+
+function itemMatchesCuisineIntent(item: MenuItem, interpretation: CravingInterpretation): boolean {
+  return interpretation.cuisineIntents.includes(item.cuisine);
+}
+
+function itemMatchesNegativeConstraint(item: MenuItem, constraint: NegativeConstraint): boolean {
+  return item.avoidIf.includes(constraint);
+}
+
+function normalizeFailureReasonCode(reason: string): FailureReasonCode | null {
+  const normalized = reason.trim().toLowerCase().replace(/['’]/g, "").replace(/[\s-]+/g, "_");
+  if (["too_oily", "oily", "greasy", "fried"].includes(normalized)) return "too_oily";
+  if (["too_bland", "bland"].includes(normalized)) return "too_bland";
+  if (["too_expensive", "expensive", "not_worth_it", "low_value"].includes(normalized)) return "too_expensive";
+  if (["portion_issue", "small_portion", "tiny_portion"].includes(normalized)) return "portion_issue";
+  if (["too_heavy", "heavy"].includes(normalized)) return "too_heavy";
+  if (["delivery_issue", "delivery"].includes(normalized)) return "delivery_issue";
+  if (["reliability_issue", "reliability", "late_delivery", "cold_delivery"].includes(normalized)) return "reliability_issue";
+  if (["wrong_craving_match", "wrong_craving", "ignored_my_craving", "bad_craving_match"].includes(normalized)) return "wrong_craving_match";
+  if (["bad_personalization", "bad_recommendation"].includes(normalized)) return "bad_personalization";
+  if (["would_reorder", "reorder"].includes(normalized)) return "would_reorder";
+  if (["would_not_reorder", "not_reorder", "do_not_reorder", "wouldnt_reorder", "wont_reorder"].includes(normalized)) return "would_not_reorder";
+  if (["not_fresh", "stale", "cold", "not_fresh_enough", "freshness_issue"].includes(normalized)) return "not_fresh";
+  if (["static_data_limitation", "missing_catalog"].includes(normalized)) return "static_data_limitation";
+  return null;
+}
+
+function isLateNightContext(context: DecisionContext, interpretation: CravingInterpretation): boolean {
+  return context.occasion === "Late night" ||
+    interpretation.contextSignals.includes("late_night") ||
+    /late night|11 pm|midnight|after 10|night/i.test(context.cravingText);
+}
+
+function hasFriedSnackIntent(context: DecisionContext, interpretation: CravingInterpretation): boolean {
+  return interpretation.explicitDishIntents.some((dishType) => ["momos", "snack", "roll"].includes(dishType)) ||
+    /fried|fry|momo|momos|snack|greasy|pakora/i.test(context.cravingText);
+}
+
+function itemIsOilyFried(item: MenuItem): boolean {
+  return item.regretRiskFlags.includes("fried_oily") ||
+    item.avoidIf.includes("avoid_oily") ||
+    item.tags.some((tag) => ["oily", "fried", "greasy"].includes(tag)) ||
+    /fried|fries|momo|momos/i.test(item.dishName);
+}
+
+function similarToMemoryContext(item: MenuItem, memory: ScoringFeedbackMemory): boolean {
+  const text = `${memory.decisionContext.rawCraving} ${memory.selectedRecommendation.dishName}`.toLowerCase();
+  return item.tags.some((tag) => text.includes(tag.toLowerCase())) ||
+    text.includes(item.cuisine.toLowerCase());
 }

@@ -13,7 +13,7 @@ Evaluate:
 - `interpretCravingStatic()`
 - `scoreRecommendationStatic()`
 - `classifyFeedbackStatic()`
-- `generateInsightsStatic()`
+- `getPersonaInsightsStatic()`
 - `getFallbackState()`
 
 Out of scope:
@@ -426,13 +426,13 @@ Out of scope:
 
 This category is manual review only. Do not pretend this can be fully automated without AI judgment.
 
-For each persona, manually review `generateInsightsStatic(persona)`.
+For each persona, manually review `getPersonaInsightsStatic(persona)`.
 
 #### CW-INSIGHT-024: Abhyudaya insights
 
 - Persona: Abhyudaya
 - User input/context: Selected persona insight view
-- Function or flow: `generateInsightsStatic()`
+- Function or flow: `getPersonaInsightsStatic()`
 - Expected output/behavior:
   - Mentions persona-specific behavior
   - References cuisine/dish type
@@ -449,7 +449,7 @@ For each persona, manually review `generateInsightsStatic(persona)`.
 
 - Persona: Simran
 - User input/context: Selected persona insight view
-- Function or flow: `generateInsightsStatic()`
+- Function or flow: `getPersonaInsightsStatic()`
 - Expected output/behavior:
   - Mentions weekday lunch, budget/value, portion, or filling meals
   - Avoids generic food preference copy
@@ -463,7 +463,7 @@ For each persona, manually review `generateInsightsStatic(persona)`.
 
 - Persona: Kartik
 - User input/context: Selected persona insight view
-- Function or flow: `generateInsightsStatic()`
+- Function or flow: `getPersonaInsightsStatic()`
 - Expected output/behavior:
   - Mentions light comfort, post-work dinner, heaviness regret, or reorder patterns
   - Avoids medical/nutrition claims
@@ -477,7 +477,7 @@ For each persona, manually review `generateInsightsStatic(persona)`.
 
 - Persona: Kushagra
 - User input/context: Selected persona insight view
-- Function or flow: `generateInsightsStatic()`
+- Function or flow: `getPersonaInsightsStatic()`
 - Expected output/behavior:
   - Mentions weekday rush, meetings, ETA reliability, comfort reorder, or avoiding novelty under pressure
 - Pass criteria: Insights capture time-pressure decision logic.
@@ -490,7 +490,7 @@ For each persona, manually review `generateInsightsStatic(persona)`.
 
 - Persona: Piyush
 - User input/context: Selected persona insight view
-- Function or flow: `generateInsightsStatic()`
+- Function or flow: `getPersonaInsightsStatic()`
 - Expected output/behavior:
   - Mentions discount-led exploration, quality guardrails, lowest-price regret, or snack combos
 - Pass criteria: Insights explain why not all deals are good recommendations.
@@ -503,7 +503,7 @@ For each persona, manually review `generateInsightsStatic(persona)`.
 
 - Persona: Pransih
 - User input/context: Selected persona insight view
-- Function or flow: `generateInsightsStatic()`
+- Function or flow: `getPersonaInsightsStatic()`
 - Expected output/behavior:
   - Mentions group-safe meals, broad acceptability, group order compromise, or budget/quality fit
 - Pass criteria: Insights reflect group-order negotiation behavior.
@@ -511,4 +511,77 @@ For each persona, manually review `generateInsightsStatic(persona)`.
   - `You like group orders.`
   - `Everyone likes this.`
 - Manual review notes: Good example: `Pransih prefers group-safe meals that work across multiple tastes.`
+
+#### CW-INSIGHT-030: Dynamic local feedback summaries
+
+- Persona: Any active persona with saved local feedback
+- User input/context: Save feedback under `cravewise.localFeedbackMemory.v1`, then open Insights
+- Function or flow: Insights screen local demo memory panel
+- Expected output/behavior:
+  - Keep `getPersonaInsightsStatic(persona)` cards visible and unchanged
+  - Show a separate browser-local summary area labeled `Based on feedback saved in this browser`
+  - Summaries use normalized reason codes such as `too_oily`, `wrong_craving_match`, `delivery_issue`, `reliability_issue`, `would_not_reorder`, and `not_fresh`
+  - Would-reorder and would-not-reorder signals appear when saved feedback supports them
+  - Clearing local demo memory removes the dynamic summaries
+- Pass criteria: Local feedback makes Insights more specific without claiming AI, backend persistence, cross-device personalization, or production personalization.
+- Failure examples:
+  - Dynamic summaries replace static persona insights entirely
+  - Old display labels like `Too oily` are dropped instead of normalized
+  - Summaries remain visible after clearing local demo memory
+- Manual review notes: This is still fully local/static and should be reviewed in the browser, not as a backend-memory feature.
+
+### Category 6: Local Dish Taxonomy
+
+#### CW-TAXONOMY-031: Structured craving signals
+
+- Persona: Any
+- User input/context: `spicy but not oily`, `late night but light`, `healthy but filling`, `group order under 800`
+- Function or flow: `interpretCravingStatic()` and `scoreRecommendationStatic()`
+- Expected output/behavior:
+  - Dish intent, cuisine intent, context, preference, negative constraint, and budget are represented as separate fields
+  - `late_night` and fried/snack intent are not mixed into a generic craving bucket
+  - Negative constraints such as `avoid_oily`, `avoid_heavy`, and `avoid_cheese_heavy` are hard user boundaries that filter matching returned recommendations
+  - Catalog items expose normalized local taxonomy fields such as `dishType`, `preferenceTags`, `contextFit`, `regretRiskFlags`, `reliabilityTags`, `avoidIf`, and `budgetTier`
+- Pass criteria: Scoring behavior remains product-aligned while the signal model is easier to inspect before AI interpretation.
+- Failure examples:
+  - Simran asks for non-cheese-heavy pizza and receives Dal Makhani
+  - Oily/fried options survive an explicit `not oily` constraint
+  - Weekday Rush ignores reliability tags
+- Manual review notes: This milestone is still local/static. Do not require AI, backend memory, or live restaurant data.
+
+#### CW-TAXONOMY-031A: Pre-AI guardrail cleanup
+
+- Persona: Any
+- User input/context: taxonomy machine-check cases
+- Function or flow: `scoreRecommendationStatic()`
+- Expected output/behavior:
+  - Heavy catalog items use the context-free regret flag `heavy_meal`
+  - No catalog or eval code depends on `heavy_late_night`
+  - Returned recommendations do not include items matching active negative constraints
+  - Negative constraints are enforced by hard filtering, not by a hidden `-90` score penalty
+  - `sleepy` maps to `avoid_heavy` because the user is avoiding a meal that may feel too heavy for the current context
+- Pass criteria: Score breakdowns remain meaningful for returned recommendations, and avoided items are absent rather than silently downranked.
+- Failure examples:
+  - `heavy_late_night` appears as a context-free catalog flag
+  - A returned item includes `avoid_oily` when the user said `not oily`
+  - `negativeConstraintPenalty` carries a dead penalty for returned recommendations
+
+#### CW-TAXONOMY-032: Taxonomy QA and score explainability
+
+- Persona: Any
+- User input/context: selected cases marked `machineCheck: true` in `sample_cases.json`
+- Function or flow: `node evals/cravewise/run_static_evals.js`
+- Expected output/behavior:
+  - `preferenceSignals` contain only positive preferences
+  - `negativeConstraints` use the `avoid_*` naming convention
+  - `spicy but not oily` includes `spicy` and `avoid_oily`, but not `not_oily`
+  - Each recommendation includes an internal `scoreBreakdown`
+  - `scoreBreakdown.finalScore` equals the recommendation `score`
+  - Machine-readable evals can check top dish type, cuisine, avoid flags, exact top recommendation, structured signals, and memory-influenced behavior
+- Pass criteria: The runner passes locally without AI, backend, API routes, or external services.
+- Failure examples:
+  - A negative constraint leaks into `preferenceSignals`
+  - A recommendation's final score does not match its score breakdown
+  - Simran's non-cheese-heavy pizza regression returns Dal Makhani
+- Manual review notes: The score breakdown is for QA and explainability, not a calibrated probability and not product UI copy.
 

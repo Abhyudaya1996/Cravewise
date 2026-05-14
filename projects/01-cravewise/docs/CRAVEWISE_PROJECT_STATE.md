@@ -1,0 +1,403 @@
+# CraveWise Project State
+
+Last updated: 2026-05-14
+Current milestone: Milestone 4F - Pre-AI guardrail cleanup
+Current status: Static prototype, local feedback memory, Simran pizza regression fix, integrity cleanup, browser-only feedback-influenced scoring, feedback reason normalization patch, 30-item dummy catalog expansion, dynamic local insight summaries, local dish taxonomy cleanup, taxonomy QA, score explainability, lightweight static eval harness, Claude review packet, and pre-AI guardrail cleanup are implemented.
+
+---
+
+## 1. Product Thesis
+
+CraveWise is a mobile-first food decision assistant.
+
+It is designed for users who do not need another food browsing app. They need one trusted, taste-aware recommendation based on their current craving, budget, context, past satisfaction, and regret patterns.
+
+CraveWise gives one primary recommendation, with optional backups only when the user asks. It is not a delivery marketplace, not a restaurant feed, and not an ordering product.
+
+The current implementation uses local/static deterministic logic only. It does not use AI, backend services, live restaurant data, or real availability.
+
+---
+
+## 2. Current Build Status
+
+Completed milestones:
+
+- Static prototype
+- Local feedback memory
+- Simran pizza regression fix
+- Integrity cleanup
+- Local feedback-influenced scoring
+- Feedback reason normalization patch
+- Catalog expansion
+- Dynamic local insights
+- Local dish taxonomy and signal cleanup
+- Taxonomy QA, static eval harness, and score explainability
+- Claude review packet 4E
+- Pre-AI guardrail cleanup
+
+Current working features:
+
+- Static mobile-first Next.js prototype
+- Full clickable app flow
+- Six demo personas
+- Taste profile preview
+- Craving input with budget, occasion, heaviness, exploration, and Weekday Rush controls
+- Local/static recommendation scoring
+- Local dish taxonomy with structured craving signals
+- Internal score breakdowns for recommendation QA
+- Primary recommendation plus optional backups
+- Typed fallback states
+- Qualitative confidence labels
+- Feedback classification
+- Browser-only local feedback memory
+- Browser-only local feedback-influenced scoring
+- Expanded 30-item dummy catalog across pizza/Italian, Mexican, North Indian, Asian/Chinese, South Indian, healthy/light, fried/oily regret, group-safe, and Weekday Rush scenarios
+- Local demo memory display in Insights
+- Dynamic local insight summaries derived from browser-only saved feedback for the active persona
+- Clear local demo memory action
+- Lightweight eval documentation
+- Claude review packet for Milestone 4E
+
+Not yet built:
+
+- AI API
+- OpenAI integration
+- backend
+- database
+- MCP
+- Supabase
+- auth
+- Swiggy/Zomato integration
+- live restaurant data
+- real-time availability
+- ordering/payment
+- delivery tracking
+- cross-device memory
+- medical/nutrition advice
+
+Current limitation:
+
+Feedback now influences future static scoring locally and also creates local demo insight summaries. Static craving interpretation uses clearer local taxonomy signals, recommendations carry internal score breakdowns, and selected taxonomy regressions run through a local eval harness. The rules are still deterministic and hardcoded.
+
+Milestone 4F resolved Claude's required pre-AI cleanup items: heavy catalog items use `heavy_meal`, negative constraints are hard returned-recommendation boundaries instead of double-penalized, and the too-oily memory eval proves the new top avoids oily/fried flags.
+
+---
+
+## 3. Current App Flow
+
+1. Home
+2. Persona Selection
+3. Taste Profile Preview
+4. Craving Input
+5. Recommendation
+6. Backup Options
+7. Feedback
+8. Insights
+
+---
+
+## 4. Key Product Decisions
+
+| Decision | Reason | Tradeoff |
+|---|---|---|
+| One recommendation, not a list | The core thesis is that users want help deciding, not another browsing feed. | A wrong primary pick is more costly, so reasoning, fallback states, and backups matter. |
+| Backups are secondary | Optional backups preserve control without turning CraveWise into a restaurant grid. | Some users may want more exploration earlier. |
+| Explicit craving beats persona defaults | The user's current stated intent should override historical comfort defaults. | Persona history becomes a secondary ranking signal when the user gives clear dish/cuisine intent. |
+| Feedback is local demo memory only | The prototype can show a learning loop without backend or account complexity. | Feedback does not survive across browsers/devices and scoring influence is local-only. |
+| No fake confidence | Heuristic scores are not calibrated probabilities, so the UI uses qualitative labels. | Less flashy than percentages, but more trustworthy. |
+| No live availability claims | The prototype uses dummy data only and should not imply real supply-side coverage. | The recommendation may not be orderable in the real world. |
+| No medical/nutrition advice | Food preference and heaviness are allowed; health claims are out of scope. | Health-aware users get preference framing, not nutrition guidance. |
+
+---
+
+## 5. Technical Architecture
+
+CraveWise is currently a frontend-only Next.js app.
+
+Architecture summary:
+
+- App framework: Next.js App Router
+- UI: React components in `apps/cravewise/app/page.tsx`
+- Styling: plain CSS in `apps/cravewise/app/globals.css`
+- Data and static logic: `apps/cravewise/data/sampleData.ts`
+- Local taxonomy: `apps/cravewise/data/dishTaxonomy.ts`
+- Persistence: browser `localStorage`
+- Current catalog size: 30 menu items
+- Target before AI: met for current prototype, with 25-30 dummy menu items
+- Long-term PRD target: 20 restaurants and 60 dishes
+- Backend/API/database: none
+- AI/MCP/live integrations: none
+
+Milestone 4B catalog coverage:
+
+- 4 pizza/Italian items, including light-cheese pizza, cheese-heavy pizza, and pasta fallback
+- 3 Mexican/burrito items with distinct ETA/reliability profiles
+- 8 North Indian items
+- 7 Asian/Chinese items
+- 2 South Indian items
+- 7 healthy/light options
+- 4 fried/oily regret-prone options
+- 5 group-safe/group-order options
+- 14 Weekday Rush-friendly or weekday-lunch-fit options
+
+Important files:
+
+- `apps/cravewise/app/page.tsx`
+- `apps/cravewise/data/sampleData.ts`
+- `apps/cravewise/data/dishTaxonomy.ts`
+- `apps/cravewise/app/globals.css`
+- `apps/cravewise/README.md`
+- `projects/01-cravewise/docs/PRD.md`
+- `projects/01-cravewise/docs/CLAUDE_REVIEW_PACKET_4E.md`
+- `projects/01-cravewise/docs/MILESTONE_TRACKER.md`
+- `evals/cravewise/README.md`
+- `evals/cravewise/sample_cases.json`
+- `evals/cravewise/run_static_evals.js`
+- `.ai/memory/session-handoff-current.md`
+- `learning-log/LEARNING_LOG.md`
+
+Important static logic functions:
+
+- `interpretCravingStatic()`
+- `scoreRecommendationStatic()`
+- `classifyFeedbackStatic()`
+- `getPersonaInsightsStatic()`
+- `getFallbackState()`
+- `run_static_evals.js`
+
+Milestone 4D taxonomy fields:
+
+- `explicitDishIntents`
+- `cuisineIntents`
+- `contextSignals`
+- `preferenceSignals`
+- `negativeConstraints`
+- `budgetSignal`
+- catalog `dishType`, `preferenceTags`, `contextFit`, `regretRiskFlags`, `reliabilityTags`, `avoidIf`, `budgetTier`, and `priceComfortBand`
+
+Milestone 4E QA additions:
+
+- negative constraints standardized on `avoid_*`
+- `not_oily` removed from positive preference signals
+- `scoreBreakdown` added to recommendations
+- `node evals/cravewise/run_static_evals.js` validates selected machine-readable cases
+
+Milestone 4F guardrail cleanup:
+
+- `heavy_late_night` corrected to `heavy_meal`
+- negative constraints remain hard filters
+- dead `-90` negative constraint score penalty removed
+- too-oily memory eval checks the new top avoids `avoid_oily` and `fried_oily`
+- comments document scoring weight principles and why `sleepy` maps to `avoid_heavy`
+
+---
+
+## 6. Local Feedback Memory
+
+localStorage key:
+
+```text
+cravewise.localFeedbackMemory.v1
+```
+
+What gets saved:
+
+- feedback id
+- persona id and name
+- decision context
+- selected recommendation
+- feedback sentiment
+- selected reason chips
+- optional custom feedback note
+- static feedback classification
+- timestamp
+
+What dynamic local insights use:
+
+- normalized failure reason codes
+- reorder intent
+- active persona feedback only
+- local browser records under `cravewise.localFeedbackMemory.v1`
+
+What does not get saved:
+
+- skipped feedback
+- account data
+- real order data
+- real restaurant availability
+- cross-device state
+- backend state
+- AI memory
+
+Clear memory behavior:
+
+- The Insights screen includes `Clear local demo memory`.
+- It clears only the CraveWise local feedback key.
+- It does not affect any other browser storage.
+
+Current limitation:
+
+Feedback-influenced scoring and dynamic insight summaries are implemented locally, but they are rule-based and only use memory saved in the current browser.
+
+Milestone 4A acceptance criteria:
+
+- saved local feedback is passed into scoring
+- feedback reason labels are normalized into stable internal codes, including legacy display labels
+- `too_oily` feedback penalizes oily/fried items in similar contexts
+- `too_heavy` feedback penalizes heavy options in late-night, weekday rush, or meeting contexts
+- `too_expensive` feedback affects price sensitivity
+- `wrong_craving_match` strengthens explicit dish/cuisine intent
+- `delivery_issue` and `reliability_issue` affect Weekday Rush recommendations
+- `would_reorder` boosts similar future options
+- `would_not_reorder` modestly penalizes the same dish or restaurant
+- `not_fresh` modestly penalizes the same restaurant and reliability-sensitive contexts
+- UI shows an honest local demo memory influence note
+- clearing local memory removes feedback influence
+- no AI/backend/database/MCP/live integration added
+
+---
+
+## 7. Milestone History
+
+| Milestone | What changed | Product decision | Files touched | Status |
+|---|---|---|---|---|
+| Static prototype | Built mobile-first clickable flow with personas, taste profile, craving input, recommendation, backups, feedback, and insights. | Prove the one-recommendation decision experience before AI or integrations. | `apps/cravewise/app/page.tsx`, `apps/cravewise/data/sampleData.ts`, `apps/cravewise/app/globals.css`, docs/memory files | Complete / Review |
+| Local feedback memory | Saved submitted feedback to browser `localStorage`, skipped feedback is not saved, local demo memory appears in Insights, clear memory action added. | Make the learning loop visible while staying local-only. | `apps/cravewise/app/page.tsx`, `apps/cravewise/app/globals.css`, `apps/cravewise/README.md`, `.ai/memory/features/cravewise-local-feedback-memory.md` | Complete |
+| Simran pizza regression fix | Fixed case where `pizza but not cheese overloaded` returned Dal Makhani. Added Thin Crust Veggie Pizza and explicit-intent scoring priority. | Current explicit craving must beat persona defaults. | `apps/cravewise/data/sampleData.ts`, `apps/cravewise/app/page.tsx`, `evals/cravewise/sample_cases.json`, memory/docs | Complete |
+| Integrity cleanup | Removed fake match percentage clamp, added qualitative confidence labels, typed fallback states, active-persona fallback logic, blocking fallback hero suppression, distinct backups, renamed persona insight function, corrected local memory copy. | Trust and honesty matter before expanding catalog or adding AI. | `apps/cravewise/data/sampleData.ts`, `apps/cravewise/app/page.tsx`, `apps/cravewise/app/globals.css`, evals/docs/memory files | Complete |
+| Local feedback-influenced scoring | Normalized feedback reasons into internal codes and passed browser-local feedback memory into static scoring. Added local memory influence notes. Patch covered `would_not_reorder` and `not_fresh` chips so selected chips are not silently dropped. | The prototype can now demonstrate feedback changing future recommendations without backend or AI. | `apps/cravewise/data/sampleData.ts`, `apps/cravewise/app/page.tsx`, `apps/cravewise/app/globals.css`, evals/docs/memory files | Complete |
+| Catalog expansion | Expanded dummy menu catalog from 9 to 30 items across core persona scenarios. Added enough alternative items for local feedback penalties to visibly change ranking behavior. | A memory-aware scoring demo needs enough local supply to choose a better alternative after a penalty. | `apps/cravewise/data/sampleData.ts`, evals/docs/memory files | Complete |
+| Dynamic local insights | Kept static persona insights and added active-persona local demo pattern summaries derived from saved browser feedback. | Insights should reflect local demo feedback without claiming AI, backend persistence, or cross-device personalization. | `apps/cravewise/app/page.tsx`, `apps/cravewise/app/globals.css`, evals/docs/memory files | Complete |
+| Local dish taxonomy and signal cleanup | Added a local taxonomy file, derived normalized catalog fields, and refactored static interpretation/scoring to use structured dish, cuisine, context, preference, constraint, and budget signals. | Clean up local signal contracts before AI interpretation so AI can later fill structured fields instead of inheriting mixed craving/context flags. | `apps/cravewise/data/dishTaxonomy.ts`, `apps/cravewise/data/sampleData.ts`, `apps/cravewise/app/page.tsx`, evals/docs/memory files | Complete |
+| Taxonomy QA and eval harness | Audited taxonomy boundaries, removed `not_oily` preference leakage, added internal score breakdowns, and added a local static eval runner. | Build confidence in deterministic scoring before AI by making regressions machine-checkable and score components inspectable. | `apps/cravewise/data/dishTaxonomy.ts`, `apps/cravewise/data/sampleData.ts`, `evals/cravewise/run_static_evals.js`, evals/docs/memory files | Complete |
+| Claude review packet 4E | Created a reviewer entrypoint summarizing product thesis, constraints, architecture, regressions, evals, score breakdowns, and review questions. | Make external critique easier before deciding whether to move to AI craving interpretation. | `projects/01-cravewise/docs/CLAUDE_REVIEW_PACKET_4E.md`, state/tracker/handoff files | Complete |
+| Pre-AI guardrail cleanup | Applied Claude's 4E review suggestions: corrected heavy flag naming, removed double negative-constraint enforcement, strengthened oily-memory eval coverage, and added small scoring/mapping comments. | Keep AI handoff contracts clean before replacing static interpretation. | `apps/cravewise/data/dishTaxonomy.ts`, `apps/cravewise/data/sampleData.ts`, evals/docs/memory files | Complete |
+| Future milestone | TBD | TBD | TBD | Planned |
+
+---
+
+## 8. Important Regression Lessons
+
+### Simran Pizza Regression
+
+Input:
+
+```text
+pizza but not cheese overloaded
+```
+
+Bad result:
+
+```text
+Dal Makhani Rice Bowl
+```
+
+Lesson:
+
+Explicit user intent must override persona defaults.
+
+Fix:
+
+Recommendation logic now prioritizes explicit dish/cuisine intent before persona preferences and history.
+
+Expected result:
+
+```text
+Thin Crust Veggie Pizza from Slice Street
+```
+
+### Feedback Memory Example
+
+Persona:
+
+```text
+Abhyudaya
+```
+
+Input:
+
+```text
+fried momos late night
+```
+
+Feedback:
+
+```text
+Disappointing + Too oily
+```
+
+Lesson:
+
+Local feedback-influenced scoring now penalizes oily/fried late-night options for similar contexts in the current browser. With the expanded catalog, an oily fried snack can lose to a lower-oil spicy alternative after `too_oily` memory is saved.
+
+---
+
+## 9. Current Known Weaknesses
+
+1. Dynamic insights are still simple aggregate summaries, not deep behavioral analysis.
+2. Static logic uses hardcoded scoring rules, though score components are now inspectable and documented at a high level.
+3. Feedback scoring influence is local-only and deterministic.
+4. Catalog is broader but still dummy data, not real supply.
+5. Taxonomy inference is still regex-based and deterministic; AI could later fill the same structured fields more flexibly.
+6. No AI yet.
+7. No real restaurant availability.
+8. Case study not written yet.
+
+---
+
+## 10. Recommended Next Milestones
+
+### Next: AI Craving Interpretation
+
+Goal:
+
+Replace only `interpretCravingStatic()` with AI structured output while keeping scoring deterministic.
+
+---
+
+## 11. Claude Review Instructions
+
+Claude should read `projects/01-cravewise/docs/CLAUDE_REVIEW_PACKET_4E.md` first for the Milestone 4E review packet.
+
+This project state file remains the broader handoff source of truth.
+
+For quick status review:
+Claude can rely mainly on the review packet plus this file.
+
+For serious product or technical review:
+Claude should read this file first, then inspect:
+- apps/cravewise/app/page.tsx
+- apps/cravewise/data/sampleData.ts
+- apps/cravewise/README.md
+- projects/01-cravewise/docs/PRD.md
+- projects/01-cravewise/docs/MILESTONE_TRACKER.md
+- evals/cravewise/sample_cases.json
+
+Claude should review critically and focus on:
+- product thesis
+- recommendation quality
+- decision logic
+- feedback loop
+- eval coverage
+- portfolio strength
+- risks before AI
+
+Claude should not assume AI, backend, database, MCP, Supabase, or live integrations exist.
+
+---
+
+## 12. Update Rule
+
+After every completed milestone, update this file.
+
+Each milestone update should include:
+- date
+- milestone name
+- what changed
+- product decision made
+- files changed
+- what was intentionally not built
+- new known weaknesses
+- recommended next milestone
+
+This file is the primary handoff document for CraveWise.

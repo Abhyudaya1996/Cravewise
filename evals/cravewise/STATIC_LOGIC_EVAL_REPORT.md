@@ -8,6 +8,40 @@ The logic is intentionally simple and deterministic, which fits Milestone 1. The
 
 No static logic was changed for this eval package.
 
+## 2026-05-14 Update
+
+Milestone 4C adds dynamic local insight summaries to the Insights screen while keeping `getPersonaInsightsStatic(persona)` unchanged. The summaries are derived from browser-local feedback memory for the active persona and use normalized failure reason codes plus reorder intent. Manual evals should now verify that repeated or single saved signals such as `too_oily`, `wrong_craving_match`, `delivery_issue`, `reliability_issue`, `would_not_reorder`, and `not_fresh` appear as honest local demo patterns, and that clearing `cravewise.localFeedbackMemory.v1` removes those dynamic summaries.
+
+## 2026-05-14 Milestone 4D Update
+
+Milestone 4D adds a local dish taxonomy layer and refactors static craving interpretation away from mixed craving/context flags. Manual evals should now inspect `explicitDishIntents`, `cuisineIntents`, `contextSignals`, `preferenceSignals`, `negativeConstraints`, and `budgetSignal`, plus catalog fields such as `dishType`, `preferenceTags`, `contextFit`, `regretRiskFlags`, `reliabilityTags`, `avoidIf`, and `budgetTier`.
+
+Known regression checks remain mandatory: Simran asking for `pizza but not cheese overloaded` must not receive Dal Makhani, Weekday Rush should favor reliable fast options, and browser-local `too_oily` memory should still penalize oily/fried future recommendations.
+
+## 2026-05-14 Milestone 4E Update
+
+Milestone 4E audits taxonomy separation, standardizes negative constraints on the `avoid_*` convention, removes `not_oily` from positive `preferenceSignals`, and adds internal score breakdowns to recommendations.
+
+The local static eval runner is:
+
+```bash
+node evals/cravewise/run_static_evals.js
+```
+
+Latest run: `CraveWise static evals passed: 8/8`.
+
+The runner validates selected machine-readable cases for structured signals, avoid flags, expected top recommendation, memory-influenced behavior, and `scoreBreakdown.finalScore === recommendation.score`.
+
+## 2026-05-14 Milestone 4F Update
+
+Claude's Milestone 4E review identified two required pre-AI cleanup items and one eval gap. Milestone 4F resolves them:
+
+- `heavy_late_night` is no longer used as a context-free catalog flag; heavy items use `heavy_meal`.
+- Negative constraints remain hard user boundaries and are enforced by filtering returned recommendations.
+- The dead `-90` `negativeConstraintPenalty` path was removed from normal scoring.
+- The too-oily memory machine-check case includes `mustAvoidFlags` for `avoid_oily` and `fried_oily`, proving the new top recommendation avoids oily/fried flags.
+- Code comments now document scoring weight principles and why `sleepy` maps to `avoid_heavy`.
+
 ## Static Logic File Paths Found
 
 Expected file:
@@ -55,7 +89,7 @@ Actual status:
 ### `scoreRecommendationStatic()`
 
 - Actual file path: `apps/cravewise/data/sampleData.ts`
-- Signature found: `scoreRecommendationStatic(persona: Persona, context: DecisionContext): Recommendation[]`
+- Signature found: `scoreRecommendationStatic(persona: Persona, context: DecisionContext, feedbackMemory?: ScoringFeedbackMemory[]): Recommendation[]`
 - Input shape inferable:
   - `Persona`
   - `DecisionContext`
@@ -99,10 +133,10 @@ Actual status:
   - Whether skipped feedback should produce low regret or no classification.
   - Whether failure reasons should use display strings or normalized ids.
 
-### `generateInsightsStatic()`
+### `getPersonaInsightsStatic()`
 
 - Actual file path: `apps/cravewise/data/sampleData.ts`
-- Signature found: `generateInsightsStatic(persona: Persona): string[]`
+- Signature found: `getPersonaInsightsStatic(persona: Persona): string[]`
 - Input shape inferable: `Persona`
 - Output shape inferable: `string[]`
 - Unclear contracts:

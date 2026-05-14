@@ -52,7 +52,7 @@ Functions found:
 - `interpretCravingStatic()`
 - `scoreRecommendationStatic()`
 - `classifyFeedbackStatic()`
-- `generateInsightsStatic()`
+- `getPersonaInsightsStatic()`
 - `getFallbackState()`
 
 ## Eval Coverage
@@ -85,4 +85,3 @@ No build or lint was run because only markdown documentation and memory files ch
 ## Status
 
 REVIEW
-

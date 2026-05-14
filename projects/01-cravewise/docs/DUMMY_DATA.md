@@ -1,4 +1,4 @@
-﻿# CraveWise Sample Data Requirements
+# CraveWise Sample Data Requirements
 
 This file translates the active PRD v1.2 into sample data requirements for the static prototype. It is not a separate product spec. If this file conflicts with `PRD.md`, follow `PRD.md`.
 
@@ -134,6 +134,6 @@ Static/local deterministic utilities may include:
 - `interpretCravingStatic()`
 - `scoreRecommendationStatic()`
 - `classifyFeedbackStatic()`
-- `generateInsightsStatic()`
+- `getPersonaInsightsStatic()`
 
 No AI, MCP, backend, or database calls are allowed in Milestone 1.

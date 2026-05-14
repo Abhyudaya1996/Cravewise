@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   budgetBands,
   BudgetBand,
@@ -8,22 +8,67 @@ import {
   constraintOptions,
   cravingExamples,
   DecisionContext,
+  FallbackState,
+  FailureReasonCode,
+  feedbackReasonLabels,
   explorationOptions,
   feedbackReasons,
-  generateInsightsStatic,
+  getPersonaInsightsStatic,
   getFallbackState,
   getPersona,
   heavinessOptions,
   interpretCravingStatic,
+  normalizeFailureReasonCodes,
   occasions,
   personas,
   Recommendation,
+  ScoringFeedbackMemory,
   scoreRecommendationStatic,
   timeOptions,
 } from "../data/sampleData";
 
 type Step = "home" | "personas" | "profile" | "craving" | "recommendation" | "backups" | "feedback" | "insights";
 type FeedbackChoice = "Loved it" | "Meh" | "Disappointing" | "Skipped" | "";
+type StoredRecommendationType = "primary" | "safer_backup" | "exploratory_backup";
+type StoredFeedbackSentiment = "loved" | "meh" | "disappointing" | "skipped";
+
+type LocalFeedbackMemory = {
+  id: string;
+  personaId: string;
+  personaName: string;
+  decisionContext: {
+    rawCraving: string;
+    budgetRange: string;
+    customBudget?: number;
+    occasion: string;
+    explorationIntent: string;
+    heaviness: string;
+    availableTime?: string;
+    upcomingConstraint?: string;
+  };
+  selectedRecommendation: {
+    dishName: string;
+    restaurantName: string;
+    price: number;
+    type: StoredRecommendationType;
+    regretRisk: "low" | "medium" | "high";
+  };
+  feedback: {
+    sentiment: StoredFeedbackSentiment;
+    reasonChips: string[];
+    customNote?: string;
+  };
+  classification: {
+    sentiment: "positive" | "mixed" | "negative";
+    regretLevel: "low" | "medium" | "high";
+    failureReasons: string[];
+    reorderIntent: "yes" | "maybe" | "no";
+    learning: string;
+  };
+  createdAt: string;
+};
+
+const localFeedbackMemoryKey = "cravewise.localFeedbackMemory.v1";
 
 const steps: Array<{ id: Step; label: string }> = [
   { id: "home", label: "Home" },
@@ -55,15 +100,23 @@ export default function CraveWisePage() {
   const [feedback, setFeedback] = useState<FeedbackChoice>("");
   const [reasonChips, setReasonChips] = useState<string[]>([]);
   const [feedbackText, setFeedbackText] = useState("");
+  const [localFeedbackMemory, setLocalFeedbackMemory] = useState<LocalFeedbackMemory[]>([]);
 
   const persona = useMemo(() => getPersona(selectedPersonaId), [selectedPersonaId]);
   const interpretation = useMemo(() => interpretCravingStatic(context), [context]);
-  const recommendations = useMemo(() => scoreRecommendationStatic(persona, context), [persona, context]);
+  const scoringFeedbackMemory = useMemo(() => localFeedbackMemory.map(toScoringFeedbackMemory), [localFeedbackMemory]);
+  const recommendations = useMemo(() => scoreRecommendationStatic(persona, context, scoringFeedbackMemory), [persona, context, scoringFeedbackMemory]);
   const primaryRecommendation = recommendations[0];
   const backupRecommendations = recommendations.slice(1, 3);
-  const fallbackState = getFallbackState(context, recommendations, interpretation);
+  const fallbackState = getFallbackState(persona, context, recommendations, interpretation);
   const feedbackClassification = classifyFeedbackStatic(feedback, reasonChips, feedbackText);
-  const insights = generateInsightsStatic(persona);
+  const insights = getPersonaInsightsStatic(persona);
+  const personaFeedbackMemory = localFeedbackMemory.filter((memory) => memory.personaId === persona.id);
+  const dynamicLocalInsights = deriveLocalInsightSummaries(personaFeedbackMemory, persona.name);
+
+  useEffect(() => {
+    setLocalFeedbackMemory(readLocalFeedbackMemory());
+  }, []);
 
   function updateContext(patch: Partial<DecisionContext>) {
     setContext((current) => ({ ...current, ...patch }));
@@ -72,6 +125,30 @@ export default function CraveWisePage() {
   function chooseRecommendation(recommendation: Recommendation) {
     setSelectedRecommendation(recommendation);
     setStep("feedback");
+  }
+
+  function continueFromFeedback() {
+    if (feedback !== "Skipped" && feedback !== "" && selectedRecommendation) {
+      const nextMemory = buildLocalFeedbackMemory(
+        persona.id,
+        persona.name,
+        context,
+        selectedRecommendation,
+        feedback,
+        reasonChips,
+        feedbackText,
+        feedbackClassification,
+      );
+      const updatedMemory = [nextMemory, ...localFeedbackMemory].slice(0, 12);
+      writeLocalFeedbackMemory(updatedMemory);
+      setLocalFeedbackMemory(updatedMemory);
+    }
+    setStep("insights");
+  }
+
+  function clearLocalFeedbackMemory() {
+    window.localStorage.removeItem(localFeedbackMemoryKey);
+    setLocalFeedbackMemory([]);
   }
 
   function toggleReason(reason: string) {
@@ -164,32 +241,54 @@ export default function CraveWisePage() {
 
       {step === "recommendation" && (
         <Screen eyebrow="Tonight's pick" title="One confident answer">
-          <RecommendationHeroCard recommendation={primaryRecommendation} personaName={persona.name} context={context} />
-          <TrustReasonBlock recommendation={primaryRecommendation} />
-          <AvoidedPatternsBlock note={primaryRecommendation.avoidedNote} fallbackState={fallbackState} />
-          <div className="action-row">
-            <button className="primary-action" onClick={() => chooseRecommendation(primaryRecommendation)}>
-              I'll order this
-            </button>
-            <button className="secondary-action" onClick={() => setStep("backups")}>
-              Not feeling this?
-            </button>
-          </div>
+          {fallbackState.shouldSuppressPrimaryRecommendation ? (
+            <>
+              <FallbackCard fallbackState={fallbackState} />
+              <div className="action-row">
+                <button className="primary-action" onClick={() => setStep("craving")}>
+                  Adjust craving
+                </button>
+                {backupRecommendations.length > 0 && (
+                  <button className="secondary-action" onClick={() => setStep("backups")}>
+                    See limited backups
+                  </button>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <RecommendationHeroCard recommendation={primaryRecommendation} personaName={persona.name} context={context} fallbackState={fallbackState} />
+              <TrustReasonBlock recommendation={primaryRecommendation} />
+              <AvoidedPatternsBlock note={primaryRecommendation.avoidedNote} fallbackState={fallbackState} />
+              <div className="action-row">
+                <button className="primary-action" onClick={() => chooseRecommendation(primaryRecommendation)}>
+                  I'll order this
+                </button>
+                <button className="secondary-action" onClick={() => setStep("backups")}>
+                  Not feeling this?
+                </button>
+              </div>
+            </>
+          )}
         </Screen>
       )}
 
       {step === "backups" && (
         <Screen eyebrow="Only if needed" title="Two backup paths">
           <p className="supporting-copy">Backups stay secondary so CraveWise does not become another browsing grid.</p>
-          <div className="backup-list">
-            {backupRecommendations.map((recommendation) => (
-              <BackupOptionCard
-                key={recommendation.item.id}
-                recommendation={recommendation}
-                onSelect={() => chooseRecommendation(recommendation)}
-              />
-            ))}
-          </div>
+          {backupRecommendations.length > 0 ? (
+            <div className="backup-list">
+              {backupRecommendations.map((recommendation) => (
+                <BackupOptionCard
+                  key={recommendation.item.id}
+                  recommendation={recommendation}
+                  onSelect={() => chooseRecommendation(recommendation)}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="gentle-note">No distinct backup options are available in this dummy catalog for the current constraints.</div>
+          )}
         </Screen>
       )}
 
@@ -220,8 +319,14 @@ export default function CraveWisePage() {
             <span>Static feedback read</span>
             <strong>{feedbackClassification.learning}</strong>
           </div>
-          <button className="primary-action" onClick={() => setStep("insights")}>
-            See what CraveWise learned
+          {feedbackClassification.failure_reasons.length > 0 && (
+            <div className="classification-card subtle">
+              <span>Stored internal signals</span>
+              <strong>{feedbackClassification.failure_reasons.join(", ")}</strong>
+            </div>
+          )}
+          <button className="primary-action" onClick={continueFromFeedback}>
+            {feedback === "Skipped" ? "Skip to insights" : "Save feedback and see insights"}
           </button>
         </Screen>
       )}
@@ -234,6 +339,13 @@ export default function CraveWisePage() {
               <InsightCard key={insight} index={index + 1} insight={insight} />
             ))}
           </div>
+          <LocalDemoMemoryPanel
+            memories={personaFeedbackMemory}
+            dynamicInsights={dynamicLocalInsights}
+            totalMemoryCount={localFeedbackMemory.length}
+            personaName={persona.name}
+            onClear={clearLocalFeedbackMemory}
+          />
           <button className="primary-action" onClick={() => setStep("craving")}>
             Start another recommendation
           </button>
@@ -411,7 +523,7 @@ function CravingInputPanel({
         <p>
           {interpretation.needs_clarification
             ? "This craving is vague, so CraveWise would ask one more question."
-            : `${interpretation.craving_type.join(", ")} craving${interpretation.cuisine_hint ? ` with ${interpretation.cuisine_hint} signal` : ""}.`}
+            : `${formatSignalList(interpretation.preferenceSignals)} craving${interpretation.cuisineIntents.length ? ` with ${interpretation.cuisineIntents.join(", ")} signal` : ""}.`}
         </p>
         {interpretation.needs_clarification && <ChipRow values={["Spicy", "Comforting", "Light", "Surprise me"]} />}
       </div>
@@ -483,19 +595,21 @@ function RecommendationHeroCard({
   recommendation,
   personaName,
   context,
+  fallbackState,
 }: {
   recommendation: Recommendation;
   personaName: string;
   context: DecisionContext;
+  fallbackState: FallbackState;
 }) {
   const item = recommendation.item;
-  const matchScore = Math.min(98, Math.max(54, recommendation.score));
   const deliveryCopy = `${item.estimatedDeliveryMin}-${item.estimatedDeliveryMax} min dummy`;
+  const confidenceLabel = getConfidenceLabel(recommendation.confidence);
   return (
     <article className="recommendation-hero-card">
       <div className="hero-card-top">
         <span>Tonight's pick</span>
-        <strong>{matchScore}% taste match</strong>
+        <strong>{fallbackState.type === "limited_match" ? "Limited confidence" : confidenceLabel}</strong>
       </div>
       <h2>{item.dishName}</h2>
       <p className="restaurant-line">{item.restaurantName}</p>
@@ -505,16 +619,45 @@ function RecommendationHeroCard({
         <Metric label="Regret risk" value={item.regretRisk} />
         <Metric label="Budget fit" value={recommendation.budgetFit} />
         <Metric label="Exploration" value={context.explorationIntent.replace("_", " ")} />
+        <Metric label="Confidence" value={fallbackState.type === "limited_match" ? "Limited confidence" : confidenceLabel} />
       </div>
       <p className="hero-reason">
         {recommendation.reason}
       </p>
+      {recommendation.memoryNotes.length > 0 && <LocalMemoryInfluenceNote notes={recommendation.memoryNotes} />}
       <div className="decision-badges">
-        <span>{recommendation.confidence} confidence</span>
+        <span>{fallbackState.type === "limited_match" ? "Limited confidence" : confidenceLabel}</span>
         <span>{personaName}'s taste memory</span>
         <span>Dummy data only</span>
       </div>
     </article>
+  );
+}
+
+function LocalMemoryInfluenceNote({ notes }: { notes: string[] }) {
+  return (
+    <section className="memory-influence-note">
+      <span>Local demo memory affected this recommendation</span>
+      <p>{notes[0]}</p>
+      <small>Based on feedback saved in this browser only. You can clear it anytime.</small>
+    </section>
+  );
+}
+
+function FallbackCard({ fallbackState }: { fallbackState: FallbackState }) {
+  return (
+    <section className={`fallback-card ${fallbackState.severity}`}>
+      <span>{fallbackState.severity === "blocking" ? "Recommendation paused" : "Recommendation note"}</span>
+      <h2>{fallbackState.title}</h2>
+      <p>{fallbackState.message}</p>
+      {fallbackState.suggestedActions && (
+        <div className="chip-row">
+          {fallbackState.suggestedActions.map((action) => (
+            <span key={action}>{action}</span>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -547,12 +690,12 @@ function TrustReasonBlock({ recommendation }: { recommendation: Recommendation }
   );
 }
 
-function AvoidedPatternsBlock({ note, fallbackState }: { note: string; fallbackState: string }) {
+function AvoidedPatternsBlock({ note, fallbackState }: { note: string; fallbackState: FallbackState }) {
   return (
     <section className="avoided-patterns-block">
       <span>What CraveWise avoided</span>
       <p>{note}</p>
-      <small>{fallbackState}</small>
+      <small>{fallbackState.message}</small>
     </section>
   );
 }
@@ -616,6 +759,79 @@ function InsightCard({ index, insight }: { index: number; insight: string }) {
   );
 }
 
+function LocalDemoMemoryPanel({
+  memories,
+  dynamicInsights,
+  totalMemoryCount,
+  personaName,
+  onClear,
+}: {
+  memories: LocalFeedbackMemory[];
+  dynamicInsights: LocalInsightSummary[];
+  totalMemoryCount: number;
+  personaName: string;
+  onClear: () => void;
+}) {
+  return (
+    <section className="local-demo-memory-panel">
+      <div className="local-memory-head">
+        <div>
+          <span>Local demo memory from this browser</span>
+          <p>
+            Saved feedback stays in this browser only. It is not AI memory, backend persistence, or cross-device personalization.
+          </p>
+        </div>
+        <button className="text-action" onClick={onClear} disabled={totalMemoryCount === 0}>
+          Clear local demo memory
+        </button>
+      </div>
+      {memories.length > 0 ? (
+        <>
+          <section className="dynamic-local-insights" aria-label={`Local demo memory patterns for ${personaName}`}>
+            <div>
+              <span>Based on feedback saved in this browser</span>
+              <p>Local demo memory patterns for {personaName}. These disappear when local demo memory is cleared.</p>
+            </div>
+            {dynamicInsights.length > 0 ? (
+              <div className="dynamic-local-insight-list">
+                {dynamicInsights.map((insight) => (
+                  <article key={insight.title}>
+                    <strong>{insight.title}</strong>
+                    <p>{insight.body}</p>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <div className="local-memory-empty">
+                Feedback is saved for {personaName}, but there is not enough repeated local pattern data yet.
+              </div>
+            )}
+          </section>
+          <div className="local-memory-list">
+            {memories.slice(0, 4).map((memory) => (
+              <article key={memory.id}>
+                <span>{formatFeedbackDate(memory.createdAt)}</span>
+                <p>{buildLocalMemoryInsight(memory)}</p>
+              </article>
+            ))}
+          </div>
+        </>
+      ) : (
+        <div className="local-memory-empty">
+          {totalMemoryCount > 0
+            ? `No saved local feedback for ${personaName} yet. Other persona demo feedback is stored in this browser.`
+            : "No local demo feedback saved yet. Submit feedback after a recommendation to see this section update after refresh."}
+        </div>
+      )}
+    </section>
+  );
+}
+
+type LocalInsightSummary = {
+  title: string;
+  body: string;
+};
+
 function ChipSelector<T extends string>({
   label,
   values,
@@ -649,4 +865,240 @@ function ChipRow({ values }: { values: string[] }) {
       ))}
     </div>
   );
+}
+
+function formatSignalList(values: string[]): string {
+  return values.length ? values.map((value) => value.replace("_", " ")).join(", ") : "comfort";
+}
+
+function readLocalFeedbackMemory(): LocalFeedbackMemory[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const rawMemory = window.localStorage.getItem(localFeedbackMemoryKey);
+    if (!rawMemory) return [];
+    const parsed = JSON.parse(rawMemory);
+    return Array.isArray(parsed) ? parsed.filter(isLocalFeedbackMemory) : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeLocalFeedbackMemory(memories: LocalFeedbackMemory[]) {
+  window.localStorage.setItem(localFeedbackMemoryKey, JSON.stringify(memories));
+}
+
+function isLocalFeedbackMemory(value: unknown): value is LocalFeedbackMemory {
+  if (!value || typeof value !== "object") return false;
+  const memory = value as Partial<LocalFeedbackMemory>;
+  return Boolean(
+    memory.id &&
+      memory.personaId &&
+      memory.personaName &&
+      memory.decisionContext &&
+      memory.selectedRecommendation &&
+      memory.feedback &&
+      memory.classification &&
+      memory.createdAt,
+  );
+}
+
+function buildLocalFeedbackMemory(
+  personaId: string,
+  personaName: string,
+  context: DecisionContext,
+  selectedRecommendation: Recommendation,
+  feedback: Exclude<FeedbackChoice, "" | "Skipped">,
+  reasonChips: string[],
+  feedbackText: string,
+  classification: ReturnType<typeof classifyFeedbackStatic>,
+): LocalFeedbackMemory {
+  const customBudget = Number(context.customBudget.match(/\d+/)?.[0]);
+  return {
+    id: `${Date.now()}-${selectedRecommendation.item.id}`,
+    personaId,
+    personaName,
+    decisionContext: {
+      rawCraving: context.cravingText,
+      budgetRange: context.budgetBand,
+      ...(Number.isFinite(customBudget) ? { customBudget } : {}),
+      occasion: context.occasion,
+      explorationIntent: context.explorationIntent,
+      heaviness: context.heaviness,
+      availableTime: context.availableTime,
+      upcomingConstraint: context.upcomingConstraint,
+    },
+    selectedRecommendation: {
+      dishName: selectedRecommendation.item.dishName,
+      restaurantName: selectedRecommendation.item.restaurantName,
+      price: selectedRecommendation.item.price,
+      type: mapRecommendationType(selectedRecommendation.type),
+      regretRisk: selectedRecommendation.item.regretRisk,
+    },
+    feedback: {
+      sentiment: mapFeedbackSentiment(feedback),
+      reasonChips,
+      ...(feedbackText.trim() ? { customNote: feedbackText.trim() } : {}),
+    },
+    classification: {
+      sentiment: classification.sentiment,
+      regretLevel: classification.regret_level,
+      failureReasons: normalizeFailureReasonCodes(classification.failure_reasons),
+      reorderIntent: classification.reorder_intent,
+      learning: classification.learning,
+    },
+    createdAt: new Date().toISOString(),
+  };
+}
+
+function mapRecommendationType(type: Recommendation["type"]): StoredRecommendationType {
+  if (type === "safe") return "safer_backup";
+  if (type === "explore") return "exploratory_backup";
+  return "primary";
+}
+
+function mapFeedbackSentiment(feedback: Exclude<FeedbackChoice, "" | "Skipped">): StoredFeedbackSentiment {
+  if (feedback === "Loved it") return "loved";
+  if (feedback === "Disappointing") return "disappointing";
+  return "meh";
+}
+
+function deriveLocalInsightSummaries(memories: LocalFeedbackMemory[], personaName: string): LocalInsightSummary[] {
+  const reasonCounts = new Map<FailureReasonCode, number>();
+  let wouldReorderCount = 0;
+  let wouldNotReorderCount = 0;
+
+  memories.forEach((memory) => {
+    const reasons = getMemoryReasonCodes(memory);
+    reasons.forEach((reason) => reasonCounts.set(reason, (reasonCounts.get(reason) ?? 0) + 1));
+
+    if (memory.classification.reorderIntent === "yes" || reasons.includes("would_reorder")) {
+      wouldReorderCount += 1;
+    }
+
+    if (memory.classification.reorderIntent === "no" || reasons.includes("would_not_reorder")) {
+      wouldNotReorderCount += 1;
+    }
+  });
+
+  const insights: LocalInsightSummary[] = [];
+  const tooOilyCount = reasonCounts.get("too_oily") ?? 0;
+  const wrongCravingCount = reasonCounts.get("wrong_craving_match") ?? 0;
+  const deliveryIssueCount = (reasonCounts.get("delivery_issue") ?? 0) + (reasonCounts.get("reliability_issue") ?? 0);
+  const notFreshCount = reasonCounts.get("not_fresh") ?? 0;
+
+  if (tooOilyCount > 0) {
+    insights.push({
+      title: tooOilyCount > 1 ? "Repeated too-oily feedback" : "Too-oily feedback saved",
+      body: `${formatCount(tooOilyCount, "meal")} included ${feedbackReasonLabels.too_oily}. Local scoring can treat oily or fried options more cautiously for ${personaName}.`,
+    });
+  }
+
+  if (wrongCravingCount > 0) {
+    insights.push({
+      title: "Craving-match miss",
+      body: `${formatCount(wrongCravingCount, "recommendation")} included ${feedbackReasonLabels.wrong_craving_match}. Local scoring can give explicit dish or cuisine hints more weight.`,
+    });
+  }
+
+  if (wouldReorderCount > 0) {
+    insights.push({
+      title: "Would-reorder signal",
+      body: `${formatCount(wouldReorderCount, "meal")} carried a would-reorder signal. Similar dishes or restaurants can get a modest local boost.`,
+    });
+  }
+
+  if (wouldNotReorderCount > 0) {
+    insights.push({
+      title: "Would-not-reorder signal",
+      body: `${formatCount(wouldNotReorderCount, "meal")} carried a would-not-reorder signal. The same dish or restaurant can be modestly penalized in this browser.`,
+    });
+  }
+
+  if (deliveryIssueCount > 0) {
+    insights.push({
+      title: "Delivery or reliability issue",
+      body: `${formatCount(deliveryIssueCount, "feedback item")} mentioned delivery or reliability. Weekday Rush choices can prefer faster, higher-reliability dummy options.`,
+    });
+  }
+
+  if (notFreshCount > 0) {
+    insights.push({
+      title: "Freshness concern",
+      body: `${formatCount(notFreshCount, "meal")} included ${feedbackReasonLabels.not_fresh}. Local scoring can treat the same restaurant and slower reliability-sensitive options more cautiously.`,
+    });
+  }
+
+  return insights.slice(0, 5);
+}
+
+function getMemoryReasonCodes(memory: LocalFeedbackMemory): FailureReasonCode[] {
+  return normalizeFailureReasonCodes([
+    ...memory.classification.failureReasons,
+    ...memory.feedback.reasonChips,
+  ]);
+}
+
+function formatCount(count: number, noun: string): string {
+  return `${count} ${noun}${count === 1 ? "" : "s"}`;
+}
+
+function buildLocalMemoryInsight(memory: LocalFeedbackMemory): string {
+  const dish = memory.selectedRecommendation.dishName;
+  const restaurant = memory.selectedRecommendation.restaurantName;
+  const label = memory.feedback.sentiment === "loved"
+    ? "Loved"
+    : memory.feedback.sentiment === "disappointing"
+      ? "Disappointing"
+      : "Meh";
+  const reasons = memory.feedback.reasonChips.length ? ` because of ${memory.feedback.reasonChips.join(", ")}` : "";
+  const context = `${memory.decisionContext.occasion.toLowerCase()} ${memory.decisionContext.rawCraving}`;
+  const failureReasons = normalizeFailureReasonCodes(memory.classification.failureReasons);
+
+  if (failureReasons.includes("wrong_craving_match")) {
+    return "CraveWise missed your explicit craving in one recommendation. This browser's local scoring now gives explicit dish/cuisine hints more weight.";
+  }
+
+  if (memory.classification.regretLevel === "high") {
+    return `You marked ${dish} from ${restaurant} as ${label}${reasons}. This browser's local scoring can now penalize similar patterns.`;
+  }
+
+  if (memory.classification.reorderIntent === "yes") {
+    return `You marked ${dish} from ${restaurant} as ${label}. This browser's local scoring can now modestly boost similar reorder patterns.`;
+  }
+
+  return `You marked ${dish} from ${restaurant} as ${label}${reasons} for ${context}. Saved for local demo review in this browser.`;
+}
+
+function toScoringFeedbackMemory(memory: LocalFeedbackMemory): ScoringFeedbackMemory {
+  return {
+    personaId: memory.personaId,
+    decisionContext: {
+      rawCraving: memory.decisionContext.rawCraving,
+      occasion: memory.decisionContext.occasion,
+      availableTime: memory.decisionContext.availableTime,
+      upcomingConstraint: memory.decisionContext.upcomingConstraint,
+    },
+    selectedRecommendation: {
+      dishName: memory.selectedRecommendation.dishName,
+      restaurantName: memory.selectedRecommendation.restaurantName,
+      price: memory.selectedRecommendation.price,
+    },
+    feedback: memory.feedback,
+    classification: {
+      ...memory.classification,
+      failureReasons: normalizeFailureReasonCodes(memory.classification.failureReasons),
+    },
+  };
+}
+
+function formatFeedbackDate(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Saved locally";
+  return `Saved locally ${date.toLocaleDateString("en-IN", { month: "short", day: "numeric" })}`;
+}
+
+function getConfidenceLabel(confidence: Recommendation["confidence"]): string {
+  if (confidence === "high") return "Strong match";
+  if (confidence === "medium") return "Medium match";
+  return "Limited confidence";
 }

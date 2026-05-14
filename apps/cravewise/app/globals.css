@@ -184,12 +184,15 @@ p {
 .taste-memory-panel,
 .craving-input-panel,
 .recommendation-hero-card,
+.memory-influence-note,
+.fallback-card,
 .trust-reason-block,
 .avoided-patterns-block,
 .backup-option-card,
 .selected-meal,
 .classification-card,
 .insight-card,
+.local-demo-memory-panel,
 .gentle-note,
 .interpretation-card {
   border: 1px solid var(--line);
@@ -368,6 +371,8 @@ p {
 .persona-card span,
 .past-orders > span,
 .memory-panel-head span,
+.memory-influence-note span,
+.fallback-card span,
 .trust-reason-block span,
 .avoided-patterns-block span,
 .backup-option-card > span,
@@ -569,6 +574,33 @@ p {
   padding: 22px;
 }
 
+.fallback-card {
+  display: grid;
+  gap: 12px;
+  border-color: rgba(185, 71, 47, 0.34);
+  background: #fff8f2;
+  padding: 20px;
+}
+
+.fallback-card.warning {
+  border-color: rgba(243, 210, 139, 0.9);
+  background: #fffaf0;
+}
+
+.fallback-card.info {
+  border-color: rgba(83, 107, 70, 0.28);
+  background: var(--olive-soft);
+}
+
+.fallback-card h2 {
+  font-size: 26px;
+}
+
+.fallback-card p {
+  color: var(--ink);
+  font-weight: 720;
+}
+
 .hero-card-top {
   display: flex;
   justify-content: space-between;
@@ -612,6 +644,31 @@ p {
   font-weight: 750;
 }
 
+.memory-influence-note {
+  display: grid;
+  gap: 7px;
+  border-color: rgba(83, 107, 70, 0.28);
+  background: var(--olive-soft);
+  padding: 14px;
+  box-shadow: none;
+}
+
+.memory-influence-note p {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.memory-influence-note small {
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.classification-card.subtle {
+  box-shadow: none;
+  background: var(--cream);
+}
+
 .decision-badges span:first-child {
   border-color: rgba(83, 107, 70, 0.28);
   background: var(--olive-soft);
@@ -621,7 +678,8 @@ p {
 .trust-reason-block,
 .avoided-patterns-block,
 .backup-option-card,
-.insight-card {
+.insight-card,
+.local-demo-memory-panel {
   display: grid;
   gap: 10px;
   padding: 16px;
@@ -711,6 +769,104 @@ p {
   font-weight: 720;
 }
 
+.local-demo-memory-panel {
+  border-color: rgba(83, 107, 70, 0.28);
+  background: var(--olive-soft);
+}
+
+.local-memory-head {
+  display: grid;
+  gap: 12px;
+}
+
+.local-memory-head div {
+  display: grid;
+  gap: 6px;
+}
+
+.local-memory-head span,
+.local-memory-list article span {
+  color: var(--olive);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.local-memory-head p {
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.local-memory-list {
+  display: grid;
+  gap: 10px;
+}
+
+.dynamic-local-insights {
+  display: grid;
+  gap: 10px;
+}
+
+.dynamic-local-insights > div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.dynamic-local-insights span,
+.dynamic-local-insight-list article strong {
+  color: var(--olive);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.dynamic-local-insights > div:first-child p {
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.dynamic-local-insight-list {
+  display: grid;
+  gap: 8px;
+}
+
+.local-memory-list article,
+.dynamic-local-insight-list article,
+.local-memory-empty {
+  display: grid;
+  gap: 6px;
+  border: 1px solid rgba(83, 107, 70, 0.18);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72);
+  padding: 12px;
+}
+
+.local-memory-list article p,
+.dynamic-local-insight-list article p,
+.local-memory-empty {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 720;
+  line-height: 1.45;
+}
+
+.text-action {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid rgba(83, 107, 70, 0.24);
+  border-radius: 16px;
+  background: #fff;
+  color: var(--olive);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.text-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.56;
+}
+
 @media (min-width: 760px) {
   .app-shell {
     align-items: center;
@@ -755,5 +911,15 @@ p {
 
   .reason-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .local-memory-head {
+    grid-template-columns: 1fr auto;
+    align-items: start;
+  }
+
+  .text-action {
+    width: auto;
+    min-width: 190px;
   }
 }

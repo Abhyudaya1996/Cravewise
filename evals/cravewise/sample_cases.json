@@ -1,22 +1,508 @@
 [
   {
-    "id": "late_night_fried_regret",
-    "input": "I want spicy fried food at 11 PM under 300",
-    "profile_signal": "User often regrets fried food late night",
+    "id": "vague_craving_clarification",
+    "category": "vague craving",
+    "input": "kuch accha",
+    "persona": "Abhyudaya",
     "expected": [
-      "flag regret risk",
-      "offer lighter spicy swap",
-      "avoid shaming language"
+      "mark interpretation confidence as low",
+      "ask for one more signal",
+      "show clarification chips",
+      "do not present a fake high-confidence recommendation"
     ]
   },
   {
-    "id": "budget_limit",
-    "input": "I want something filling under 200",
-    "profile_signal": "Budget sensitive user",
+    "id": "budget_too_low",
+    "category": "budget too low",
+    "input": "premium bowl under 150",
+    "persona": "Simran",
     "expected": [
-      "stay under budget",
-      "explain value",
-      "do not recommend premium meals"
+      "make the budget constraint explicit",
+      "offer budget-safe options or suggest increasing budget",
+      "do not claim an above-budget item fits"
+    ]
+  },
+  {
+    "id": "high_regret_risk",
+    "category": "high regret risk",
+    "input": "spicy fried momos late night under 300",
+    "persona": "Abhyudaya",
+    "expected": [
+      "avoid high-regret fried late-night option as primary",
+      "explain the avoided oily late-night pattern",
+      "offer a lower-regret alternative"
+    ]
+  },
+  {
+    "id": "weekday_rush_burrito",
+    "category": "Weekday Rush",
+    "input": "mexican burrito before a meeting in 20 mins",
+    "persona": "Kushagra",
+    "expected": [
+      "select or favor Classic Chicken Burrito from Baja Bowl Co. when Weekday Rush controls are set",
+      "mention dummy ETA and meeting-safe fit",
+      "avoid implying real-time availability"
+    ]
+  },
+  {
+    "id": "unsafe_nutrition_medical_claim",
+    "category": "unsafe nutrition/medical claim",
+    "input": "what should I order to cure acidity and reduce cholesterol tonight",
+    "persona": "Kartik",
+    "expected": [
+      "do not provide medical advice",
+      "do not claim a dish cures or treats a condition",
+      "keep any response framed as taste, heaviness, and comfort preference only"
+    ]
+  },
+  {
+    "id": "feedback_classification_too_oily",
+    "category": "feedback classification",
+    "input": "sentiment=Disappointing; reasons=Too oily, Would not reorder; note=not worth it",
+    "persona": "Abhyudaya",
+    "expected": [
+      "store negative or mixed classification",
+      "set regret level high",
+      "set reorder intent no",
+      "include too_oily as the normalized internal failure reason",
+      "include would_not_reorder as the normalized internal failure reason"
+    ]
+  },
+  {
+    "id": "too_oily_memory_late_night_penalty",
+    "category": "local feedback-influenced scoring",
+    "persona": "Abhyudaya",
+    "initial_input": "fried momos late night",
+    "feedback": "Disappointing + Too oily",
+    "next_input": "spicy fried snack late night",
+    "expected": [
+      "normalize old or new Too oily labels to too_oily",
+      "penalize oily/fried or same rejected item patterns",
+      "apply stronger penalty in late-night/fried snack context",
+      "show local demo memory influence note"
+    ]
+  },
+  {
+    "id": "wrong_craving_match_memory_strengthens_intent",
+    "category": "local feedback-influenced scoring",
+    "persona": "Simran",
+    "feedback": "Ignored my craving",
+    "next_input": "pizza but not cheese overloaded",
+    "expected": [
+      "normalize ignored craving feedback to wrong_craving_match",
+      "strengthen explicit dish/cuisine intent",
+      "do not allow persona defaults to override explicit pizza intent"
+    ]
+  },
+  {
+    "id": "delivery_issue_memory_weekday_rush",
+    "category": "local feedback-influenced scoring",
+    "persona": "Kushagra",
+    "feedback": "Delivery issue or Reliability issue",
+    "next_input": "lunch in 20 mins meeting after this mexican burrito",
+    "expected": [
+      "normalize delivery/reliability feedback to internal codes",
+      "penalize low reliability or high ETA options",
+      "apply stronger penalty in Weekday Rush or meeting context"
+    ]
+  },
+  {
+    "id": "would_reorder_memory_modest_boost",
+    "category": "local feedback-influenced scoring",
+    "persona": "Simran",
+    "feedback": "Loved it + Would reorder",
+    "next_input": "filling lunch",
+    "expected": [
+      "normalize reorder signal to would_reorder",
+      "modestly boost same dish or same restaurant",
+      "do not override explicit current craving"
+    ]
+  },
+  {
+    "id": "would_not_reorder_reason_persisted",
+    "category": "feedback reason normalization",
+    "persona": "Abhyudaya",
+    "input": "sentiment=Disappointing; reasons=Would not reorder; note=not worth it",
+    "expected": [
+      "normalize Would not reorder to would_not_reorder",
+      "set reorder intent no",
+      "store would_not_reorder as a usable failure reason"
+    ]
+  },
+  {
+    "id": "would_not_reorder_memory_penalty",
+    "category": "local feedback-influenced scoring",
+    "persona": "Abhyudaya",
+    "feedback": "Disappointing + Would not reorder for Chilli Garlic Noodles",
+    "next_input": "spicy noodles",
+    "expected": [
+      "penalize the same dish modestly",
+      "penalize the same restaurant modestly",
+      "do not let memory override explicit current craving or hard constraints"
+    ]
+  },
+  {
+    "id": "not_fresh_reason_persisted",
+    "category": "feedback reason normalization",
+    "persona": "Kushagra",
+    "input": "sentiment=Meh; reasons=Not fresh; note=cold and stale",
+    "expected": [
+      "normalize Not fresh to not_fresh",
+      "store not_fresh as a usable failure reason",
+      "continue to support legacy labels such as Not fresh from localStorage"
+    ]
+  },
+  {
+    "id": "not_fresh_memory_penalty",
+    "category": "local feedback-influenced scoring",
+    "persona": "Kushagra",
+    "feedback": "Disappointing + Not fresh",
+    "next_input": "quick lunch before meeting",
+    "expected": [
+      "penalize the same restaurant modestly",
+      "treat lower-reliability or slower options more cautiously in freshness-sensitive contexts",
+      "show local demo memory influence note when scoring changes"
+    ]
+  },
+  {
+    "id": "legacy_feedback_labels_still_normalize",
+    "category": "feedback reason normalization",
+    "input": "legacy localStorage failureReasons=[Too oily, Would not reorder, Not fresh]",
+    "persona": "Any",
+    "expected": [
+      "normalize Too oily to too_oily",
+      "normalize Would not reorder to would_not_reorder",
+      "normalize Not fresh to not_fresh",
+      "do not drop legacy display labels during scoring"
+    ]
+  },
+  {
+    "id": "clear_local_memory_removes_influence",
+    "category": "local feedback-influenced scoring",
+    "persona": "Any",
+    "input": "clear local demo memory, then repeat a previous memory-influenced case",
+    "expected": [
+      "remove records under cravewise.localFeedbackMemory.v1",
+      "remove memory influence notes",
+      "return to normal static scoring behavior"
+    ]
+  },
+  {
+    "id": "catalog_size_25_to_30_items",
+    "category": "catalog expansion",
+    "input": "inspect menuCatalog",
+    "persona": "Any",
+    "expected": [
+      "catalog contains between 25 and 30 dummy menu items",
+      "existing regression anchor items remain present",
+      "items include complete fields required by MenuItem"
+    ]
+  },
+  {
+    "id": "persona_catalog_coverage",
+    "category": "catalog expansion",
+    "input": "inspect personaFit coverage",
+    "persona": "Any",
+    "expected": [
+      "each demo persona has at least 4 plausible matching items",
+      "catalog covers budget lunch, Weekday Rush, group order, pizza, Mexican, Asian, North Indian, South Indian, and healthy/light scenarios"
+    ]
+  },
+  {
+    "id": "abhyudaya_oily_memory_changes_recommendation",
+    "category": "catalog expansion",
+    "persona": "Abhyudaya",
+    "initial_input": "fried momos late night",
+    "feedback": "Disappointing + Too oily",
+    "next_input": "spicy fried snack late night",
+    "expected": [
+      "without local memory, an oily/fried spicy snack can rank strongly",
+      "with too_oily local memory, oily/fried options are penalized",
+      "a lower-oil spicy alternative can become the primary recommendation",
+      "local demo memory influence note is shown"
+    ]
+  },
+  {
+    "id": "weekday_rush_mexican_catalog_depth",
+    "category": "catalog expansion",
+    "persona": "Kushagra",
+    "input": "lunch in 20 mins meeting after this mexican burrito",
+    "expected": [
+      "catalog has at least two Mexican or burrito options with different ETA/reliability profiles",
+      "fast reliable burrito option is preferred",
+      "slow or low-reliability Mexican option is penalized when delivery/reliability memory exists"
+    ]
+  },
+  {
+    "id": "piyush_deal_trap_guardrail",
+    "category": "catalog expansion",
+    "persona": "Piyush",
+    "input": "cheap pizza deal",
+    "expected": [
+      "avoid high-regret deal-trap items as primary",
+      "prefer a better-value pizza option when available",
+      "do not imply a real discount or live offer"
+    ]
+  },
+  {
+    "id": "pransih_group_safe_catalog_depth",
+    "category": "catalog expansion",
+    "persona": "Pransih",
+    "input": "group dinner something safe",
+    "expected": [
+      "prefer a group-safe broad-appeal option",
+      "avoid polarizing experimental item as primary",
+      "keep backup options distinct"
+    ]
+  },
+  {
+    "id": "simran_pizza_not_cheese_overloaded_regression",
+    "category": "explicit dish intent",
+    "input": "pizza but not cheese overloaded",
+    "persona": "Simran",
+    "budget": "Custom Rs.800",
+    "machineCheck": true,
+    "context": {
+      "budgetBand": "Custom",
+      "customBudget": "800"
+    },
+    "mustIncludeDishType": "pizza",
+    "mustIncludeCuisine": "Pizza",
+    "mustAvoidFlags": ["avoid_cheese_heavy", "cheese_heavy"],
+    "mustIncludeNegativeConstraints": ["avoid_cheese_heavy"],
+    "mustNotRecommendDishName": "Dal Makhani Rice Bowl",
+    "expected": [
+      "recommend a non-cheese-heavy pizza if available",
+      "otherwise show static data limitation fallback",
+      "must not recommend Dal Makhani or unrelated North Indian comfort food as primary",
+      "avoid cheese-heavy pizza when the user says not cheese overloaded"
+    ]
+  },
+  {
+    "id": "local_feedback_memory_persistence",
+    "category": "local feedback memory persistence",
+    "input": "submit Loved it feedback for Chilli Garlic Noodles, refresh, open Insights",
+    "persona": "Abhyudaya",
+    "expected": [
+      "persist feedback under cravewise.localFeedbackMemory.v1",
+      "show Local demo memory from this browser",
+      "show a saved feedback insight after refresh",
+      "allow Clear local demo memory to remove only CraveWise local feedback"
+    ]
+  },
+  {
+    "id": "dynamic_local_insights_reason_summaries",
+    "category": "dynamic local insights",
+    "persona": "Abhyudaya",
+    "input": "save local feedback for Disappointing + Too oily, then open Insights",
+    "expected": [
+      "keep the static persona insight cards visible",
+      "show a separate Local demo memory pattern summary labeled Based on feedback saved in this browser",
+      "derive the too_oily summary from normalized failure reason codes",
+      "avoid claiming AI memory, permanent learning, backend persistence, or cross-device personalization"
+    ]
+  },
+  {
+    "id": "dynamic_local_insights_clear_reset",
+    "category": "dynamic local insights",
+    "persona": "Any",
+    "input": "clear local demo memory after dynamic summaries are visible",
+    "expected": [
+      "remove records under cravewise.localFeedbackMemory.v1",
+      "remove dynamic local insight summaries for the active persona",
+      "show the empty local demo memory copy",
+      "leave static persona insights unchanged"
+    ]
+  },
+  {
+    "id": "taxonomy_spicy_but_not_oily",
+    "category": "local dish taxonomy",
+    "persona": "Abhyudaya",
+    "input": "spicy but not oily",
+    "machineCheck": true,
+    "mustIncludePreferenceSignals": ["spicy"],
+    "mustNotIncludePreferenceSignals": ["not_oily"],
+    "mustIncludeNegativeConstraints": ["avoid_oily"],
+    "mustAvoidFlags": ["avoid_oily", "fried_oily"],
+    "expected": [
+      "interpret craving into preferenceSignals including spicy",
+      "interpret negativeConstraints including avoid_oily",
+      "do not mix late_night or fried_snack into a generic craving_type bucket",
+      "prefer spicy options that do not match oily/fried avoid constraints"
+    ]
+  },
+  {
+    "id": "taxonomy_late_night_but_light",
+    "category": "local dish taxonomy",
+    "persona": "Kartik",
+    "input": "late night but light",
+    "machineCheck": true,
+    "context": {
+      "occasion": "Late night",
+      "heaviness": "Light"
+    },
+    "mustIncludeContextSignals": ["late_night"],
+    "mustIncludePreferenceSignals": ["light"],
+    "mustIncludeNegativeConstraints": ["avoid_heavy"],
+    "mustAvoidFlags": ["avoid_heavy", "heavy_meal"],
+    "expected": [
+      "interpret late_night as a contextSignal",
+      "interpret light as a preferenceSignal",
+      "interpret avoid_heavy as a negative constraint",
+      "penalize heavy items in late-night context"
+    ]
+  },
+  {
+    "id": "taxonomy_healthy_but_filling",
+    "category": "local dish taxonomy",
+    "persona": "Kartik",
+    "input": "healthy but filling",
+    "machineCheck": true,
+    "context": {
+      "occasion": "Post-work",
+      "heaviness": "Filling"
+    },
+    "mustIncludePreferenceSignals": ["healthy", "filling"],
+    "topMustIncludePreferenceTags": ["healthy"],
+    "expected": [
+      "interpret healthy and filling as preferenceSignals",
+      "prefer healthy/light catalog options that are still satisfying",
+      "do not make medical or nutrition claims"
+    ]
+  },
+  {
+    "id": "taxonomy_group_order_under_budget",
+    "category": "local dish taxonomy",
+    "persona": "Pransih",
+    "input": "group order under 800",
+    "machineCheck": true,
+    "context": {
+      "budgetBand": "Custom",
+      "customBudget": "800",
+      "occasion": "Group order"
+    },
+    "mustIncludeContextSignals": ["group_order"],
+    "topMustIncludePreferenceTags": ["group_safe"],
+    "expected": [
+      "interpret group_order as a contextSignal",
+      "interpret budgetSignal max as 800",
+      "prefer group_safe or sharing options under the budget",
+      "avoid implying real restaurant availability"
+    ]
+  },
+  {
+    "id": "taxonomy_weekday_rush_reliable_option",
+    "category": "local dish taxonomy",
+    "persona": "Kushagra",
+    "input": "weekday rush reliable lunch before meeting",
+    "machineCheck": true,
+    "context": {
+      "occasion": "Weekday Rush",
+      "upcomingConstraint": "Meeting soon",
+      "explorationIntent": "safe"
+    },
+    "mustIncludeContextSignals": ["weekday_rush", "meeting_soon"],
+    "topMustIncludeReliabilityTags": ["fast_eta", "high_reliability"],
+    "expectedTopRecommendation": "Classic Chicken Burrito",
+    "expected": [
+      "interpret weekday_rush and meeting_soon as contextSignals",
+      "prefer fast_eta and high_reliability catalog items",
+      "penalize slow_eta or low_reliability items",
+      "keep ETA copy labeled as dummy/static"
+    ]
+  },
+  {
+    "id": "taxonomy_simran_pizza_not_cheese_overloaded",
+    "category": "local dish taxonomy",
+    "persona": "Simran",
+    "input": "pizza but not cheese overloaded",
+    "machineCheck": true,
+    "context": {
+      "budgetBand": "Custom",
+      "customBudget": "800"
+    },
+    "mustIncludeDishType": "pizza",
+    "mustIncludeCuisine": "Pizza",
+    "mustAvoidFlags": ["avoid_cheese_heavy", "cheese_heavy"],
+    "mustIncludeNegativeConstraints": ["avoid_cheese_heavy"],
+    "mustNotRecommendDishName": "Dal Makhani Rice Bowl",
+    "expected": [
+      "interpret pizza as an explicitDishIntent",
+      "interpret avoid_cheese_heavy as a negative constraint",
+      "return a pizza or Italian option that does not match cheese-heavy avoid fields, or show an honest fallback",
+      "must not recommend Dal Makhani Rice Bowl"
+    ]
+  },
+  {
+    "id": "taxonomy_too_oily_memory_changes_fried_snack",
+    "category": "local dish taxonomy",
+    "persona": "Abhyudaya",
+    "initial_input": "fried momos late night",
+    "feedback": "Disappointing + Too oily",
+    "next_input": "spicy fried snack late night",
+    "machineCheck": true,
+    "context": {
+      "occasion": "Late night"
+    },
+    "memory": {
+      "rawCraving": "fried momos late night",
+      "occasion": "Late night",
+      "dishName": "Schezwan Fried Momos",
+      "restaurantName": "Crispy Corner",
+      "price": 260,
+      "failureReasons": ["too_oily"]
+    },
+    "mustChangeWithMemory": true,
+    "mustAvoidFlags": ["avoid_oily", "fried_oily"],
+    "expected": [
+      "derive fried snack intent from explicitDishIntents or raw craving text",
+      "use normalized too_oily feedback to penalize items with fried_oily regret flags or avoid_oily fields",
+      "allow a lower-oil spicy alternative to outrank oily/fried snacks and machine-check that it avoids avoid_oily/fried_oily flags",
+      "keep dynamic local insights visible until local demo memory is cleared"
+    ]
+  },
+  {
+    "id": "no_duplicate_backup_cards",
+    "category": "recommendation integrity",
+    "input": "any constrained craving with fewer than three valid dummy matches",
+    "persona": "Any",
+    "expected": [
+      "primary, safer backup, and exploratory backup are distinct when shown",
+      "do not duplicate the same dish card as a backup",
+      "show fewer backups with honest empty copy if distinct options are unavailable"
+    ]
+  },
+  {
+    "id": "active_persona_budget_fallback",
+    "category": "fallback integrity",
+    "input": "custom budget below active persona low-regret range",
+    "persona": "Simran",
+    "expected": [
+      "fallback uses Simran's budget range, not the default Abhyudaya persona",
+      "budget fallback returns a typed object",
+      "blocking fallback suppresses the recommendation hero"
+    ]
+  },
+  {
+    "id": "limited_confidence_suppresses_fake_strength",
+    "category": "confidence integrity",
+    "input": "unsupported or weakly matched craving",
+    "persona": "Kartik",
+    "expected": [
+      "limited match is labeled Limited confidence",
+      "do not display fake strong recommendation copy",
+      "do not inflate weak scores into a percentage"
+    ]
+  },
+  {
+    "id": "qualitative_match_label",
+    "category": "confidence integrity",
+    "input": "normal recommendation flow",
+    "persona": "Abhyudaya",
+    "expected": [
+      "match confidence is shown as Strong match, Medium match, or Limited confidence",
+      "no clamped percentage such as 54% taste match appears",
+      "raw heuristic score is not presented as a calibrated probability"
     ]
   }
 ]

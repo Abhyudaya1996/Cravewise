@@ -2,7 +2,7 @@
 
 ## Current Portfolio State
 
-Status: CraveWise Milestone 4F pre-AI guardrail cleanup implemented after Claude's Milestone 4E review.
+Status: CraveWise Milestone 5A AI structured craving interpretation implemented for review.
 
 ## Active Project
 
@@ -10,7 +10,7 @@ CraveWise.
 
 ## Active Milestone
 
-Milestone 4F pre-AI guardrail cleanup.
+Milestone 5A AI structured craving interpretation.
 
 ## Latest Decisions
 
@@ -63,8 +63,16 @@ Milestone 4F pre-AI guardrail cleanup.
 - Milestone 4F applied the required Claude cleanup: `heavy_late_night` is corrected to `heavy_meal`, negative constraints are hard-filtered instead of also receiving a hidden `-90` penalty, and the too-oily memory eval checks the top recommendation avoids oily/fried flags.
 - Small code comments now document scoring weight principles and why `sleepy` maps to `avoid_heavy`.
 - Direct static logic checks passed; `npm run lint` passed; `npm run build` passed.
+- Milestone 5A adds `apps/cravewise/app/api/interpret-craving/route.ts` for optional server-side AI structured craving interpretation.
+- `OPENAI_API_KEY` stays server-side; `OPENAI_MODEL` is optional and defaults to `gpt-4.1-mini`.
+- The route uses OpenAI Responses API structured outputs with strict JSON schema, `store: false`, and a 5-second timeout.
+- AI output is validated in `apps/cravewise/data/cravingInterpretationValidation.ts` against local taxonomy enum values and the existing `CravingInterpretation` shape.
+- Validation rejects missing fields, invalid enum values, raw-input mismatch, low-quality empty output, and forbidden recommendation/ranking fields.
+- `scoreRecommendationStatic()` can accept a prevalidated interpretation but remains the only final ranking/recommendation layer.
+- The UI adds honest status copy: `AI interpreted your craving`, `Using local rules`, or `AI unavailable, using local rules`.
+- The static eval runner remains offline and now includes four mock AI-output validation checks.
 - `projects/01-cravewise/docs/CRAVEWISE_PROJECT_STATE.md` is now the primary Claude/Codex handoff and review entrypoint for CraveWise.
-- No AI, MCP, backend, database, auth, API routes, Supabase, or live integrations were added.
+- No backend database, MCP, auth, Supabase, live restaurant data, ordering/payment, delivery tracking, or cross-device memory were added.
 
 ## Open Questions
 
@@ -73,7 +81,7 @@ Milestone 4F pre-AI guardrail cleanup.
 
 ## Next Recommended Action
 
-For broader CraveWise context, read `projects/01-cravewise/docs/CRAVEWISE_PROJECT_STATE.md`. Next recommended milestone: begin AI structured craving interpretation by replacing only the signal extraction inside `interpretCravingStatic()` while keeping taxonomy validation and deterministic scoring.
+For broader CraveWise context, read `projects/01-cravewise/docs/CRAVEWISE_PROJECT_STATE.md`. Next recommended milestone: live-key AI interpretation QA and prompt/schema tuning only if outputs fail the local taxonomy contract.
 
 ## Last Updated
 

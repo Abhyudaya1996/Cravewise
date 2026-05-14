@@ -117,3 +117,12 @@ Update after every meaningful task.
 - Technical tradeoff: kept the score breakdown shape stable while making `negativeConstraintPenalty` stay zero for returned recommendations.
 - Verification: `npm run lint` passed; `npm run build` passed; `node evals/cravewise/run_static_evals.js` passed 8/8.
 - Next action: replace only structured signal extraction in `interpretCravingStatic()` with AI output while keeping taxonomy validation and deterministic scoring.
+
+## 2026-05-14 - CraveWise AI Structured Craving Interpretation
+
+- Milestone: CraveWise Milestone 5A AI structured craving interpretation.
+- Changed: added an optional server-side OpenAI interpretation route, strict structured output schema, local taxonomy validation, fallback metadata, UI status copy, and offline malformed AI-output validation checks.
+- Product tradeoff: allowed AI to improve messy craving understanding while keeping deterministic scoring as the only final recommendation authority.
+- Technical tradeoff: used the Responses API with `fetch` instead of adding an SDK dependency; the app still works without `OPENAI_API_KEY`.
+- Verification: `npm run lint` passed; `node evals/cravewise/run_static_evals.js` passed 8/8 static checks plus 4/4 AI validation checks. Build result should be checked before accepting the milestone.
+- Next action: run live-key AI QA if an API key is available; otherwise review no-key fallback and keep prompt/schema tuning scoped to interpretation only.

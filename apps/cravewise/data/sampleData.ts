@@ -1333,8 +1333,13 @@ export function interpretCravingStatic(context: DecisionContext): CravingInterpr
   };
 }
 
-export function scoreRecommendationStatic(persona: Persona, context: DecisionContext, feedbackMemory: ScoringFeedbackMemory[] = []): Recommendation[] {
-  const interpretation = interpretCravingStatic(context);
+export function scoreRecommendationStatic(
+  persona: Persona,
+  context: DecisionContext,
+  feedbackMemory: ScoringFeedbackMemory[] = [],
+  providedInterpretation?: CravingInterpretation,
+): Recommendation[] {
+  const interpretation = providedInterpretation ?? interpretCravingStatic(context);
   const budgetMax = interpretation.budgetSignal?.max ?? parseBudgetMax(context, persona);
   const isRush = context.occasion === "Weekday Rush";
   const hasExplicitIntent = Boolean(interpretation.explicitDishIntents.length || interpretation.cuisineIntents.length);

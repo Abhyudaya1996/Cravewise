@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This spec defines manual product-intent evals for the current deterministic CraveWise static logic before adding local feedback persistence or AI.
+This spec defines manual product-intent evals for CraveWise deterministic scoring and the optional AI structured interpretation boundary.
 
 This is not a test runner. It is a review checklist for judging whether the static prototype logic behaves like a premium food decision assistant rather than a generic restaurant feed.
 
@@ -15,16 +15,16 @@ Evaluate:
 - `classifyFeedbackStatic()`
 - `getPersonaInsightsStatic()`
 - `getFallbackState()`
+- AI interpretation validation, when `app/api/interpret-craving/route.ts` is enabled
 
 Out of scope:
 
-- AI calls
-- backend routes
+- live AI calls in deterministic eval runs
 - databases
 - MCP
 - Swiggy/Zomato integration
 - real availability checks
-- automated eval runner
+- AI-generated recommendation/ranking
 
 ## Eval Cases
 
@@ -584,4 +584,62 @@ For each persona, manually review `getPersonaInsightsStatic(persona)`.
   - A recommendation's final score does not match its score breakdown
   - Simran's non-cheese-heavy pizza regression returns Dal Makhani
 - Manual review notes: The score breakdown is for QA and explainability, not a calibrated probability and not product UI copy.
+
+### Category 7: AI Structured Interpretation Boundary
+
+#### CW-AI-033: Optional AI interpretation with no key
+
+- Persona: Any
+- User input/context: any craving with no `OPENAI_API_KEY`
+- Function or flow: `app/api/interpret-craving/route.ts` and Craving Input -> Recommendation
+- Expected output/behavior:
+  - Route returns `interpretationSource = static_fallback`
+  - `fallbackReason = missing_api_key`
+  - Client uses `interpretCravingStatic()`
+  - UI copy says `AI unavailable, using local rules`
+- Pass criteria: The app still produces deterministic recommendations without an API key.
+- Failure examples:
+  - App throws an unhandled error
+  - Client exposes or asks for an API key
+  - Recommendation flow blocks entirely
+
+#### CW-AI-034: AI output cannot recommend
+
+- Persona: Any
+- User input/context: malformed mock AI output containing recommendation, item id, restaurant, score, ranking, or backup fields
+- Function or flow: `validateCravingInterpretation()`
+- Expected output/behavior:
+  - Validation rejects the output with `unsafe_recommendation_field`
+  - Client/server fallback uses static rules
+  - Deterministic scoring remains the only ranking layer
+- Pass criteria: AI cannot bypass scoring by naming a dish, restaurant, item id, score, ranking, or backup.
+- Failure examples:
+  - AI output with `recommendation` is accepted
+  - AI-selected item bypasses `scoreRecommendationStatic()`
+
+#### CW-AI-035: AI output must use local taxonomy
+
+- Persona: Any
+- User input/context: malformed mock AI output with invalid enum values such as `sushi`
+- Function or flow: `validateCravingInterpretation()`
+- Expected output/behavior:
+  - Validation rejects invalid dish, cuisine, context, preference, and negative-constraint values
+  - Static fallback remains available
+- Pass criteria: Only values from `dishTaxonomy.ts` can pass into deterministic scoring.
+- Failure examples:
+  - Unknown enum values survive validation
+  - Raw model text is parsed but not checked against taxonomy
+
+#### CW-AI-036: AI output preserves raw input
+
+- Persona: Any
+- User input/context: malformed mock AI output where `rawInput` differs from the user's craving
+- Function or flow: `validateCravingInterpretation()`
+- Expected output/behavior:
+  - Validation rejects the output
+  - Static fallback uses the actual current `DecisionContext`
+- Pass criteria: The model cannot silently rewrite the user's craving before scoring.
+- Failure examples:
+  - `rawInput` mismatch is accepted
+  - Scoring uses a model-rewritten craving string
 

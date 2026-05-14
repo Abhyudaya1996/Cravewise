@@ -7,6 +7,7 @@ import {
   classifyFeedbackStatic,
   constraintOptions,
   cravingExamples,
+  CravingInterpretation,
   DecisionContext,
   FallbackState,
   FailureReasonCode,
@@ -26,11 +27,18 @@ import {
   scoreRecommendationStatic,
   timeOptions,
 } from "../data/sampleData";
+import type { InterpretationFallbackReason, InterpretationSource } from "../data/cravingInterpretationValidation";
 
 type Step = "home" | "personas" | "profile" | "craving" | "recommendation" | "backups" | "feedback" | "insights";
 type FeedbackChoice = "Loved it" | "Meh" | "Disappointing" | "Skipped" | "";
 type StoredRecommendationType = "primary" | "safer_backup" | "exploratory_backup";
 type StoredFeedbackSentiment = "loved" | "meh" | "disappointing" | "skipped";
+type InterpretationResolution = {
+  contextKey: string;
+  interpretation: CravingInterpretation | null;
+  interpretationSource: InterpretationSource;
+  fallbackReason?: InterpretationFallbackReason;
+};
 
 type LocalFeedbackMemory = {
   id: string;
@@ -101,11 +109,19 @@ export default function CraveWisePage() {
   const [reasonChips, setReasonChips] = useState<string[]>([]);
   const [feedbackText, setFeedbackText] = useState("");
   const [localFeedbackMemory, setLocalFeedbackMemory] = useState<LocalFeedbackMemory[]>([]);
+  const [interpretationResolution, setInterpretationResolution] = useState<InterpretationResolution | null>(null);
+  const [isInterpretingCraving, setIsInterpretingCraving] = useState(false);
 
   const persona = useMemo(() => getPersona(selectedPersonaId), [selectedPersonaId]);
-  const interpretation = useMemo(() => interpretCravingStatic(context), [context]);
+  const contextKey = useMemo(() => JSON.stringify(context), [context]);
+  const staticInterpretation = useMemo(() => interpretCravingStatic(context), [context]);
+  const resolvedInterpretation = interpretationResolution?.contextKey === contextKey
+    ? interpretationResolution.interpretation
+    : null;
+  const interpretation = resolvedInterpretation ?? staticInterpretation;
+  const interpretationStatus = getInterpretationStatus(interpretationResolution, contextKey, isInterpretingCraving);
   const scoringFeedbackMemory = useMemo(() => localFeedbackMemory.map(toScoringFeedbackMemory), [localFeedbackMemory]);
-  const recommendations = useMemo(() => scoreRecommendationStatic(persona, context, scoringFeedbackMemory), [persona, context, scoringFeedbackMemory]);
+  const recommendations = useMemo(() => scoreRecommendationStatic(persona, context, scoringFeedbackMemory, interpretation), [persona, context, scoringFeedbackMemory, interpretation]);
   const primaryRecommendation = recommendations[0];
   const backupRecommendations = recommendations.slice(1, 3);
   const fallbackState = getFallbackState(persona, context, recommendations, interpretation);
@@ -120,6 +136,38 @@ export default function CraveWisePage() {
 
   function updateContext(patch: Partial<DecisionContext>) {
     setContext((current) => ({ ...current, ...patch }));
+  }
+
+  async function resolveCravingAndRecommend() {
+    setIsInterpretingCraving(true);
+    try {
+      const response = await fetch("/api/interpret-craving", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ context }),
+      });
+      const result = await response.json() as {
+        interpretationSource: InterpretationSource;
+        interpretation?: CravingInterpretation;
+        fallbackReason?: InterpretationFallbackReason;
+      };
+      setInterpretationResolution({
+        contextKey,
+        interpretation: result.interpretationSource === "ai_interpreted" && result.interpretation ? result.interpretation : null,
+        interpretationSource: result.interpretationSource,
+        fallbackReason: result.fallbackReason,
+      });
+    } catch {
+      setInterpretationResolution({
+        contextKey,
+        interpretation: null,
+        interpretationSource: "static_fallback",
+        fallbackReason: "api_error",
+      });
+    } finally {
+      setIsInterpretingCraving(false);
+      setStep("recommendation");
+    }
   }
 
   function chooseRecommendation(recommendation: Recommendation) {
@@ -231,10 +279,11 @@ export default function CraveWisePage() {
           <CravingInputPanel
             context={context}
             interpretation={interpretation}
+            interpretationStatus={interpretationStatus}
             onChange={updateContext}
           />
-          <button className="primary-action" onClick={() => setStep("recommendation")}>
-            Get one recommendation
+          <button className="primary-action" onClick={resolveCravingAndRecommend} disabled={isInterpretingCraving}>
+            {isInterpretingCraving ? "Reading craving..." : "Get one recommendation"}
           </button>
         </Screen>
       )}
@@ -491,10 +540,12 @@ function MemoryBlock({ title, values }: { title: string; values: string[] }) {
 function CravingInputPanel({
   context,
   interpretation,
+  interpretationStatus,
   onChange,
 }: {
   context: DecisionContext;
   interpretation: ReturnType<typeof interpretCravingStatic>;
+  interpretationStatus: string;
   onChange: (patch: Partial<DecisionContext>) => void;
 }) {
   return (
@@ -520,6 +571,7 @@ function CravingInputPanel({
       )}
       <div className="interpretation-card">
         <span>CraveWise heard</span>
+        <small>{interpretationStatus}</small>
         <p>
           {interpretation.needs_clarification
             ? "This craving is vague, so CraveWise would ask one more question."
@@ -869,6 +921,18 @@ function ChipRow({ values }: { values: string[] }) {
 
 function formatSignalList(values: string[]): string {
   return values.length ? values.map((value) => value.replace("_", " ")).join(", ") : "comfort";
+}
+
+function getInterpretationStatus(
+  resolution: InterpretationResolution | null,
+  contextKey: string,
+  isInterpreting: boolean,
+): string {
+  if (isInterpreting) return "Checking AI interpretation";
+  if (resolution?.contextKey !== contextKey) return "Using local rules";
+  if (resolution.interpretationSource === "ai_interpreted") return "AI interpreted your craving";
+  if (resolution.fallbackReason === "missing_api_key") return "AI unavailable, using local rules";
+  return "Using local rules";
 }
 
 function readLocalFeedbackMemory(): LocalFeedbackMemory[] {

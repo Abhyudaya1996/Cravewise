@@ -42,6 +42,27 @@ Claude's Milestone 4E review identified two required pre-AI cleanup items and on
 - The too-oily memory machine-check case includes `mustAvoidFlags` for `avoid_oily` and `fried_oily`, proving the new top recommendation avoids oily/fried flags.
 - Code comments now document scoring weight principles and why `sleepy` maps to `avoid_heavy`.
 
+## 2026-05-14 Milestone 5A Update
+
+Milestone 5A adds optional AI structured craving interpretation while preserving deterministic recommendation scoring.
+
+- New server boundary: `apps/cravewise/app/api/interpret-craving/route.ts`.
+- Default model: `gpt-4.1-mini`, override with `OPENAI_MODEL`.
+- Missing `OPENAI_API_KEY` returns `interpretationSource = static_fallback` and `fallbackReason = missing_api_key`.
+- The route uses OpenAI Responses API structured outputs with `text.format.type = json_schema`, `strict = true`, and `store = false`.
+- AI output is validated against local taxonomy in `apps/cravewise/data/cravingInterpretationValidation.ts`.
+- Validation rejects invalid enums, missing fields, raw input mismatch, low-quality empty output, and forbidden recommendation/ranking fields.
+- `scoreRecommendationStatic()` can accept a prevalidated `CravingInterpretation`, but remains the only ranking layer.
+- The UI adds small status copy: `AI interpreted your craving`, `Using local rules`, or `AI unavailable, using local rules`.
+- Static evals remain offline and deterministic; the runner now adds four local AI-output validation checks.
+
+Latest local run:
+
+```text
+CraveWise static evals passed: 8/8
+CraveWise AI interpretation validation checks passed: 4/4
+```
+
 ## Static Logic File Paths Found
 
 Expected file:

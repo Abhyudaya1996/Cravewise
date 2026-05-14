@@ -17,7 +17,7 @@
 | Taxonomy QA, static eval harness, and score explainability complete | DONE | Removed taxonomy leakage, standardized `avoid_*` constraints, added internal score breakdowns, and added `node evals/cravewise/run_static_evals.js` with 8 passing machine checks | 2026-05-14 |
 | Claude review packet 4E complete | DONE | `projects/01-cravewise/docs/CLAUDE_REVIEW_PACKET_4E.md`; reviewer entrypoint after Milestone 4E with thesis, constraints, architecture, evals, regressions, and review questions | 2026-05-14 |
 | Pre-AI guardrail cleanup complete | DONE | Claude 4E review suggestions applied: `heavy_meal`, hard-filter-only negative constraints, stronger too-oily memory eval, and comments for scoring principles / sleepy-to-heavy mapping | 2026-05-14 |
-| AI workflow complete | TODO | API route | - |
+| AI structured craving interpretation | REVIEW | Optional server-side `app/api/interpret-craving` route, strict structured output schema, taxonomy validation, static fallback metadata, small UI status copy, and offline malformed-output validation checks | 2026-05-14 |
 | Feedback/scoring loop complete | DONE | local persistence and local feedback-influenced scoring complete; still browser-only and deterministic | 2026-05-13 |
 | Evals complete | REVIEW | `evals/cravewise/STATIC_LOGIC_EVAL_SPEC.md`, `evals/cravewise/STATIC_LOGIC_EVAL_REPORT.md`, expanded `evals/cravewise/sample_cases.json` | 2026-05-13 |
 | Case study complete | TODO | case-studies file | - |
@@ -25,4 +25,4 @@
 
 ## Current Note
 
-Milestone 4F applies Claude's pre-AI guardrail cleanup after the 4E review. Heavy catalog items use `heavy_meal`, negative constraints are hard-filtered instead of double-penalized, and the too-oily memory eval proves the new top avoids oily/fried flags. The Claude review packet is `projects/01-cravewise/docs/CLAUDE_REVIEW_PACKET_4E.md`. `CRAVEWISE_PROJECT_STATE.md` remains the primary durable handoff file and should be updated after every completed CraveWise milestone. No AI, MCP, backend, database, auth, live restaurant data, ordering, payments, medical/nutrition advice, cross-device memory, or delivery tracking were added.
+Milestone 5A adds AI only as optional server-side structured craving interpretation. The API route keeps `OPENAI_API_KEY` server-side, defaults `OPENAI_MODEL` to `gpt-4.1-mini`, uses a 5-second timeout, validates output against the local taxonomy, and falls back to `interpretCravingStatic()` when AI is missing, invalid, slow, or unavailable. Deterministic scoring still chooses the final recommendation. No backend database, MCP, auth, live restaurant data, ordering, payments, medical/nutrition advice, cross-device memory, or delivery tracking were added.

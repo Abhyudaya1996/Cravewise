@@ -1,8 +1,8 @@
 ﻿# CraveWise App
 
-Status: Milestone 4F pre-AI guardrail cleanup added on top of the PRD v1.2 static prototype.
+Status: Milestone 5A AI structured craving interpretation added on top of the PRD v1.2 prototype.
 
-This is a mobile-first clickable prototype using dummy/sample data only. It does not use AI, MCP, backend routes, database, auth, live restaurant data, Swiggy/Zomato integrations, payments, or delivery tracking.
+This is a mobile-first clickable prototype using dummy/sample data only. AI is optional and limited to structured craving-signal extraction through a server-side route. It does not use MCP, backend databases, auth, live restaurant data, Swiggy/Zomato integrations, payments, or delivery tracking.
 
 The latest UI pass makes the product feel more premium, calm, personal, and food-intelligent while keeping one recommendation as the core focus. It adds a stronger mobile app shell, richer persona cards, a clearer taste-memory panel, a hero recommendation screen, visible trust reasoning, secondary backup options, lightweight feedback, and specific insight cards.
 
@@ -19,6 +19,27 @@ npm run dev
 npm run build
 npm run lint
 ```
+
+From the repo root:
+
+```bash
+node evals/cravewise/run_static_evals.js
+```
+
+## Optional AI Configuration
+
+CraveWise works without AI. If `OPENAI_API_KEY` is missing, the app falls back to local static interpretation and shows honest fallback copy.
+
+Optional environment variables:
+
+```text
+OPENAI_API_KEY=server-side only
+OPENAI_MODEL=gpt-4.1-mini
+```
+
+`OPENAI_MODEL` is optional and defaults to `gpt-4.1-mini`.
+
+The API key must stay server-side. The client calls `app/api/interpret-craving/route.ts`; it never receives or stores the key.
 
 ## Current Flow
 
@@ -38,7 +59,15 @@ npm run lint
 - `classifyFeedbackStatic()`
 - `getPersonaInsightsStatic()`
 
-All logic is local and deterministic.
+Final recommendation ranking is still local and deterministic.
+
+Milestone 5A adds optional AI structured craving interpretation:
+
+```text
+user craving -> API route -> validated CravingInterpretation -> deterministic scoreRecommendationStatic()
+```
+
+AI can only fill the existing `CravingInterpretation` fields. It cannot output item IDs, restaurant names, scores, recommendations, rankings, or backups. If the route has no key, errors, times out, returns invalid schema, returns invalid taxonomy values, or tries to recommend an item, the client uses `interpretCravingStatic()`.
 
 ## Local Dish Taxonomy
 
@@ -52,6 +81,8 @@ Recommendations now carry an internal `scoreBreakdown` with named score componen
 
 Milestone 4F applies Claude's pre-AI guardrail cleanup. Heavy catalog items use the context-free `heavy_meal` regret flag, not `heavy_late_night`. Negative constraints are treated as hard user boundaries: matching items are filtered from returned recommendations instead of also receiving a dead `-90` score penalty. The score breakdown remains for returned recommendations and should not be read as a calibrated probability.
 
+Milestone 5A adds `apps/cravewise/data/cravingInterpretationValidation.ts` and `apps/cravewise/app/api/interpret-craving/route.ts`. The validation layer checks taxonomy enum arrays, required fields, trimmed `rawInput` match, budget signal shape, forbidden recommendation/ranking fields, and low-quality empty output before any AI interpretation can reach scoring.
+
 ## Static Eval Harness
 
 Run from the repo root:
@@ -60,7 +91,7 @@ Run from the repo root:
 node evals/cravewise/run_static_evals.js
 ```
 
-The runner reads `evals/cravewise/sample_cases.json` and executes machine-readable checks for selected cases, including dish type, cuisine, avoid flags, top recommendation, structured signals, memory-influenced behavior, and score breakdown consistency.
+The runner reads `evals/cravewise/sample_cases.json` and executes machine-readable checks for selected cases, including dish type, cuisine, avoid flags, top recommendation, structured signals, memory-influenced behavior, and score breakdown consistency. It also runs local AI-output validation checks with malformed mock payloads, without calling OpenAI.
 
 ## Local Feedback Memory
 
@@ -130,10 +161,11 @@ This is still static dummy data. It does not represent live restaurant availabil
 - Insights now include local demo pattern summaries derived from saved browser feedback for the active persona.
 - Static craving interpretation now uses local taxonomy signals instead of mixed craving/context flags.
 - Static eval harness covers key taxonomy regressions and memory-influenced behavior.
+- Optional AI interpretation is server-side, schema-validated, and falls back to local rules without changing deterministic scoring.
 
 ## Guardrails
 
-- no OpenAI API in static prototype
+- OpenAI API is optional and used only in the server route for structured signal extraction
 - no restaurant integrations
 - no MCP yet
 - no medical nutrition claims

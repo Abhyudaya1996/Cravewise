@@ -1,6 +1,6 @@
 # CraveWise Evals
 
-These are lightweight manual eval documents for the static CraveWise prototype. They are not a test runner.
+These are lightweight manual eval documents plus a small local static eval runner for CraveWise.
 
 Milestone 4E adds a tiny local static eval runner for selected machine-readable cases:
 
@@ -8,7 +8,7 @@ Milestone 4E adds a tiny local static eval runner for selected machine-readable 
 node evals/cravewise/run_static_evals.js
 ```
 
-The runner uses no backend or live integrations. It checks only cases marked with `machineCheck: true` in `sample_cases.json`.
+The runner uses no backend, live integrations, or live AI calls. It checks only cases marked with `machineCheck: true` in `sample_cases.json`, plus local malformed AI-output validation fixtures.
 
 Checks should cover recommendation relevance, regret-risk explanation, constraint handling, refusal of medical or nutrition claims, feedback classification, and local demo memory persistence.
 
@@ -30,5 +30,20 @@ Checks should cover recommendation relevance, regret-risk explanation, constrain
 - Local dish taxonomy: structured craving signals for explicit dish intent, cuisine intent, context, preference, negative constraints, and budget; catalog items expose normalized dish, context, regret, reliability, and avoid fields.
 - Taxonomy QA and score explainability: negative constraints use the `avoid_*` convention, `not_oily` is not duplicated as a positive preference signal, recommendations include internal score breakdowns, and selected static eval cases can run locally.
 - Pre-AI guardrail cleanup: heavy items use `heavy_meal`, negative constraints are hard-filtered instead of double-penalized, and the too-oily memory case proves the new top avoids oily/fried flags.
+- AI structured interpretation guardrails: malformed mock AI outputs are rejected for invalid taxonomy values, forbidden recommendation fields, and raw-input mismatch without calling OpenAI.
 
 Local feedback memory checks must verify that data is stored only under `cravewise.localFeedbackMemory.v1` in the current browser and can be cleared with "Clear local demo memory".
+
+## AI Interpretation Manual Test Cases
+
+Milestone 5A adds optional AI signal extraction through `apps/cravewise/app/api/interpret-craving/route.ts`. These cases should be reviewed manually in the app because the static eval runner must remain deterministic and must not depend on live OpenAI calls.
+
+- Simran + `pizza but not cheese overloaded`: AI may extract `pizza`, `Pizza`, and `avoid_cheese_heavy`, but deterministic scoring must still choose a non-cheese-heavy pizza/Italian option or an honest fallback. It must not return Dal Makhani Rice Bowl.
+- `spicy but not oily`: AI should put `spicy` in `preferenceSignals` and `avoid_oily` in `negativeConstraints`; returned recommendations must avoid oily/fried flags.
+- `late night but light`: AI should include `late_night`, `light`, and `avoid_heavy`; returned recommendations should avoid heavy meals.
+- `healthy but filling`: AI should include `healthy` and `filling` without making medical or nutrition claims.
+- `fried momos late night` after prior `too_oily` local memory: deterministic scoring should still penalize oily/fried options for the active persona.
+- Nonsense or vague input: the app should fall back gracefully to local rules or show clarification behavior, not invent coverage.
+- No `OPENAI_API_KEY`: the UI should show `AI unavailable, using local rules`, and recommendations should still work.
+- Timeout or API error: the route should return `static_fallback` metadata and the client should use `interpretCravingStatic()`.
+- Invalid enum or forbidden recommendation field: validation should reject the output and use static fallback.

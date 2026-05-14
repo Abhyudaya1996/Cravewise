@@ -21,6 +21,9 @@ function loadTsModule(relativePath, mocks = {}) {
 
 const taxonomy = loadTsModule("apps/cravewise/data/dishTaxonomy.ts");
 const data = loadTsModule("apps/cravewise/data/sampleData.ts", { "./dishTaxonomy": taxonomy });
+const validation = loadTsModule("apps/cravewise/data/cravingInterpretationValidation.ts", {
+  "./dishTaxonomy": taxonomy,
+});
 const cases = JSON.parse(fs.readFileSync(path.join(__dirname, "sample_cases.json"), "utf8"));
 
 const personaIds = {
@@ -173,11 +176,17 @@ function runMachineCase(testCase) {
 
 const machineCases = cases.filter((testCase) => testCase.machineCheck);
 const results = machineCases.map(runMachineCase);
+const validationResults = runValidationCases();
 const failed = results.filter((result) => result.failures.length > 0);
+const failedValidation = validationResults.filter((result) => result.failures.length > 0);
 
-if (failed.length) {
+if (failed.length || failedValidation.length) {
   console.error(`CraveWise static evals failed: ${failed.length}/${machineCases.length}`);
   failed.forEach((result) => {
+    console.error(`- ${result.id}`);
+    result.failures.forEach((failure) => console.error(`  - ${failure}`));
+  });
+  failedValidation.forEach((result) => {
     console.error(`- ${result.id}`);
     result.failures.forEach((failure) => console.error(`  - ${failure}`));
   });
@@ -185,3 +194,69 @@ if (failed.length) {
 }
 
 console.log(`CraveWise static evals passed: ${machineCases.length}/${machineCases.length}`);
+console.log(`CraveWise AI interpretation validation checks passed: ${validationResults.length}/${validationResults.length}`);
+
+function runValidationCases() {
+  const validOutput = {
+    explicitDishIntents: ["pizza"],
+    cuisineIntents: ["Pizza"],
+    contextSignals: ["weekend_dinner"],
+    preferenceSignals: ["comfort"],
+    negativeConstraints: ["avoid_cheese_heavy"],
+    budgetSignal: null,
+    rawInput: "pizza but not cheese overloaded",
+    occasion: "Weekend dinner",
+    heaviness: "medium",
+    exploration_intent: "safe",
+    confidence: "high",
+    needs_clarification: false,
+  };
+
+  const cases = [
+    {
+      id: "ai_validation_accepts_taxonomy_only_output",
+      value: validOutput,
+      rawInput: "pizza but not cheese overloaded",
+      expectedValid: true,
+    },
+    {
+      id: "ai_validation_rejects_invalid_enum",
+      value: { ...validOutput, explicitDishIntents: ["sushi"] },
+      rawInput: "pizza but not cheese overloaded",
+      expectedValid: false,
+      expectedReason: "invalid_enum",
+    },
+    {
+      id: "ai_validation_rejects_recommendation_fields",
+      value: { ...validOutput, recommendation: "Thin Crust Veggie Pizza", restaurant: "Slice Street", backupOptions: [] },
+      rawInput: "pizza but not cheese overloaded",
+      expectedValid: false,
+      expectedReason: "unsafe_recommendation_field",
+    },
+    {
+      id: "ai_validation_accepts_trimmed_raw_input_match",
+      value: { ...validOutput, rawInput: " pizza but not cheese overloaded " },
+      rawInput: "pizza but not cheese overloaded",
+      expectedValid: true,
+    },
+    {
+      id: "ai_validation_rejects_raw_input_mismatch",
+      value: { ...validOutput, rawInput: "different craving" },
+      rawInput: "pizza but not cheese overloaded",
+      expectedValid: false,
+      expectedReason: "invalid_schema",
+    },
+  ];
+
+  return cases.map((testCase) => {
+    const result = validation.validateCravingInterpretation(testCase.value, testCase.rawInput);
+    const failures = [];
+    if (result.valid !== testCase.expectedValid) {
+      failures.push(`Expected valid=${testCase.expectedValid}, got valid=${result.valid}.`);
+    }
+    if (!result.valid && testCase.expectedReason && result.reason !== testCase.expectedReason) {
+      failures.push(`Expected reason ${testCase.expectedReason}, got ${result.reason}.`);
+    }
+    return { id: testCase.id, failures };
+  });
+}

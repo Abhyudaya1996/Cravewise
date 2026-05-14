@@ -1,8 +1,8 @@
 # CraveWise Project State
 
 Last updated: 2026-05-14
-Current milestone: Milestone 4F - Pre-AI guardrail cleanup
-Current status: Static prototype, local feedback memory, Simran pizza regression fix, integrity cleanup, browser-only feedback-influenced scoring, feedback reason normalization patch, 30-item dummy catalog expansion, dynamic local insight summaries, local dish taxonomy cleanup, taxonomy QA, score explainability, lightweight static eval harness, Claude review packet, and pre-AI guardrail cleanup are implemented.
+Current milestone: Milestone 5A - AI structured craving interpretation
+Current status: Static prototype, local feedback memory, Simran pizza regression fix, integrity cleanup, browser-only feedback-influenced scoring, feedback reason normalization patch, 30-item dummy catalog expansion, dynamic local insight summaries, local dish taxonomy cleanup, taxonomy QA, score explainability, lightweight static eval harness, Claude review packet, pre-AI guardrail cleanup, and optional AI structured craving interpretation are implemented.
 
 ---
 
@@ -14,7 +14,7 @@ It is designed for users who do not need another food browsing app. They need on
 
 CraveWise gives one primary recommendation, with optional backups only when the user asks. It is not a delivery marketplace, not a restaurant feed, and not an ordering product.
 
-The current implementation uses local/static deterministic logic only. It does not use AI, backend services, live restaurant data, or real availability.
+The current implementation uses deterministic scoring and optional server-side AI only for structured craving-signal extraction. It does not use backend databases, live restaurant data, real availability, ordering, or delivery tracking.
 
 ---
 
@@ -34,6 +34,7 @@ Completed milestones:
 - Taxonomy QA, static eval harness, and score explainability
 - Claude review packet 4E
 - Pre-AI guardrail cleanup
+- AI structured craving interpretation
 
 Current working features:
 
@@ -57,11 +58,12 @@ Current working features:
 - Clear local demo memory action
 - Lightweight eval documentation
 - Claude review packet for Milestone 4E
+- Optional server-side AI interpretation route for structured craving signals
+- Local taxonomy validation for AI output
+- Static fallback when AI is unavailable, invalid, slow, or unconfigured
 
 Not yet built:
 
-- AI API
-- OpenAI integration
 - backend
 - database
 - MCP
@@ -77,9 +79,11 @@ Not yet built:
 
 Current limitation:
 
-Feedback now influences future static scoring locally and also creates local demo insight summaries. Static craving interpretation uses clearer local taxonomy signals, recommendations carry internal score breakdowns, and selected taxonomy regressions run through a local eval harness. The rules are still deterministic and hardcoded.
+Feedback now influences future static scoring locally and also creates local demo insight summaries. Static craving interpretation remains the fallback. Optional AI can now fill the same structured interpretation fields, but deterministic local scoring still chooses the recommendation. Selected taxonomy regressions and malformed AI-output validation checks run through the local eval harness.
 
 Milestone 4F resolved Claude's required pre-AI cleanup items: heavy catalog items use `heavy_meal`, negative constraints are hard returned-recommendation boundaries instead of double-penalized, and the too-oily memory eval proves the new top avoids oily/fried flags.
+
+Milestone 5A adds AI only at the signal extraction boundary: user craving -> server route -> validated `CravingInterpretation` -> deterministic scoring. AI cannot output item IDs, restaurant names, scores, recommendations, rankings, or backups.
 
 ---
 
@@ -107,12 +111,13 @@ Milestone 4F resolved Claude's required pre-AI cleanup items: heavy catalog item
 | No fake confidence | Heuristic scores are not calibrated probabilities, so the UI uses qualitative labels. | Less flashy than percentages, but more trustworthy. |
 | No live availability claims | The prototype uses dummy data only and should not imply real supply-side coverage. | The recommendation may not be orderable in the real world. |
 | No medical/nutrition advice | Food preference and heaviness are allowed; health claims are out of scope. | Health-aware users get preference framing, not nutrition guidance. |
+| AI only extracts structured signals | The product should remain explainable and deterministic while improving messy craving parsing. | AI can improve interpretation but cannot choose the final meal. |
 
 ---
 
 ## 5. Technical Architecture
 
-CraveWise is currently a frontend-only Next.js app.
+CraveWise is currently a Next.js app with one optional server-side API route for AI structured interpretation.
 
 Architecture summary:
 
@@ -121,12 +126,14 @@ Architecture summary:
 - Styling: plain CSS in `apps/cravewise/app/globals.css`
 - Data and static logic: `apps/cravewise/data/sampleData.ts`
 - Local taxonomy: `apps/cravewise/data/dishTaxonomy.ts`
+- AI validation: `apps/cravewise/data/cravingInterpretationValidation.ts`
+- Optional AI route: `apps/cravewise/app/api/interpret-craving/route.ts`
 - Persistence: browser `localStorage`
 - Current catalog size: 30 menu items
 - Target before AI: met for current prototype, with 25-30 dummy menu items
 - Long-term PRD target: 20 restaurants and 60 dishes
-- Backend/API/database: none
-- AI/MCP/live integrations: none
+- Backend/API/database: no database; one server route for optional OpenAI interpretation only
+- AI/MCP/live integrations: optional OpenAI interpretation only; no MCP or live restaurant integrations
 
 Milestone 4B catalog coverage:
 
@@ -145,6 +152,8 @@ Important files:
 - `apps/cravewise/app/page.tsx`
 - `apps/cravewise/data/sampleData.ts`
 - `apps/cravewise/data/dishTaxonomy.ts`
+- `apps/cravewise/data/cravingInterpretationValidation.ts`
+- `apps/cravewise/app/api/interpret-craving/route.ts`
 - `apps/cravewise/app/globals.css`
 - `apps/cravewise/README.md`
 - `projects/01-cravewise/docs/PRD.md`
@@ -189,6 +198,15 @@ Milestone 4F guardrail cleanup:
 - dead `-90` negative constraint score penalty removed
 - too-oily memory eval checks the new top avoids `avoid_oily` and `fried_oily`
 - comments document scoring weight principles and why `sleepy` maps to `avoid_heavy`
+
+Milestone 5A AI interpretation:
+
+- `OPENAI_API_KEY` is optional and must stay server-side
+- `OPENAI_MODEL` is optional and defaults to `gpt-4.1-mini`
+- route timeout is 5 seconds
+- route returns `ai_interpreted` only after schema and taxonomy validation
+- fallback reasons include `missing_api_key`, `api_error`, `timeout`, `invalid_schema`, `invalid_enum`, `missing_required_field`, `low_quality_output`, and `unsafe_recommendation_field`
+- static eval runner remains offline and includes mocked AI-output validation checks
 
 ---
 
@@ -272,6 +290,7 @@ Milestone 4A acceptance criteria:
 | Taxonomy QA and eval harness | Audited taxonomy boundaries, removed `not_oily` preference leakage, added internal score breakdowns, and added a local static eval runner. | Build confidence in deterministic scoring before AI by making regressions machine-checkable and score components inspectable. | `apps/cravewise/data/dishTaxonomy.ts`, `apps/cravewise/data/sampleData.ts`, `evals/cravewise/run_static_evals.js`, evals/docs/memory files | Complete |
 | Claude review packet 4E | Created a reviewer entrypoint summarizing product thesis, constraints, architecture, regressions, evals, score breakdowns, and review questions. | Make external critique easier before deciding whether to move to AI craving interpretation. | `projects/01-cravewise/docs/CLAUDE_REVIEW_PACKET_4E.md`, state/tracker/handoff files | Complete |
 | Pre-AI guardrail cleanup | Applied Claude's 4E review suggestions: corrected heavy flag naming, removed double negative-constraint enforcement, strengthened oily-memory eval coverage, and added small scoring/mapping comments. | Keep AI handoff contracts clean before replacing static interpretation. | `apps/cravewise/data/dishTaxonomy.ts`, `apps/cravewise/data/sampleData.ts`, evals/docs/memory files | Complete |
+| AI structured craving interpretation | Added an optional server-side OpenAI interpretation route, strict schema output, taxonomy validation, static fallback metadata, small UI status copy, and offline malformed-output validation checks. | Let AI improve messy craving parsing while deterministic scoring remains the recommendation authority. | `apps/cravewise/app/api/interpret-craving/route.ts`, `apps/cravewise/data/cravingInterpretationValidation.ts`, `apps/cravewise/app/page.tsx`, `apps/cravewise/data/sampleData.ts`, evals/docs/memory files | Review |
 | Future milestone | TBD | TBD | TBD | Planned |
 
 ---
@@ -338,8 +357,8 @@ Local feedback-influenced scoring now penalizes oily/fried late-night options fo
 2. Static logic uses hardcoded scoring rules, though score components are now inspectable and documented at a high level.
 3. Feedback scoring influence is local-only and deterministic.
 4. Catalog is broader but still dummy data, not real supply.
-5. Taxonomy inference is still regex-based and deterministic; AI could later fill the same structured fields more flexibly.
-6. No AI yet.
+5. AI interpretation is optional and still needs live-key QA in environments with `OPENAI_API_KEY`.
+6. AI only extracts signals; scoring quality still depends on deterministic taxonomy, weights, and dummy catalog coverage.
 7. No real restaurant availability.
 8. Case study not written yet.
 
@@ -347,11 +366,11 @@ Local feedback-influenced scoring now penalizes oily/fried late-night options fo
 
 ## 10. Recommended Next Milestones
 
-### Next: AI Craving Interpretation
+### Next: AI Interpretation QA and Debug Review
 
 Goal:
 
-Replace only `interpretCravingStatic()` with AI structured output while keeping scoring deterministic.
+Review live AI interpretations with an API key, tune the extraction prompt/schema only if needed, and keep deterministic scoring unchanged.
 
 ---
 

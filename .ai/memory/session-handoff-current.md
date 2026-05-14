@@ -2,7 +2,7 @@
 
 ## Current Portfolio State
 
-Status: CraveWise Milestone 5A AI structured craving interpretation implemented for review.
+Status: CraveWise Milestone 5B AI vs static interpretation comparison implemented for review.
 
 ## Active Project
 
@@ -10,7 +10,7 @@ CraveWise.
 
 ## Active Milestone
 
-Milestone 5A AI structured craving interpretation.
+Milestone 5B AI vs static interpretation comparison.
 
 ## Latest Decisions
 
@@ -70,7 +70,11 @@ Milestone 5A AI structured craving interpretation.
 - Validation rejects missing fields, invalid enum values, raw-input mismatch, low-quality empty output, and forbidden recommendation/ranking fields.
 - `scoreRecommendationStatic()` can accept a prevalidated interpretation but remains the only final ranking/recommendation layer.
 - The UI adds honest status copy: `AI interpreted your craving`, `Using local rules`, or `AI unavailable, using local rules`.
-- The static eval runner remains offline and now includes four mock AI-output validation checks.
+- The static eval runner remains offline and now includes five mock AI-output validation checks.
+- Milestone 5B adds `apps/cravewise/data/interpretationComparison.ts`.
+- The comparison helper compares static interpretation vs validated AI interpretation fields, then scores both signal sets with `scoreRecommendationStatic()` for QA only.
+- The recommendation screen includes a small collapsible `Static vs AI interpretation` debug panel after a recommendation request.
+- Static evals remain offline and include mock comparison checks for changed fields, recommendation-change detection, and AI fallback comparison.
 - `projects/01-cravewise/docs/CRAVEWISE_PROJECT_STATE.md` is now the primary Claude/Codex handoff and review entrypoint for CraveWise.
 - No backend database, MCP, auth, Supabase, live restaurant data, ordering/payment, delivery tracking, or cross-device memory were added.
 
@@ -81,7 +85,7 @@ Milestone 5A AI structured craving interpretation.
 
 ## Next Recommended Action
 
-For broader CraveWise context, read `projects/01-cravewise/docs/CRAVEWISE_PROJECT_STATE.md`. Next recommended milestone: live-key AI interpretation QA and prompt/schema tuning only if outputs fail the local taxonomy contract.
+For broader CraveWise context, read `projects/01-cravewise/docs/CRAVEWISE_PROJECT_STATE.md`. Next recommended milestone: run live-key AI interpretation comparison QA and tune prompt/schema only if outputs fail the local taxonomy contract.
 
 ## Last Updated
 

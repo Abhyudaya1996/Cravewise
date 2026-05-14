@@ -1,6 +1,6 @@
 ﻿# CraveWise App
 
-Status: Milestone 5A AI structured craving interpretation added on top of the PRD v1.2 prototype.
+Status: Milestone 5B AI vs static interpretation comparison added on top of the PRD v1.2 prototype.
 
 This is a mobile-first clickable prototype using dummy/sample data only. AI is optional and limited to structured craving-signal extraction through a server-side route. It does not use MCP, backend databases, auth, live restaurant data, Swiggy/Zomato integrations, payments, or delivery tracking.
 
@@ -69,6 +69,14 @@ user craving -> API route -> validated CravingInterpretation -> deterministic sc
 
 AI can only fill the existing `CravingInterpretation` fields. It cannot output item IDs, restaurant names, scores, recommendations, rankings, or backups. If the route has no key, errors, times out, returns invalid schema, returns invalid taxonomy values, or tries to recommend an item, the client uses `interpretCravingStatic()`.
 
+Milestone 5B adds an internal comparison layer:
+
+```text
+same user craving -> static interpretation and optional AI interpretation -> deterministic scoring for each signal set -> compare top recommendation
+```
+
+The comparison is for debugging and QA only. It does not let AI rank, explain, or choose the meal. The recommendation screen includes a small collapsible "Static vs AI interpretation" panel after the user requests a recommendation.
+
 ## Local Dish Taxonomy
 
 Milestone 4D adds `apps/cravewise/data/dishTaxonomy.ts` with normalized local types for dish types, cuisines, context signals, preference signals, negative constraints, regret risk flags, reliability flags, and budget fit signals.
@@ -92,6 +100,8 @@ node evals/cravewise/run_static_evals.js
 ```
 
 The runner reads `evals/cravewise/sample_cases.json` and executes machine-readable checks for selected cases, including dish type, cuisine, avoid flags, top recommendation, structured signals, memory-influenced behavior, and score breakdown consistency. It also runs local AI-output validation checks with malformed mock payloads, without calling OpenAI.
+
+Milestone 5B adds offline mock comparison checks for changed fields, recommendation-change detection, and AI-unavailable fallback comparison.
 
 ## Local Feedback Memory
 
@@ -162,6 +172,7 @@ This is still static dummy data. It does not represent live restaurant availabil
 - Static craving interpretation now uses local taxonomy signals instead of mixed craving/context flags.
 - Static eval harness covers key taxonomy regressions and memory-influenced behavior.
 - Optional AI interpretation is server-side, schema-validated, and falls back to local rules without changing deterministic scoring.
+- Static vs AI comparison is internal/debug only and is not shown as user-facing confidence.
 
 ## Guardrails
 

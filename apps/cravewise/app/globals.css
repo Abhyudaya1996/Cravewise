@@ -185,6 +185,7 @@ p {
 .craving-input-panel,
 .recommendation-hero-card,
 .memory-influence-note,
+.interpretation-comparison-panel,
 .fallback-card,
 .trust-reason-block,
 .avoided-patterns-block,
@@ -651,6 +652,76 @@ p {
   background: var(--olive-soft);
   padding: 14px;
   box-shadow: none;
+}
+
+.interpretation-comparison-panel {
+  display: grid;
+  gap: 10px;
+  background: #fbfaf6;
+  padding: 14px;
+  box-shadow: none;
+}
+
+.interpretation-comparison-panel summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 900;
+  list-style: none;
+  text-transform: uppercase;
+}
+
+.interpretation-comparison-panel summary::-webkit-details-marker {
+  display: none;
+}
+
+.interpretation-comparison-panel summary strong {
+  color: var(--accent-dark);
+  font-size: 11px;
+}
+
+.comparison-body {
+  display: grid;
+  gap: 10px;
+  padding-top: 10px;
+}
+
+.comparison-body p,
+.comparison-signal-list p {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 720;
+}
+
+.comparison-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.comparison-grid div,
+.comparison-signal-list {
+  display: grid;
+  gap: 4px;
+  border-radius: 16px;
+  background: var(--cream);
+  padding: 10px;
+}
+
+.comparison-grid span,
+.comparison-signal-list span,
+.comparison-body small {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.comparison-grid strong {
+  color: var(--ink);
+  font-size: 13px;
 }
 
 .memory-influence-note p {

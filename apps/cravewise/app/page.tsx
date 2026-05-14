@@ -28,6 +28,8 @@ import {
   timeOptions,
 } from "../data/sampleData";
 import type { InterpretationFallbackReason, InterpretationSource } from "../data/cravingInterpretationValidation";
+import { compareInterpretations } from "../data/interpretationComparison";
+import type { InterpretationComparisonResult } from "../data/interpretationComparison";
 
 type Step = "home" | "personas" | "profile" | "craving" | "recommendation" | "backups" | "feedback" | "insights";
 type FeedbackChoice = "Loved it" | "Meh" | "Disappointing" | "Skipped" | "";
@@ -122,6 +124,16 @@ export default function CraveWisePage() {
   const interpretationStatus = getInterpretationStatus(interpretationResolution, contextKey, isInterpretingCraving);
   const scoringFeedbackMemory = useMemo(() => localFeedbackMemory.map(toScoringFeedbackMemory), [localFeedbackMemory]);
   const recommendations = useMemo(() => scoreRecommendationStatic(persona, context, scoringFeedbackMemory, interpretation), [persona, context, scoringFeedbackMemory, interpretation]);
+  const interpretationComparison = useMemo(() => {
+    if (interpretationResolution?.contextKey !== contextKey) return null;
+    return compareInterpretations({
+      persona,
+      context,
+      feedbackMemory: scoringFeedbackMemory,
+      staticInterpretation,
+      aiInterpretation: resolvedInterpretation,
+    });
+  }, [context, contextKey, interpretationResolution, persona, resolvedInterpretation, scoringFeedbackMemory, staticInterpretation]);
   const primaryRecommendation = recommendations[0];
   const backupRecommendations = recommendations.slice(1, 3);
   const fallbackState = getFallbackState(persona, context, recommendations, interpretation);
@@ -293,6 +305,7 @@ export default function CraveWisePage() {
           {fallbackState.shouldSuppressPrimaryRecommendation ? (
             <>
               <FallbackCard fallbackState={fallbackState} />
+              {interpretationComparison && <InterpretationComparisonPanel comparison={interpretationComparison} />}
               <div className="action-row">
                 <button className="primary-action" onClick={() => setStep("craving")}>
                   Adjust craving
@@ -307,6 +320,7 @@ export default function CraveWisePage() {
           ) : (
             <>
               <RecommendationHeroCard recommendation={primaryRecommendation} personaName={persona.name} context={context} fallbackState={fallbackState} />
+              {interpretationComparison && <InterpretationComparisonPanel comparison={interpretationComparison} />}
               <TrustReasonBlock recommendation={primaryRecommendation} />
               <AvoidedPatternsBlock note={primaryRecommendation.avoidedNote} fallbackState={fallbackState} />
               <div className="action-row">
@@ -696,6 +710,49 @@ function LocalMemoryInfluenceNote({ notes }: { notes: string[] }) {
   );
 }
 
+function InterpretationComparisonPanel({ comparison }: { comparison: InterpretationComparisonResult }) {
+  const changedCopy = comparison.changedFields.length
+    ? comparison.changedFields.map((field) => field.replace("_", " ")).join(", ")
+    : "No compared signal fields changed";
+  const staticTop = comparison.staticTopRecommendation ?? "No static top recommendation";
+  const aiTop = comparison.aiTopRecommendation ?? "No deterministic top from AI-interpreted signals";
+
+  return (
+    <details className="interpretation-comparison-panel">
+      <summary>
+        <span>Prototype QA: static vs AI interpretation</span>
+        <strong>{comparison.recommendationChanged ? "Recommendation changed" : "Same recommendation"}</strong>
+      </summary>
+      <div className="comparison-body">
+        <p>{changedCopy}</p>
+        <small>Same persona, context, local memory, catalog, and deterministic scorer. Only interpretation source differs.</small>
+        <div className="comparison-grid">
+          <div>
+            <span>Static top</span>
+            <strong>{staticTop}</strong>
+          </div>
+          <div>
+            <span>Deterministic top from AI-interpreted signals</span>
+            <strong>{aiTop}</strong>
+          </div>
+        </div>
+        <ComparisonSignalList title="Signals found by AI but not static rules" values={flattenSignalDiff(comparison.addedByAI)} />
+        <ComparisonSignalList title="Signals found by static rules but not AI" values={flattenSignalDiff(comparison.missedByAI)} />
+        <small>{comparison.notes.join(" ")}</small>
+      </div>
+    </details>
+  );
+}
+
+function ComparisonSignalList({ title, values }: { title: string; values: string[] }) {
+  return (
+    <div className="comparison-signal-list">
+      <span>{title}</span>
+      <p>{values.length ? values.join(", ") : "None"}</p>
+    </div>
+  );
+}
+
 function FallbackCard({ fallbackState }: { fallbackState: FallbackState }) {
   return (
     <section className={`fallback-card ${fallbackState.severity}`}>
@@ -710,6 +767,12 @@ function FallbackCard({ fallbackState }: { fallbackState: FallbackState }) {
         </div>
       )}
     </section>
+  );
+}
+
+function flattenSignalDiff(diff: InterpretationComparisonResult["addedByAI"]): string[] {
+  return Object.entries(diff).flatMap(([field, values]) =>
+    (values ?? []).map((value) => `${field.replace("_", " ")}: ${value.replace("_", " ")}`)
   );
 }
 

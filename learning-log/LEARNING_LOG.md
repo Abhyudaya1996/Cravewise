@@ -126,3 +126,12 @@ Update after every meaningful task.
 - Technical tradeoff: used the Responses API with `fetch` instead of adding an SDK dependency; the app still works without `OPENAI_API_KEY`.
 - Verification: `npm run lint` passed; `node evals/cravewise/run_static_evals.js` passed 8/8 static checks plus 4/4 AI validation checks. Build result should be checked before accepting the milestone.
 - Next action: run live-key AI QA if an API key is available; otherwise review no-key fallback and keep prompt/schema tuning scoped to interpretation only.
+
+## 2026-05-14 - CraveWise AI vs Static Interpretation Comparison
+
+- Milestone: CraveWise Milestone 5B AI vs static interpretation comparison.
+- Changed: added an internal comparison helper, deterministic static-vs-AI top-result comparison, a small collapsible recommendation-screen debug panel, and offline mock comparison checks.
+- Product tradeoff: made AI interpretation quality easier to evaluate without turning the feature into user-facing confidence or AI ranking.
+- Technical tradeoff: reused `scoreRecommendationStatic()` for both comparison paths instead of adding another ranking layer.
+- Verification: pending final `npm run lint`, `npm run build`, and `node evals/cravewise/run_static_evals.js`.
+- Next action: run manual comparison cases with `OPENAI_API_KEY` set, then decide whether prompt/schema tuning is needed.

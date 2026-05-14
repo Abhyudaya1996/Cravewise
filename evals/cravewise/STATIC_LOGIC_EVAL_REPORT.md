@@ -63,6 +63,24 @@ CraveWise static evals passed: 8/8
 CraveWise AI interpretation validation checks passed: 4/4
 ```
 
+## 2026-05-14 Milestone 5B Update
+
+Milestone 5B adds `apps/cravewise/data/interpretationComparison.ts` for internal static-vs-AI interpretation QA.
+
+- Compares static and AI interpretations across dish intent, cuisine, context, preferences, negative constraints, budget, heaviness, exploration intent, confidence, and clarification need.
+- Scores the same decision twice for comparison only: once with static interpretation and once with AI interpretation when available.
+- Reports changed fields, signals found by AI but not static rules, signals found by static rules but not AI, matched fields, static top result, deterministic top from AI-interpreted signals, and whether deterministic scoring changed the top pick.
+- Adds a small collapsible recommendation-screen debug panel.
+- Keeps static evals offline with mock comparison checks.
+
+Latest local runner expectation after 5B:
+
+```text
+CraveWise static evals passed: 8/8
+CraveWise AI interpretation validation checks passed: 5/5
+CraveWise interpretation comparison checks passed: 3/3
+```
+
 ## Static Logic File Paths Found
 
 Expected file:

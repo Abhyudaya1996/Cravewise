@@ -643,3 +643,20 @@ For each persona, manually review `getPersonaInsightsStatic(persona)`.
   - `rawInput` mismatch is accepted
   - Scoring uses a model-rewritten craving string
 
+#### CW-AI-037: Static vs AI comparison remains evaluative
+
+- Persona: Any
+- User input/context: any craving after AI interpretation succeeds or falls back
+- Function or flow: `compareInterpretations()`
+- Expected output/behavior:
+  - Compares static and AI interpretation fields without calling live AI in evals
+  - Scores once with static interpretation and once with AI interpretation when available
+  - Reports changed fields, signals found by AI but not static rules, signals found by static rules but not AI, matched fields, static top, deterministic top from AI-interpreted signals, and whether the top changed
+  - Does not accept AI recommendation names, item IDs, restaurants, scores, rankings, or backups
+  - If AI interpretation is null, comparison should remain available as a fallback note without claiming AI improvement
+- Pass criteria: The comparison helps QA interpretation quality while deterministic scoring remains the only recommendation authority.
+- Failure examples:
+  - AI recommendation text is displayed as the chosen meal
+  - Static evals depend on `OPENAI_API_KEY`
+  - Comparison changes the primary recommendation without passing through `scoreRecommendationStatic()`
+

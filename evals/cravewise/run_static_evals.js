@@ -24,6 +24,9 @@ const data = loadTsModule("apps/cravewise/data/sampleData.ts", { "./dishTaxonomy
 const validation = loadTsModule("apps/cravewise/data/cravingInterpretationValidation.ts", {
   "./dishTaxonomy": taxonomy,
 });
+const comparison = loadTsModule("apps/cravewise/data/interpretationComparison.ts", {
+  "./sampleData": data,
+});
 const cases = JSON.parse(fs.readFileSync(path.join(__dirname, "sample_cases.json"), "utf8"));
 
 const personaIds = {
@@ -177,10 +180,12 @@ function runMachineCase(testCase) {
 const machineCases = cases.filter((testCase) => testCase.machineCheck);
 const results = machineCases.map(runMachineCase);
 const validationResults = runValidationCases();
+const comparisonResults = runComparisonCases();
 const failed = results.filter((result) => result.failures.length > 0);
 const failedValidation = validationResults.filter((result) => result.failures.length > 0);
+const failedComparison = comparisonResults.filter((result) => result.failures.length > 0);
 
-if (failed.length || failedValidation.length) {
+if (failed.length || failedValidation.length || failedComparison.length) {
   console.error(`CraveWise static evals failed: ${failed.length}/${machineCases.length}`);
   failed.forEach((result) => {
     console.error(`- ${result.id}`);
@@ -190,11 +195,16 @@ if (failed.length || failedValidation.length) {
     console.error(`- ${result.id}`);
     result.failures.forEach((failure) => console.error(`  - ${failure}`));
   });
+  failedComparison.forEach((result) => {
+    console.error(`- ${result.id}`);
+    result.failures.forEach((failure) => console.error(`  - ${failure}`));
+  });
   process.exit(1);
 }
 
 console.log(`CraveWise static evals passed: ${machineCases.length}/${machineCases.length}`);
 console.log(`CraveWise AI interpretation validation checks passed: ${validationResults.length}/${validationResults.length}`);
+console.log(`CraveWise interpretation comparison checks passed: ${comparisonResults.length}/${comparisonResults.length}`);
 
 function runValidationCases() {
   const validOutput = {
@@ -259,4 +269,64 @@ function runValidationCases() {
     }
     return { id: testCase.id, failures };
   });
+}
+
+function runComparisonCases() {
+  const persona = data.getPersona(personaIds.Abhyudaya);
+  const context = {
+    ...baseContext,
+    cravingText: "something nice but not too much",
+    budgetBand: "Custom",
+    customBudget: "800",
+  };
+  const staticInterpretation = data.interpretCravingStatic(context);
+  const aiInterpretation = {
+    ...staticInterpretation,
+    explicitDishIntents: ["pizza"],
+    cuisineIntents: ["Pizza"],
+    negativeConstraints: ["avoid_cheese_heavy", "avoid_heavy"],
+    preferenceSignals: ["comfort", "light"],
+    confidence: "high",
+  };
+  const changedResult = comparison.compareInterpretations({
+    persona,
+    context,
+    feedbackMemory: [],
+    staticInterpretation,
+    aiInterpretation,
+  });
+  const fallbackResult = comparison.compareInterpretations({
+    persona,
+    context,
+    feedbackMemory: [],
+    staticInterpretation,
+    aiInterpretation: null,
+  });
+
+  const cases = [
+    {
+      id: "comparison_detects_changed_fields",
+      failures: [
+        !changedResult.changedFields.includes("explicitDishIntents") ? "Expected explicitDishIntents to be marked changed." : null,
+        !(changedResult.addedByAI.explicitDishIntents ?? []).includes("pizza") ? "Expected pizza to be listed as added by AI." : null,
+      ].filter(Boolean),
+    },
+    {
+      id: "comparison_detects_recommendation_change",
+      failures: [
+        !changedResult.recommendationChanged ? "Expected deterministic top recommendation to change under AI interpretation signals." : null,
+        changedResult.staticTopRecommendation === changedResult.aiTopRecommendation ? "Expected static top and deterministic top from AI-interpreted signals to differ." : null,
+      ].filter(Boolean),
+    },
+    {
+      id: "comparison_handles_ai_fallback",
+      failures: [
+        fallbackResult.aiInterpretation !== null ? "Expected null AI interpretation in fallback result." : null,
+        fallbackResult.aiTopRecommendation !== null ? "Expected no deterministic top from AI-interpreted signals when AI interpretation is null." : null,
+        fallbackResult.recommendationChanged ? "Fallback comparison should not mark recommendationChanged." : null,
+      ].filter(Boolean),
+    },
+  ];
+
+  return cases;
 }

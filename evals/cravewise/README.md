@@ -31,6 +31,7 @@ Checks should cover recommendation relevance, regret-risk explanation, constrain
 - Taxonomy QA and score explainability: negative constraints use the `avoid_*` convention, `not_oily` is not duplicated as a positive preference signal, recommendations include internal score breakdowns, and selected static eval cases can run locally.
 - Pre-AI guardrail cleanup: heavy items use `heavy_meal`, negative constraints are hard-filtered instead of double-penalized, and the too-oily memory case proves the new top avoids oily/fried flags.
 - AI structured interpretation guardrails: malformed mock AI outputs are rejected for invalid taxonomy values, forbidden recommendation fields, and raw-input mismatch without calling OpenAI.
+- AI vs static interpretation comparison: mock checks verify changed-field detection, deterministic top-recommendation comparison, and graceful AI-unavailable comparison.
 
 Local feedback memory checks must verify that data is stored only under `cravewise.localFeedbackMemory.v1` in the current browser and can be cleared with "Clear local demo memory".
 
@@ -47,3 +48,18 @@ Milestone 5A adds optional AI signal extraction through `apps/cravewise/app/api/
 - No `OPENAI_API_KEY`: the UI should show `AI unavailable, using local rules`, and recommendations should still work.
 - Timeout or API error: the route should return `static_fallback` metadata and the client should use `interpretCravingStatic()`.
 - Invalid enum or forbidden recommendation field: validation should reject the output and use static fallback.
+
+## AI vs Static Comparison Manual Cases
+
+Milestone 5B adds a small prototype QA comparison panel after a recommendation request. Use it to inspect whether AI interpretation changes structured signals and whether deterministic scoring would choose a different top result from those signals.
+
+- Simran + `pizza but not cheese overloaded`
+- `spicy but not oily`
+- `late night but light`
+- `healthy but filling`
+- `fried momos late night` after prior `too_oily` browser-local memory
+- Ambiguous input: `something nice but not too much`
+- Nonsense input fallback
+- No `OPENAI_API_KEY` fallback
+
+The panel is for QA only. It holds persona, craving input, budget/context, local feedback memory, catalog, and `scoreRecommendationStatic()` constant. Only the interpretation source differs. It should not be treated as user-facing confidence, AI ranking, or production personalization.

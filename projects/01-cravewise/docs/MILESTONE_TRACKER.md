@@ -18,6 +18,7 @@
 | Claude review packet 4E complete | DONE | `projects/01-cravewise/docs/CLAUDE_REVIEW_PACKET_4E.md`; reviewer entrypoint after Milestone 4E with thesis, constraints, architecture, evals, regressions, and review questions | 2026-05-14 |
 | Pre-AI guardrail cleanup complete | DONE | Claude 4E review suggestions applied: `heavy_meal`, hard-filter-only negative constraints, stronger too-oily memory eval, and comments for scoring principles / sleepy-to-heavy mapping | 2026-05-14 |
 | AI structured craving interpretation | REVIEW | Optional server-side `app/api/interpret-craving` route, strict structured output schema, taxonomy validation, static fallback metadata, small UI status copy, and offline malformed-output validation checks | 2026-05-14 |
+| AI vs static interpretation comparison | REVIEW | Internal comparison helper, deterministic static-vs-AI top-result comparison, small debug panel, and offline mock comparison checks | 2026-05-14 |
 | Feedback/scoring loop complete | DONE | local persistence and local feedback-influenced scoring complete; still browser-only and deterministic | 2026-05-13 |
 | Evals complete | REVIEW | `evals/cravewise/STATIC_LOGIC_EVAL_SPEC.md`, `evals/cravewise/STATIC_LOGIC_EVAL_REPORT.md`, expanded `evals/cravewise/sample_cases.json` | 2026-05-13 |
 | Case study complete | TODO | case-studies file | - |
@@ -25,4 +26,4 @@
 
 ## Current Note
 
-Milestone 5A adds AI only as optional server-side structured craving interpretation. The API route keeps `OPENAI_API_KEY` server-side, defaults `OPENAI_MODEL` to `gpt-4.1-mini`, uses a 5-second timeout, validates output against the local taxonomy, and falls back to `interpretCravingStatic()` when AI is missing, invalid, slow, or unavailable. Deterministic scoring still chooses the final recommendation. No backend database, MCP, auth, live restaurant data, ordering, payments, medical/nutrition advice, cross-device memory, or delivery tracking were added.
+Milestone 5B adds static-vs-AI interpretation comparison for QA. The app can compare changed interpretation fields and deterministic top recommendations from static vs AI signals, but AI still does not rank or choose the final meal. Static evals remain offline and include mock comparison checks. No backend database, MCP, auth, live restaurant data, ordering, payments, medical/nutrition advice, cross-device memory, or delivery tracking were added.

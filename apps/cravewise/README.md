@@ -1,6 +1,6 @@
 ﻿# CraveWise App
 
-Status: Milestone 5B AI vs static interpretation comparison added on top of the PRD v1.2 prototype.
+Status: Milestone 5C AI evaluation pack and case study evidence added on top of the PRD v1.2 prototype.
 
 This is a mobile-first clickable prototype using dummy/sample data only. AI is optional and limited to structured craving-signal extraction through a server-side route. It does not use MCP, backend databases, auth, live restaurant data, Swiggy/Zomato integrations, payments, or delivery tracking.
 
@@ -103,6 +103,13 @@ The runner reads `evals/cravewise/sample_cases.json` and executes machine-readab
 
 Milestone 5B adds offline mock comparison checks for changed fields, recommendation-change detection, and AI-unavailable fallback comparison.
 
+Milestone 5C adds portfolio evidence documents:
+
+- `projects/01-cravewise/docs/AI_EVALUATION_PACK_5C.md`
+- `projects/01-cravewise/docs/CASE_STUDY_OUTLINE.md`
+
+These documents structure manual AI-vs-static evidence collection while keeping this eval runner offline and deterministic.
+
 ## Local Feedback Memory
 
 Milestone 3A stores submitted feedback in browser `localStorage` only, using the key:
@@ -173,6 +180,7 @@ This is still static dummy data. It does not represent live restaurant availabil
 - Static eval harness covers key taxonomy regressions and memory-influenced behavior.
 - Optional AI interpretation is server-side, schema-validated, and falls back to local rules without changing deterministic scoring.
 - Static vs AI comparison is internal/debug only and is not shown as user-facing confidence.
+- AI evaluation evidence is documented separately; live AI results should not be claimed unless collected with `OPENAI_API_KEY`.
 
 ## Guardrails
 

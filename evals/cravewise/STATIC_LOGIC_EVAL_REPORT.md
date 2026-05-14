@@ -81,6 +81,15 @@ CraveWise AI interpretation validation checks passed: 5/5
 CraveWise interpretation comparison checks passed: 3/3
 ```
 
+## 2026-05-14 Milestone 5C Update
+
+Milestone 5C adds portfolio evidence scaffolding without changing recommendation logic or live eval dependencies.
+
+- `projects/01-cravewise/docs/AI_EVALUATION_PACK_5C.md` defines the AI-vs-static evaluation goal, curated cases, allowed AI scope, forbidden AI control areas, product tradeoffs, and manual evidence collection instructions.
+- `projects/01-cravewise/docs/CASE_STUDY_OUTLINE.md` outlines the CraveWise portfolio case study.
+- Live AI evaluation was not run locally because `OPENAI_API_KEY` was unavailable.
+- Offline eval behavior remains unchanged: no live OpenAI calls and no API route dependency.
+
 ## Static Logic File Paths Found
 
 Expected file:

@@ -2,7 +2,7 @@
 
 ## Current Portfolio State
 
-Status: CraveWise Milestone 5B AI vs static interpretation comparison implemented for review.
+Status: CraveWise Milestone 5C AI evaluation pack and case study evidence implemented for review.
 
 ## Active Project
 
@@ -10,7 +10,7 @@ CraveWise.
 
 ## Active Milestone
 
-Milestone 5B AI vs static interpretation comparison.
+Milestone 5C AI evaluation pack and case study evidence.
 
 ## Latest Decisions
 
@@ -75,6 +75,9 @@ Milestone 5B AI vs static interpretation comparison.
 - The comparison helper compares static interpretation vs validated AI interpretation fields, then scores both signal sets with `scoreRecommendationStatic()` for QA only.
 - The recommendation screen includes a small collapsible `Static vs AI interpretation` debug panel after a recommendation request.
 - Static evals remain offline and include mock comparison checks for changed fields, recommendation-change detection, and AI fallback comparison.
+- Milestone 5C adds `projects/01-cravewise/docs/AI_EVALUATION_PACK_5C.md`.
+- Milestone 5C adds `projects/01-cravewise/docs/CASE_STUDY_OUTLINE.md`.
+- Live AI evaluation was not run locally because `OPENAI_API_KEY` was not set. Do not claim AI improved cases until manual evidence is recorded.
 - `projects/01-cravewise/docs/CRAVEWISE_PROJECT_STATE.md` is now the primary Claude/Codex handoff and review entrypoint for CraveWise.
 - No backend database, MCP, auth, Supabase, live restaurant data, ordering/payment, delivery tracking, or cross-device memory were added.
 
@@ -85,7 +88,7 @@ Milestone 5B AI vs static interpretation comparison.
 
 ## Next Recommended Action
 
-For broader CraveWise context, read `projects/01-cravewise/docs/CRAVEWISE_PROJECT_STATE.md`. Next recommended milestone: run live-key AI interpretation comparison QA and tune prompt/schema only if outputs fail the local taxonomy contract.
+For broader CraveWise context, read `projects/01-cravewise/docs/CRAVEWISE_PROJECT_STATE.md`. Next recommended milestone: run the AI evaluation pack with `OPENAI_API_KEY` and write the portfolio case study from recorded evidence.
 
 ## Last Updated
 

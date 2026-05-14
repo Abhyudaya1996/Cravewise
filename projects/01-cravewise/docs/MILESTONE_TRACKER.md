@@ -19,6 +19,7 @@
 | Pre-AI guardrail cleanup complete | DONE | Claude 4E review suggestions applied: `heavy_meal`, hard-filter-only negative constraints, stronger too-oily memory eval, and comments for scoring principles / sleepy-to-heavy mapping | 2026-05-14 |
 | AI structured craving interpretation | REVIEW | Optional server-side `app/api/interpret-craving` route, strict structured output schema, taxonomy validation, static fallback metadata, small UI status copy, and offline malformed-output validation checks | 2026-05-14 |
 | AI vs static interpretation comparison | REVIEW | Internal comparison helper, deterministic static-vs-AI top-result comparison, small debug panel, and offline mock comparison checks | 2026-05-14 |
+| AI evaluation pack and case study evidence | REVIEW | `AI_EVALUATION_PACK_5C.md` and `CASE_STUDY_OUTLINE.md`; live-key evidence template, AI scope boundaries, product tradeoffs, and case study outline | 2026-05-14 |
 | Feedback/scoring loop complete | DONE | local persistence and local feedback-influenced scoring complete; still browser-only and deterministic | 2026-05-13 |
 | Evals complete | REVIEW | `evals/cravewise/STATIC_LOGIC_EVAL_SPEC.md`, `evals/cravewise/STATIC_LOGIC_EVAL_REPORT.md`, expanded `evals/cravewise/sample_cases.json` | 2026-05-13 |
 | Case study complete | TODO | case-studies file | - |
@@ -26,4 +27,4 @@
 
 ## Current Note
 
-Milestone 5B adds static-vs-AI interpretation comparison for QA. The app can compare changed interpretation fields and deterministic top recommendations from static vs AI signals, but AI still does not rank or choose the final meal. Static evals remain offline and include mock comparison checks. No backend database, MCP, auth, live restaurant data, ordering, payments, medical/nutrition advice, cross-device memory, or delivery tracking were added.
+Milestone 5C adds a structured AI evaluation pack and case study outline. Live-key AI evidence was not collected locally because `OPENAI_API_KEY` was unavailable, so the pack is a manual template and not a results claim. Static evals remain offline. No backend database, MCP, auth, live restaurant data, ordering, payments, medical/nutrition advice, cross-device memory, or delivery tracking were added.

@@ -660,3 +660,19 @@ For each persona, manually review `getPersonaInsightsStatic(persona)`.
   - Static evals depend on `OPENAI_API_KEY`
   - Comparison changes the primary recommendation without passing through `scoreRecommendationStatic()`
 
+#### CW-AI-038: AI evaluation evidence pack stays honest
+
+- Persona: Multiple curated cases
+- User input/context: Cases listed in `projects/01-cravewise/docs/AI_EVALUATION_PACK_5C.md`
+- Function or flow: Manual live-key review plus offline eval runner
+- Expected output/behavior:
+  - Evidence pack records static interpretation, AI interpretation when available, changed fields, deterministic tops, recommendation change status, PM judgment, and case-study notes
+  - If `OPENAI_API_KEY` is unavailable, live AI results stay marked as not run locally
+  - Static eval runner remains offline and deterministic
+  - Evidence does not claim AI improvement unless observed manually
+- Pass criteria: Portfolio evidence is structured and honest without adding live AI dependency to evals.
+- Failure examples:
+  - Fabricated AI outputs appear in the evidence pack
+  - Static evals call the AI route
+  - Evidence claims AI improved cases without live-key observations
+

@@ -1,8 +1,8 @@
 # CraveWise Project State
 
 Last updated: 2026-05-14
-Current milestone: Milestone 5B - AI vs static interpretation comparison
-Current status: Static prototype, local feedback memory, Simran pizza regression fix, integrity cleanup, browser-only feedback-influenced scoring, feedback reason normalization patch, 30-item dummy catalog expansion, dynamic local insight summaries, local dish taxonomy cleanup, taxonomy QA, score explainability, lightweight static eval harness, Claude review packet, pre-AI guardrail cleanup, optional AI structured craving interpretation, and AI-vs-static interpretation comparison are implemented.
+Current milestone: Milestone 5C - AI evaluation pack and case study evidence
+Current status: Static prototype, local feedback memory, Simran pizza regression fix, integrity cleanup, browser-only feedback-influenced scoring, feedback reason normalization patch, 30-item dummy catalog expansion, dynamic local insight summaries, local dish taxonomy cleanup, taxonomy QA, score explainability, lightweight static eval harness, Claude review packet, pre-AI guardrail cleanup, optional AI structured craving interpretation, AI-vs-static interpretation comparison, and AI evaluation evidence scaffolding are implemented.
 
 ---
 
@@ -36,6 +36,7 @@ Completed milestones:
 - Pre-AI guardrail cleanup
 - AI structured craving interpretation
 - AI vs static interpretation comparison
+- AI evaluation pack and case study outline
 
 Current working features:
 
@@ -63,6 +64,8 @@ Current working features:
 - Local taxonomy validation for AI output
 - Static fallback when AI is unavailable, invalid, slow, or unconfigured
 - Internal static-vs-AI interpretation comparison for QA
+- Manual AI evaluation evidence pack
+- Portfolio case study outline
 
 Not yet built:
 
@@ -88,6 +91,8 @@ Milestone 4F resolved Claude's required pre-AI cleanup items: heavy catalog item
 Milestone 5A adds AI only at the signal extraction boundary: user craving -> server route -> validated `CravingInterpretation` -> deterministic scoring. AI cannot output item IDs, restaurant names, scores, recommendations, rankings, or backups.
 
 Milestone 5B adds a comparison layer for QA: static interpretation and AI interpretation can be scored separately by deterministic scoring to compare changed signals and top recommendation differences. This does not let AI choose the final recommendation.
+
+Milestone 5C adds an evidence pack and case study outline. Live-key AI evidence was not collected locally because `OPENAI_API_KEY` was unavailable, so the pack is a structured manual template rather than a fabricated results report.
 
 ---
 
@@ -164,6 +169,8 @@ Important files:
 - `apps/cravewise/README.md`
 - `projects/01-cravewise/docs/PRD.md`
 - `projects/01-cravewise/docs/CLAUDE_REVIEW_PACKET_4E.md`
+- `projects/01-cravewise/docs/AI_EVALUATION_PACK_5C.md`
+- `projects/01-cravewise/docs/CASE_STUDY_OUTLINE.md`
 - `projects/01-cravewise/docs/MILESTONE_TRACKER.md`
 - `evals/cravewise/README.md`
 - `evals/cravewise/sample_cases.json`
@@ -220,6 +227,15 @@ Milestone 5B comparison:
 - reports `changedFields`, `addedByAI`, `missedByAI`, `matchedFields`, recommendation change status, static top, deterministic top from AI-interpreted signals, and notes
 - adds a small collapsible recommendation-screen debug panel
 - static eval runner remains offline and includes mocked comparison checks
+
+Milestone 5C evidence:
+
+- curated manual cases for AI vs static interpretation
+- explicit AI allowed/not-allowed scope
+- AI product tradeoffs
+- manual evidence table for live-key runs
+- case study outline for portfolio storytelling
+- no live AI results claimed without `OPENAI_API_KEY`
 
 ---
 
@@ -305,6 +321,7 @@ Milestone 4A acceptance criteria:
 | Pre-AI guardrail cleanup | Applied Claude's 4E review suggestions: corrected heavy flag naming, removed double negative-constraint enforcement, strengthened oily-memory eval coverage, and added small scoring/mapping comments. | Keep AI handoff contracts clean before replacing static interpretation. | `apps/cravewise/data/dishTaxonomy.ts`, `apps/cravewise/data/sampleData.ts`, evals/docs/memory files | Complete |
 | AI structured craving interpretation | Added an optional server-side OpenAI interpretation route, strict schema output, taxonomy validation, static fallback metadata, small UI status copy, and offline malformed-output validation checks. | Let AI improve messy craving parsing while deterministic scoring remains the recommendation authority. | `apps/cravewise/app/api/interpret-craving/route.ts`, `apps/cravewise/data/cravingInterpretationValidation.ts`, `apps/cravewise/app/page.tsx`, `apps/cravewise/data/sampleData.ts`, evals/docs/memory files | Review |
 | AI vs static interpretation comparison | Added internal comparison of static interpretation vs validated AI interpretation, deterministic top-result comparison, a small debug panel, and offline mock comparison checks. | Evaluate whether AI improves signal extraction without giving AI ranking authority. | `apps/cravewise/data/interpretationComparison.ts`, `apps/cravewise/app/page.tsx`, `apps/cravewise/app/globals.css`, evals/docs/memory files | Review |
+| AI evaluation pack and case study evidence | Added a structured AI evaluation pack and case study outline for portfolio evidence collection. | Prepare honest AI-vs-static evidence without fabricating live AI results or changing product behavior. | `projects/01-cravewise/docs/AI_EVALUATION_PACK_5C.md`, `projects/01-cravewise/docs/CASE_STUDY_OUTLINE.md`, evals/docs/memory files | Review |
 | Future milestone | TBD | TBD | TBD | Planned |
 
 ---
@@ -374,17 +391,17 @@ Local feedback-influenced scoring now penalizes oily/fried late-night options fo
 5. AI interpretation and comparison still need live-key QA in environments with `OPENAI_API_KEY`.
 6. AI only extracts signals; comparison is internal QA, not user-facing confidence.
 7. No real restaurant availability.
-8. Case study not written yet.
+8. Case study is outlined but not written as a polished portfolio page yet.
 
 ---
 
 ## 10. Recommended Next Milestones
 
-### Next: Live-Key AI Interpretation QA
+### Next: Live-Key Evidence Collection
 
 Goal:
 
-Run manual comparison cases with an API key, inspect changed signals and top-pick differences, and tune extraction prompt/schema only if needed while keeping deterministic scoring unchanged.
+Run the AI evaluation pack cases with an API key, record observed differences, and then write the portfolio case study from evidence rather than assumptions.
 
 ---
 

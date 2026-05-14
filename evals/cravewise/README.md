@@ -32,6 +32,7 @@ Checks should cover recommendation relevance, regret-risk explanation, constrain
 - Pre-AI guardrail cleanup: heavy items use `heavy_meal`, negative constraints are hard-filtered instead of double-penalized, and the too-oily memory case proves the new top avoids oily/fried flags.
 - AI structured interpretation guardrails: malformed mock AI outputs are rejected for invalid taxonomy values, forbidden recommendation fields, and raw-input mismatch without calling OpenAI.
 - AI vs static interpretation comparison: mock checks verify changed-field detection, deterministic top-recommendation comparison, and graceful AI-unavailable comparison.
+- AI evaluation pack: `projects/01-cravewise/docs/AI_EVALUATION_PACK_5C.md` provides a manual evidence template for live-key AI vs static review without changing deterministic evals.
 
 Local feedback memory checks must verify that data is stored only under `cravewise.localFeedbackMemory.v1` in the current browser and can be cleared with "Clear local demo memory".
 
@@ -63,3 +64,20 @@ Milestone 5B adds a small prototype QA comparison panel after a recommendation r
 - No `OPENAI_API_KEY` fallback
 
 The panel is for QA only. It holds persona, craving input, budget/context, local feedback memory, catalog, and `scoreRecommendationStatic()` constant. Only the interpretation source differs. It should not be treated as user-facing confidence, AI ranking, or production personalization.
+
+## AI Evaluation Pack
+
+Milestone 5C adds `projects/01-cravewise/docs/AI_EVALUATION_PACK_5C.md`.
+
+Use it to collect live-key manual evidence for:
+
+- explicit negative constraints
+- preference plus avoid constraints
+- context and lightness
+- ambiguous health/satiety language
+- feedback-memory-sensitive scoring
+- ambiguous natural language
+- nonsense or low-quality input fallback
+- budget-sensitive interpretation
+
+If `OPENAI_API_KEY` is unavailable, keep the live AI rows marked as not run locally. Do not fabricate AI outputs.

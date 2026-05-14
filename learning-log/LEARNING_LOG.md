@@ -135,3 +135,12 @@ Update after every meaningful task.
 - Technical tradeoff: reused `scoreRecommendationStatic()` for both comparison paths instead of adding another ranking layer.
 - Verification: pending final `npm run lint`, `npm run build`, and `node evals/cravewise/run_static_evals.js`.
 - Next action: run manual comparison cases with `OPENAI_API_KEY` set, then decide whether prompt/schema tuning is needed.
+
+## 2026-05-14 - CraveWise AI Evaluation Pack + Case Study Evidence
+
+- Milestone: CraveWise Milestone 5C AI evaluation pack and case study evidence.
+- Changed: added an AI evaluation evidence pack and a case study outline.
+- Product tradeoff: prepared portfolio evidence collection without making unsupported claims about AI quality.
+- Technical tradeoff: kept evals offline and did not add new runtime logic, ranking behavior, backend storage, or live dependencies.
+- Verification: pending final `npm run lint`, `npm run build`, and `node evals/cravewise/run_static_evals.js`.
+- Next action: collect live-key comparison evidence, then write the polished case study from observed results.

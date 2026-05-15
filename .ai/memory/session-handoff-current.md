@@ -2,7 +2,7 @@
 
 ## Current Portfolio State
 
-Status: CraveWise Milestone 5D-C combined Gemini live evidence implemented for review.
+Status: CraveWise case study draft complete from Milestone 5D-C combined Gemini live evidence.
 
 ## Active Project
 
@@ -10,7 +10,7 @@ CraveWise.
 
 ## Active Milestone
 
-Milestone 5D-C complete live AI evidence collection attempt.
+Case study draft from combined AI evidence.
 
 ## Latest Decisions
 
@@ -100,6 +100,8 @@ Milestone 5D-C complete live AI evidence collection attempt.
 - A later clean all-8 rerun hit Gemini HTTP 429 provider limits from D onward.
 - No accepted Gemini case changed the deterministic top recommendation.
 - Evidence rows in `AI_EVALUATION_PACK_5C.md` now include run-source annotations so combined evidence is labeled, not implied as one clean run.
+- `projects/01-cravewise/docs/CASE_STUDY_DRAFT.md` now contains a polished portfolio narrative covering the problem, one-recommendation thesis, static MVP, local feedback memory, taxonomy/scoring, bounded AI interpretation, OpenAI quota-blocked fallback evidence, Gemini partial evidence, Case G AI noise, and next steps.
+- The case study draft preserves the exact takeaway: "Deterministic scoring is necessary because AI can degrade signal quality."
 - `projects/01-cravewise/docs/CRAVEWISE_PROJECT_STATE.md` is now the primary Claude/Codex handoff and review entrypoint for CraveWise.
 - No backend database, MCP, auth, Supabase, live restaurant data, ordering/payment, delivery tracking, or cross-device memory were added.
 
@@ -110,7 +112,7 @@ Milestone 5D-C complete live AI evidence collection attempt.
 
 ## Next Recommended Action
 
-For broader CraveWise context, read `projects/01-cravewise/docs/CRAVEWISE_PROJECT_STATE.md`. Next recommended milestone: draft the case study with nuanced evidence, or rerun during a stable Gemini quota window only if a single clean 8-case pass is needed.
+For broader CraveWise context, read `projects/01-cravewise/docs/CRAVEWISE_PROJECT_STATE.md`. Next recommended milestone: convert `projects/01-cravewise/docs/CASE_STUDY_DRAFT.md` into a portfolio page with screenshots and a concise demo script, or rerun Gemini only if a single clean 8-case evidence pass is required.
 
 ## Last Updated
 

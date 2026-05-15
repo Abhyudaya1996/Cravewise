@@ -1,8 +1,8 @@
 # CraveWise Project State
 
 Last updated: 2026-05-15
-Current milestone: Milestone 5D - live-key AI evidence pass
-Current status: Static prototype, local feedback memory, Simran pizza regression fix, integrity cleanup, browser-only feedback-influenced scoring, feedback reason normalization patch, 30-item dummy catalog expansion, dynamic local insight summaries, local dish taxonomy cleanup, taxonomy QA, score explainability, lightweight static eval harness, Claude review packet, pre-AI guardrail cleanup, optional AI structured craving interpretation, AI-vs-static interpretation comparison, AI evaluation evidence scaffolding, live-key fallback evidence, live route diagnosis, Gemini alternate-provider support, and combined live Gemini evidence are implemented.
+Current milestone: CraveWise case study draft
+Current status: Static prototype, local feedback memory, Simran pizza regression fix, integrity cleanup, browser-only feedback-influenced scoring, feedback reason normalization patch, 30-item dummy catalog expansion, dynamic local insight summaries, local dish taxonomy cleanup, taxonomy QA, score explainability, lightweight static eval harness, Claude review packet, pre-AI guardrail cleanup, optional AI structured craving interpretation, AI-vs-static interpretation comparison, AI evaluation evidence scaffolding, live-key fallback evidence, live route diagnosis, Gemini alternate-provider support, combined live Gemini evidence, and a polished case study draft are implemented.
 
 ---
 
@@ -41,6 +41,7 @@ Completed milestones:
 - Live AI route diagnosis
 - Gemini alternate provider for live evidence
 - Combined Gemini live evidence collection
+- Portfolio case study draft
 
 Current working features:
 
@@ -73,6 +74,7 @@ Current working features:
 - Safe live route diagnostics for fallback investigation
 - Provider selection with OpenAI or Gemini
 - Portfolio case study outline
+- Portfolio case study draft from combined AI evidence
 
 Not yet built:
 
@@ -108,6 +110,8 @@ Milestone 5D-A diagnoses the live route. The env file was corrected to `apps/cra
 Milestone 5D-B adds Gemini as an alternate provider for live evidence collection without changing the architecture. `AI_PROVIDER=openai | gemini` selects the provider, `GEMINI_MODEL` defaults to `gemini-2.5-flash`, and Gemini output is validated through the same local `CravingInterpretation` validator before deterministic scoring. A Gemini live pass produced accepted interpretations for several curated cases but still hit timeout / HTTP 429 provider limits before completing all 8 cases.
 
 Milestone 5D-C reruns the missing Gemini cases and records combined evidence with explicit run-source annotations. Cases G and H returned accepted Gemini interpretations, while F still fell back due to invalid output JSON. Case G is confirmed AI noise: Gemini treated nonsense as high-confidence exploratory intent instead of setting `needs_clarification: true`. A clean all-8 rerun was attempted but hit Gemini HTTP 429 from case D onward, so the evaluation pack contains combined evidence across runs rather than a single uninterrupted 8-case pass. No recommendation changed in accepted Gemini cases.
+
+The case study draft turns the combined 5D-C evidence into a portfolio narrative. It covers the problem, one-recommendation thesis, static MVP, local feedback memory, taxonomy and deterministic scoring, bounded AI interpretation, OpenAI quota-blocked fallback evidence, Gemini partial evidence, Case G AI-noise learning, and next steps. The draft frames AI as useful but bounded, not broadly better than static rules, and preserves the takeaway: "Deterministic scoring is necessary because AI can degrade signal quality."
 
 ---
 
@@ -186,6 +190,7 @@ Important files:
 - `projects/01-cravewise/docs/CLAUDE_REVIEW_PACKET_4E.md`
 - `projects/01-cravewise/docs/AI_EVALUATION_PACK_5C.md`
 - `projects/01-cravewise/docs/CASE_STUDY_OUTLINE.md`
+- `projects/01-cravewise/docs/CASE_STUDY_DRAFT.md`
 - `projects/01-cravewise/docs/MILESTONE_TRACKER.md`
 - `evals/cravewise/README.md`
 - `evals/cravewise/sample_cases.json`
@@ -289,6 +294,13 @@ Milestone 5D-C Gemini evidence:
 - no accepted Gemini case changed the deterministic top recommendation
 - evidence rows now include run-source annotations
 
+Case study draft:
+
+- `CASE_STUDY_DRAFT.md` converts the evidence into a portfolio-ready narrative
+- covers problem, product thesis, one-recommendation wedge, static MVP, local feedback memory, taxonomy, deterministic scoring, bounded AI, OpenAI fallback, Gemini partial evidence, and Case G noise
+- does not claim AI is broadly better than static rules
+- preserves deterministic scoring as final recommendation authority
+
 ---
 
 ## 6. Local Feedback Memory
@@ -378,6 +390,7 @@ Milestone 4A acceptance criteria:
 | Live AI route diagnosis | Corrected env-file hygiene, added safe fallback diagnostics, confirmed no-key fallback, and diagnosed the live OpenAI failure as `insufficient_quota`. | Keep AI evaluation honest by separating product fallback health from upstream account/quota readiness. | `.gitignore`, `apps/cravewise/app/api/interpret-craving/route.ts`, docs/memory files | Review |
 | Gemini alternate provider | Added `AI_PROVIDER` selection, kept OpenAI path, added Gemini `generateContent` path, and recorded partial Gemini live evidence. | Collect portfolio evidence without spending on OpenAI while keeping AI bounded to structured signal extraction. | `apps/cravewise/app/api/interpret-craving/route.ts`, docs/memory files | Review |
 | Combined Gemini live evidence | Reran missing Gemini cases, recorded accepted G/H interpretations, retained F fallback, and documented provider-limit behavior during a full rerun. | Use live evidence honestly, including noise and fallback, instead of claiming AI is universally better. | `projects/01-cravewise/docs/AI_EVALUATION_PACK_5C.md`, docs/memory files | Review |
+| Case study draft | Wrote a polished portfolio case study draft from the combined evidence, including the problem, product thesis, local memory loop, deterministic scoring, bounded AI interpretation, provider failure evidence, Gemini partial evidence, and next steps. | Convert evidence into an honest portfolio narrative without adding unsupported AI claims or new product scope. | `projects/01-cravewise/docs/CASE_STUDY_DRAFT.md`, tracker/log/handoff/state files | Review |
 | Future milestone | TBD | TBD | TBD | Planned |
 
 ---
@@ -447,17 +460,17 @@ Local feedback-influenced scoring now penalizes oily/fried late-night options fo
 5. AI interpretation has combined Gemini live evidence but still lacks a single clean uninterrupted 8-case pass; OpenAI is blocked by `insufficient_quota`, and Gemini hit provider limits during a full rerun.
 6. AI only extracts signals; comparison is internal QA, not user-facing confidence.
 7. No real restaurant availability.
-8. Case study is outlined but not written as a polished portfolio page yet.
+8. Case study is drafted in Markdown but not yet converted into a portfolio page with screenshots.
 
 ---
 
 ## 10. Recommended Next Milestones
 
-### Next: AI Route Reliability / Successful Live-Response Evidence
+### Next: Portfolio Case Study Page
 
 Goal:
 
-Use the combined evidence to draft a nuanced case study, or rerun during a stable Gemini quota window if a single clean pass is required.
+Convert `CASE_STUDY_DRAFT.md` into a polished portfolio page with screenshots and a concise demo script. Rerun Gemini during a stable quota window only if a single clean 8-case evidence pass is required.
 
 ---
 

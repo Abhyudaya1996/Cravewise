@@ -180,3 +180,12 @@ Update after every meaningful task.
 - Technical tradeoff: changed only docs/memory; recommendation logic and static eval isolation remained untouched.
 - Verification: pending final `npm run lint`, `npm run build`, and `node evals/cravewise/run_static_evals.js`.
 - Next action: draft the case study from the combined evidence, or rerun during a stable Gemini quota window if a single clean 8-case pass is required.
+
+## 2026-05-15 - CraveWise Case Study Draft
+
+- Milestone: portfolio case study draft.
+- Changed: added `projects/01-cravewise/docs/CASE_STUDY_DRAFT.md` with a polished narrative covering the problem, one-recommendation thesis, static MVP, local feedback memory, taxonomy/scoring, bounded AI interpretation, OpenAI quota fallback, Gemini partial evidence, Case G AI noise, and next steps.
+- Product tradeoff: framed AI as useful but bounded rather than broadly better than static rules.
+- Technical tradeoff: changed docs and memory only; no product features, backend, database, live integrations, auth, ordering, payments, delivery, or cross-device memory were added.
+- Verification: documentation-only change; previous verified baseline remains `npm run lint`, `npm run build`, and `node evals/cravewise/run_static_evals.js`.
+- Next action: convert the case study draft into a portfolio page with screenshots and a short demo script.

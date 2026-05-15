@@ -26,9 +26,9 @@
 | Combined Gemini live evidence | REVIEW | Missing cases rerun: G/H accepted, F invalid-output fallback retained, full rerun hit Gemini HTTP 429 limits; no accepted Gemini case changed deterministic top result | 2026-05-15 |
 | Feedback/scoring loop complete | DONE | local persistence and local feedback-influenced scoring complete; still browser-only and deterministic | 2026-05-13 |
 | Evals complete | REVIEW | `evals/cravewise/STATIC_LOGIC_EVAL_SPEC.md`, `evals/cravewise/STATIC_LOGIC_EVAL_REPORT.md`, expanded `evals/cravewise/sample_cases.json` | 2026-05-13 |
-| Case study complete | TODO | case-studies file | - |
+| Case study draft complete | REVIEW | `projects/01-cravewise/docs/CASE_STUDY_DRAFT.md`; polished portfolio narrative from combined Milestone 5D-C evidence | 2026-05-15 |
 | Deployed demo | TODO | URL | - |
 
 ## Current Note
 
-Milestone 5D-C records combined Gemini live evidence. Missing cases were rerun first: G and H accepted, while F still fell back on invalid output JSON. A clean all-8 rerun hit Gemini HTTP 429 provider limits from D onward, so the evidence pack is honest combined evidence rather than a fabricated clean pass. Static evals remain offline. No backend database, MCP, auth, live restaurant data, ordering, payments, medical/nutrition advice, cross-device memory, or delivery tracking were added.
+The CraveWise case study draft now turns the combined Milestone 5D-C evidence into a portfolio-ready narrative. It frames AI as useful but bounded, documents OpenAI quota fallback and Gemini partial evidence, includes Case G AI-noise learning, and preserves the conclusion that deterministic scoring remains final recommendation authority. Static evals remain offline. No backend database, MCP, auth, live restaurant data, ordering, payments, medical/nutrition advice, cross-device memory, or delivery tracking were added.

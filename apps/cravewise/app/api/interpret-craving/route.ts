@@ -162,7 +162,17 @@ function extractOutputText(provider: AIProvider, payload: OpenAIResponsePayload 
 function parseStructuredOutputText(outputText: string): unknown {
   const trimmed = outputText.trim();
   const fencedJsonMatch = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
-  return JSON.parse(fencedJsonMatch ? fencedJsonMatch[1] : trimmed);
+  if (fencedJsonMatch) return JSON.parse(fencedJsonMatch[1]);
+  try {
+    return JSON.parse(trimmed);
+  } catch (error) {
+    const firstObject = trimmed.indexOf("{");
+    const lastObject = trimmed.lastIndexOf("}");
+    if (firstObject >= 0 && lastObject > firstObject) {
+      return JSON.parse(trimmed.slice(firstObject, lastObject + 1));
+    }
+    throw error;
+  }
 }
 
 function buildDiagnostics(

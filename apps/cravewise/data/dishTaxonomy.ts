@@ -51,6 +51,7 @@ export const preferenceSignals = [
   "group_safe",
   "healthy",
   "light",
+  "meaty",
   "meeting_safe",
   "reorder",
   "spicy",
@@ -62,6 +63,7 @@ export const negativeConstraints = [
   "avoid_creamy",
   "avoid_expensive",
   "avoid_heavy",
+  "avoid_non_veg",
   "avoid_oily",
   "avoid_slow_delivery",
 ] as const;

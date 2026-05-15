@@ -867,7 +867,7 @@ const rawMenuCatalog: RawMenuItem[] = [
     dishName: "Chicken Kathi Roll",
     cuisine: "North Indian",
     price: 310,
-    tags: ["comfort", "weekday_rush", "fast_delivery", "reliable", "spicy"],
+    tags: ["comfort", "weekday_rush", "fast_delivery", "reliable", "spicy", "filling"],
     spiceLevel: "medium",
     heaviness: "medium",
     bestFor: ["Weekday Rush", "Weekday lunch", "Post-work"],
@@ -1078,6 +1078,7 @@ function inferPreferenceTags(item: RawMenuItem): PreferenceSignal[] {
   if (/comfort|reorder|homely|filling/.test(tags) || item.reorderSignal === "high") values.push("comfort");
   if (/filling|protein|platter|combo/.test(tags) || item.heaviness === "heavy") values.push("filling");
   if (/light|salad|healthy|lean|not_too_heavy/.test(tags) || item.heaviness === "light") values.push("light");
+  if (/meaty|meat|chicken|biryani|kathi|non veg|non-veg/.test(`${item.dishName} ${tags}`.toLowerCase())) values.push("meaty");
   if (/healthy|protein|lean|bowl/.test(tags) || item.cuisine === "Healthy Bowls" || item.cuisine === "Mediterranean") values.push("healthy");
   if (/fresh|not oily|not_oily/.test(tags)) values.push("fresh");
   if (/group|sharing|group_safe/.test(tags) || item.bestFor.includes("Group order")) values.push("group_safe");
@@ -1127,6 +1128,7 @@ function inferAvoidIf(item: RawMenuItem, regretRiskFlags: RegretRiskFlag[]): Neg
   if (item.heaviness === "heavy") values.push("avoid_heavy");
   if (item.price > 600) values.push("avoid_expensive");
   if (item.estimatedDeliveryMax > 35 || item.deliveryReliabilityScore < 78) values.push("avoid_slow_delivery");
+  if (/\b(meat|chicken|mutton|non.?veg)\b/.test(`${item.dishName} ${item.tags.join(" ")}`.toLowerCase())) values.push("avoid_non_veg");
   return uniqueSignals(values);
 }
 
@@ -1195,6 +1197,11 @@ function matchContextSignals(text: string): ContextSignal[] {
   return values;
 }
 
+function hasMeatyIntent(text: string): boolean {
+  if (/\b(no|not|without|avoid)\s+(too\s+)?(meat|meaty|chicken|non.?veg)\b/.test(text)) return false;
+  return /\b(meaty|meat|chicken|non.?veg|mutton)\b/.test(text);
+}
+
 function matchPreferenceSignals(text: string): PreferenceSignal[] {
   const values: PreferenceSignal[] = [];
   if (/spicy|spicyy|chatpata|schezwan|chilli/.test(text)) values.push("spicy");
@@ -1207,6 +1214,7 @@ function matchPreferenceSignals(text: string): PreferenceSignal[] {
   if (/group safe|safe for group|sharing/.test(text)) values.push("group_safe");
   if (/healthy|balanced/.test(text)) values.push("healthy");
   if (/light|lighttt|not heavy|sleepy/.test(text)) values.push("light");
+  if (hasMeatyIntent(text)) values.push("meaty");
   if (/meeting safe|meeting/.test(text)) values.push("meeting_safe");
   if (/reorder|repeat/.test(text)) values.push("reorder");
   if (/value|budget|worth/.test(text)) values.push("value");
@@ -1215,13 +1223,18 @@ function matchPreferenceSignals(text: string): PreferenceSignal[] {
 
 function matchNegativeConstraints(text: string): NegativeConstraint[] {
   const values: NegativeConstraint[] = [];
-  if (/cheese overloaded|too much cheese|too cheesy|cheesy|cheese heavy|loaded cheese/.test(text)) values.push("avoid_cheese_heavy");
-  if (/creamy|cream/.test(text)) values.push("avoid_creamy");
+  // "cheesy" alone is affirmative; constraint requires an explicit negative qualifier or a heavy-cheese phrase.
+  if (/cheese overloaded|too much cheese|too cheesy|cheese heavy|loaded cheese|\b(not|no|avoid)\s+(too\s+)?cheese/.test(text)) values.push("avoid_cheese_heavy");
+  // "creamy" alone is affirmative; constraint requires a negative qualifier.
+  if (/\b(not|no|too|avoid)\s+(too\s+)?(creamy|cream)/.test(text)) values.push("avoid_creamy");
   if (/expensive|overpriced|not worth|under|budget|not above/.test(text)) values.push("avoid_expensive");
   // "sleepy" is treated as a heaviness constraint because the user is asking to avoid a meal that may feel too heavy for the context.
   if (/too heavy|not heavy|sleepy|light/.test(text)) values.push("avoid_heavy");
-  if (/oily|oil|greasy/.test(text)) values.push("avoid_oily");
+  // "oily" alone is affirmative; constraint requires a negative qualifier. "greasy" is kept as an implicit aversion.
+  if (/\b(not|no|too|avoid)\s+(too\s+)?(oily|oil)|\bgreasy\b/.test(text)) values.push("avoid_oily");
   if (/slow delivery|late delivery|quick|fast|20 mins|20 min/.test(text)) values.push("avoid_slow_delivery");
+  // "veg only", "vegetarian", "no meat/chicken/non-veg" signal a dietary constraint against non-vegetarian items.
+  if (/\bveg(etarian)?\s+only\b|\bpure\s+veg\b|\b(no|not|without|avoid)\s+(meat|chicken|non.?veg)\b|\bvegetarian\b/.test(text)) values.push("avoid_non_veg");
   return values;
 }
 
@@ -1369,10 +1382,19 @@ export function scoreRecommendationStatic(
       if (interpretation.contextSignals.includes("group_order") && item.preferenceTags.includes("group_safe")) breakdown.contextFitScore += 24;
       if (item.personaFit.includes(persona.id)) breakdown.personaPreferenceScore += hasExplicitIntent ? 12 : 25;
       if (item.preferenceTags.some((signal) => interpretation.preferenceSignals.includes(signal))) breakdown.preferenceMatchScore += 30;
+      if (interpretation.preferenceSignals.includes("meaty") && !item.preferenceTags.includes("meaty")) breakdown.preferenceMatchScore -= 35;
+      if (interpretation.preferenceSignals.includes("filling") && !item.preferenceTags.includes("filling") && item.heaviness !== "heavy") breakdown.preferenceMatchScore -= 15;
       if (item.reorderSignal === "high") breakdown.personaPreferenceScore += context.explorationIntent === "safe" ? 18 : 10;
       if (context.explorationIntent === "somewhat_new" && item.novelty === "somewhat_new") breakdown.explorationScore += 12;
       if (context.explorationIntent === "surprise_me" && item.novelty !== "familiar") breakdown.explorationScore += 12;
       if (normalizeHeaviness(context.heaviness) === item.heaviness) breakdown.heavinessScore += 8;
+      const timeWindowMax = getAvailableTimeMax(context.availableTime);
+      if (timeWindowMax !== null) {
+        if (item.estimatedDeliveryMax <= timeWindowMax) breakdown.reliabilityScore += 18;
+        else if (item.estimatedDeliveryMin <= timeWindowMax) breakdown.reliabilityScore += 6;
+        else if (item.estimatedDeliveryMax > timeWindowMax + 10) breakdown.reliabilityScore -= 28;
+        else breakdown.reliabilityScore -= 14;
+      }
       if (item.regretRisk === "high") breakdown.regretRiskPenalty -= 35;
       if (item.regretRisk === "medium") breakdown.regretRiskPenalty -= 10;
       if (isRush) {
@@ -1530,13 +1552,15 @@ function makeRecommendation(
   const isRush = context.occasion === "Weekday Rush";
   const budgetFit = item.price <= budgetMax ? `within ${context.budgetBand}` : `slightly above ${context.budgetBand}`;
   const explicitIntentCopy = getExplicitIntentCopy(interpretation);
-  const constraintCopy = interpretation.negativeConstraints.length ? interpretation.negativeConstraints.map(formatNegativeConstraint).join(", ") : persona.topRegretPattern;
-  const preferenceCopy = interpretation.preferenceSignals.join(", ");
+  const activeConstraints = interpretation.negativeConstraints;
+  const preferenceCopy = formatPreferenceCopy(interpretation.preferenceSignals);
+  const caveats = getRecommendationCaveats(item, context, budgetMax);
+  const caveatCopy = caveats.length ? ` ${caveats.join(" ")}` : "";
   const reason = isRush && item.id === "baja-bowl-classic-chicken-burrito"
-    ? `${item.dishName} fits because ${persona.name} has a comfort reorder pattern for burritos, the dummy ETA is ${item.estimatedDeliveryMin}-${item.estimatedDeliveryMax} mins, and it is meeting-safe for "${context.upcomingConstraint}".`
+    ? `${item.dishName} fits because ${persona.name} has a comfort reorder pattern for burritos, the dummy ETA is ${item.estimatedDeliveryMin}-${item.estimatedDeliveryMax} mins, and it is meeting-safe for "${context.upcomingConstraint}".${caveatCopy}`
     : explicitIntentCopy
-      ? `${item.dishName} fits the explicit ${explicitIntentCopy} craving, stays ${budgetFit}, and avoids ${constraintCopy}. Persona defaults are secondary for this pick.`
-    : `${item.dishName} fits because ${persona.name} has ${persona.primaryMode} behavior, likes ${persona.topCuisines.slice(0, 2).join(" and ")}, and this matches ${preferenceCopy} without triggering ${persona.topRegretPattern}.`;
+      ? `${item.dishName} fits the explicit ${explicitIntentCopy} craving and stays ${budgetFit}.${activeConstraints.length ? ` It avoids active constraints: ${activeConstraints.map(formatNegativeConstraint).join(", ")}.` : " Persona defaults are secondary for this pick."}${caveatCopy}`
+    : `${item.dishName} fits the ${preferenceCopy} ${formatOccasionCopy(context.occasion)} craving and matches ${persona.name}'s ${persona.topCuisines.slice(0, 2).join(" and ")} discovery pattern.${activeConstraints.length ? ` It avoids active constraints: ${activeConstraints.map(formatNegativeConstraint).join(", ")}.` : ""}${caveatCopy}`;
   return {
     item,
     score,
@@ -1666,12 +1690,41 @@ function getExplicitIntentCopy(interpretation: CravingInterpretation): string {
   return [...dish, ...cuisine].join(" / ");
 }
 
+function formatPreferenceCopy(preferences: PreferenceSignal[]): string {
+  if (!preferences.length) return "comfort";
+  return preferences.map((preference) => preference.replace("_", " ")).join(", ");
+}
+
+function formatOccasionCopy(occasion: Occasion): string {
+  return occasion.toLowerCase().replace("weekday rush", "weekday-rush");
+}
+
+function getRecommendationCaveats(item: MenuItem, context: DecisionContext, budgetMax: number): string[] {
+  const caveats: string[] = [];
+  if (item.price > budgetMax) {
+    caveats.push(`It is slightly above the selected budget at Rs.${item.price}.`);
+  }
+  const timeWindowMax = getAvailableTimeMax(context.availableTime);
+  if (timeWindowMax !== null && item.estimatedDeliveryMax > timeWindowMax) {
+    caveats.push(`The dummy ETA is ${item.estimatedDeliveryMin}-${item.estimatedDeliveryMax} mins, which may take longer than the ${context.availableTime} window.`);
+  }
+  return caveats;
+}
+
+function getAvailableTimeMax(availableTime: DecisionContext["availableTime"]): number | null {
+  if (availableTime === "Under 20 min") return 20;
+  if (availableTime === "20-30 min") return 30;
+  if (availableTime === "30-45 min") return 45;
+  return null;
+}
+
 function formatNegativeConstraint(constraint: NegativeConstraint): string {
   const labels: Record<NegativeConstraint, string> = {
     avoid_cheese_heavy: "cheese-heavy options",
     avoid_creamy: "creamy-heavy options",
     avoid_expensive: "above-budget options",
     avoid_heavy: "heavy options",
+    avoid_non_veg: "non-vegetarian options",
     avoid_oily: "oily/fried options",
     avoid_slow_delivery: "slow or unreliable options",
   };

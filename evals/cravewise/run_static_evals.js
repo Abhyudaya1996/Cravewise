@@ -125,6 +125,26 @@ function runMachineCase(testCase) {
     }
   }
 
+  if (testCase.topEstimatedDeliveryMaxAtMost && top.item.estimatedDeliveryMax > testCase.topEstimatedDeliveryMaxAtMost) {
+    failures.push(`Top recommendation ETA max ${top.item.estimatedDeliveryMax} exceeds ${testCase.topEstimatedDeliveryMaxAtMost}.`);
+  }
+
+  if (testCase.topPriceAtMost && top.item.price > testCase.topPriceAtMost) {
+    failures.push(`Top recommendation price ${top.item.price} exceeds ${testCase.topPriceAtMost}.`);
+  }
+
+  for (const text of testCase.reasonMustInclude ?? []) {
+    if (!top.reason.toLowerCase().includes(text.toLowerCase())) {
+      failures.push(`Top recommendation reason must include "${text}".`);
+    }
+  }
+
+  for (const text of testCase.reasonMustNotInclude ?? []) {
+    if (top.reason.toLowerCase().includes(text.toLowerCase())) {
+      failures.push(`Top recommendation reason must not include "${text}".`);
+    }
+  }
+
   for (const tag of testCase.topMustIncludeReliabilityTags ?? []) {
     if (!top.item.reliabilityTags.includes(tag)) {
       failures.push(`Top recommendation missing reliability tag ${tag}.`);
@@ -150,6 +170,12 @@ function runMachineCase(testCase) {
   for (const signal of testCase.mustIncludeNegativeConstraints ?? []) {
     if (!interpretation.negativeConstraints.includes(signal)) {
       failures.push(`Expected negative constraint ${signal}.`);
+    }
+  }
+
+  for (const signal of testCase.mustNotIncludeNegativeConstraints ?? []) {
+    if (interpretation.negativeConstraints.includes(signal)) {
+      failures.push(`Negative constraint must not include ${signal}.`);
     }
   }
 

@@ -371,6 +371,33 @@
     ]
   },
   {
+    "id": "taxonomy_meaty_filling_time_window",
+    "category": "recommendation integrity",
+    "persona": "Abhyudaya",
+    "input": "something meaty",
+    "machineCheck": true,
+    "context": {
+      "budgetBand": "Rs.400-600",
+      "availableTime": "20-30 min",
+      "occasion": "Weekend dinner",
+      "explorationIntent": "surprise_me",
+      "heaviness": "Filling",
+      "upcomingConstraint": "No constraint"
+    },
+    "mustIncludePreferenceSignals": ["meaty", "filling"],
+    "topMustIncludePreferenceTags": ["meaty", "filling"],
+    "topEstimatedDeliveryMaxAtMost": 30,
+    "topPriceAtMost": 600,
+    "reasonMustInclude": ["meaty", "filling", "weekend dinner"],
+    "reasonMustNotInclude": ["late-night", "late night", "oily"],
+    "expected": [
+      "interpret meaty and filling as preference signals",
+      "prefer a meaty/filling option that fits the selected 20-30 min time window when available",
+      "do not mention oily late-night snack avoidance when that constraint is not active",
+      "keep any budget or dummy ETA caveat explicit if an out-of-window or over-budget item is selected"
+    ]
+  },
+  {
     "id": "taxonomy_group_order_under_budget",
     "category": "local dish taxonomy",
     "persona": "Pransih",
@@ -504,5 +531,143 @@
       "no clamped percentage such as 54% taste match appears",
       "raw heuristic score is not presented as a calibrated probability"
     ]
+  },
+  {
+    "id": "negation_no_chicken_light",
+    "machineCheck": true,
+    "category": "signal negation",
+    "persona": "Abhyudaya",
+    "input": "no chicken, something light",
+    "context": {
+      "occasion": "Weekend dinner",
+      "heaviness": "Light",
+      "budgetBand": "Rs.200-350",
+      "explorationIntent": "somewhat_new",
+      "availableTime": "No rush",
+      "upcomingConstraint": "No constraint"
+    },
+    "mustNotIncludePreferenceSignals": ["meaty"],
+    "mustIncludePreferenceSignals": ["light"],
+    "mustNotIncludeDishType": "biryani"
+  },
+  {
+    "id": "negation_veg_only_filling",
+    "machineCheck": true,
+    "category": "signal negation",
+    "persona": "Simran",
+    "input": "veg only, something filling",
+    "context": {
+      "occasion": "Weekday lunch",
+      "heaviness": "Medium",
+      "budgetBand": "Rs.200-350",
+      "explorationIntent": "safe",
+      "availableTime": "No rush",
+      "upcomingConstraint": "No constraint"
+    },
+    "mustIncludeNegativeConstraints": ["avoid_non_veg"],
+    "mustIncludePreferenceSignals": ["filling"],
+    "mustAvoidFlags": ["avoid_non_veg"]
+  },
+  {
+    "id": "affirmative_oily_no_constraint",
+    "machineCheck": true,
+    "category": "affirmative texture",
+    "persona": "Abhyudaya",
+    "input": "oily street food",
+    "context": {
+      "occasion": "Late night",
+      "heaviness": "Medium",
+      "budgetBand": "Rs.150-300",
+      "explorationIntent": "somewhat_new",
+      "availableTime": "No rush",
+      "upcomingConstraint": "No constraint"
+    },
+    "mustNotIncludeNegativeConstraints": ["avoid_oily"]
+  },
+  {
+    "id": "affirmative_creamy_no_constraint",
+    "machineCheck": true,
+    "category": "affirmative texture",
+    "persona": "Kartik",
+    "input": "something creamy and filling",
+    "context": {
+      "occasion": "Weekend dinner",
+      "heaviness": "Medium",
+      "budgetBand": "Rs.300-500",
+      "explorationIntent": "safe",
+      "availableTime": "No rush",
+      "upcomingConstraint": "No constraint"
+    },
+    "mustNotIncludeNegativeConstraints": ["avoid_creamy"],
+    "mustIncludePreferenceSignals": ["filling"]
+  },
+  {
+    "id": "affirmative_cheesy_no_constraint",
+    "machineCheck": true,
+    "category": "affirmative texture",
+    "persona": "Abhyudaya",
+    "input": "cheesy pizza",
+    "context": {
+      "occasion": "Weekend dinner",
+      "heaviness": "Medium",
+      "budgetBand": "Rs.300-500",
+      "explorationIntent": "somewhat_new",
+      "availableTime": "No rush",
+      "upcomingConstraint": "No constraint"
+    },
+    "mustNotIncludeNegativeConstraints": ["avoid_cheese_heavy"],
+    "mustIncludeDishType": "pizza"
+  },
+  {
+    "id": "regression_too_cheesy_still_fires",
+    "machineCheck": true,
+    "category": "signal negation",
+    "persona": "Abhyudaya",
+    "input": "pizza but not too cheesy",
+    "context": {
+      "occasion": "Weekend dinner",
+      "heaviness": "Medium",
+      "budgetBand": "Rs.300-500",
+      "explorationIntent": "somewhat_new",
+      "availableTime": "No rush",
+      "upcomingConstraint": "No constraint"
+    },
+    "mustIncludeNegativeConstraints": ["avoid_cheese_heavy"],
+    "mustIncludeDishType": "pizza"
+  },
+  {
+    "id": "regression_too_oily_still_fires",
+    "machineCheck": true,
+    "category": "signal negation",
+    "persona": "Abhyudaya",
+    "input": "spicy but not too oily",
+    "context": {
+      "occasion": "Weekend dinner",
+      "heaviness": "Medium",
+      "budgetBand": "Rs.250-400",
+      "explorationIntent": "somewhat_new",
+      "availableTime": "20-30 min",
+      "upcomingConstraint": "No constraint"
+    },
+    "mustIncludeNegativeConstraints": ["avoid_oily"],
+    "mustIncludePreferenceSignals": ["spicy"]
+  },
+  {
+    "id": "negation_vegetarian_under_budget",
+    "machineCheck": true,
+    "category": "signal negation",
+    "persona": "Simran",
+    "input": "vegetarian, something under 300",
+    "context": {
+      "occasion": "Weekday lunch",
+      "heaviness": "Light",
+      "budgetBand": "Rs.150-300",
+      "explorationIntent": "safe",
+      "availableTime": "No rush",
+      "upcomingConstraint": "No constraint"
+    },
+    "mustIncludeNegativeConstraints": ["avoid_non_veg"],
+    "mustAvoidFlags": ["avoid_non_veg"],
+    "topPriceAtMost": 300
   }
 ]

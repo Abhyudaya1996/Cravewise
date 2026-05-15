@@ -91,19 +91,20 @@ Current evidence status:
 - Milestone 5D live-key fallback evidence was collected with the key loaded server-side, but accepted AI interpretations were not returned because the route hit timeout/API-error fallback paths.
 - Milestone 5D-A diagnosed the live failure as upstream OpenAI quota: a tiny structured-output call returned HTTP `429` with `insufficient_quota`.
 - Milestone 5D-B added Gemini as an alternate server-side provider selected by `AI_PROVIDER`. Gemini produced accepted interpretations for several curated cases, but the run still hit timeout / HTTP 429 provider limits before completing all 8 cases.
+- Milestone 5D-C completed missing-case evidence where possible: Gemini accepted G and H, F still failed validation, and a full clean rerun was blocked by HTTP 429 provider limits.
 - The app stayed usable because local static interpretation and deterministic scoring handled every curated case.
 
-Potential learning themes to fill after manual evidence:
+Confirmed learning themes:
 
 - Where AI adds useful signal extraction
 - Where static rules are enough
-- Where AI adds noise
+- Where AI adds noise: Case G showed Gemini over-interpreting `asdf random blah` as high-confidence exploratory intent instead of setting `needs_clarification: true`
 - Where fallback behavior protects the product
-- Whether AI changes deterministic top results in meaningful cases
+- Whether AI changes deterministic top results in meaningful cases: no accepted Gemini case changed the deterministic top recommendation in the recorded evidence
 
 Current case-study-safe takeaway:
 
-CraveWise has evidence that AI failure modes are contained: slow, quota-blocked, or failed AI interpretation does not break the recommendation flow or give AI ranking authority. It also has early Gemini evidence that AI can preserve important structured signals, but it does not yet have a complete 8-case live AI quality pass.
+CraveWise has evidence that AI failure modes are contained: slow, quota-blocked, malformed, or failed AI interpretation does not break the recommendation flow or give AI ranking authority. It also has Gemini evidence that AI can preserve important structured signals, plus confirmed evidence from Case G that AI can degrade signal quality on nonsense input. Deterministic scoring is necessary because AI can degrade signal quality. The case study should frame AI as useful but bounded, not as broadly better than static rules.
 
 ## 11. What Would Come Next
 

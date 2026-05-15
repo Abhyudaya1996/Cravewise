@@ -35,6 +35,24 @@ Milestone 5D-B alternate-provider pass:
 - OpenAI provider path was retested and still fails safely through static fallback while quota-blocked.
 - Live Gemini evidence is useful but still partial; do not claim complete 8/8 AI quality evidence yet.
 
+Milestone 5D-C evidence completion attempt:
+
+- Missing cases F-H were rerun first while `AI_PROVIDER=gemini`.
+- Case F still fell back with `fallbackReason: "invalid_schema"` and `errorCategory: "invalid_output_json"`.
+- Case G returned an accepted Gemini interpretation, but it treated nonsense input as a high-confidence exploratory craving instead of asking for clarification.
+- Case H returned an accepted Gemini interpretation with `budgetSignal.max: 250`.
+- A clean rerun of all 8 cases was attempted afterward, but Gemini returned HTTP 429 provider-limit fallback from case D onward.
+- This pack now contains combined live evidence across runs, not a single uninterrupted 8-case pass.
+- No AI outputs are fabricated; fallback rows remain fallback rows.
+
+Run-source rule for the table below:
+
+- Rows can combine evidence across milestone runs only when the source is explicitly labeled.
+- `5D-B partial Gemini run` means the accepted result came from the earlier partial Gemini pass.
+- `5D-C individual rerun` means the result came from rerunning the missing F-H cases first.
+- `5D-C full rerun` means the result came from the later all-8 rerun attempt, which hit HTTP 429 from D onward.
+- There is no claim of a clean uninterrupted 8-case Gemini pass.
+
 Use this pack as live fallback evidence plus the manual evidence template for a future successful AI-response pass. Offline checks remain the deterministic baseline:
 
 ```bash
@@ -64,16 +82,16 @@ Current offline coverage:
 
 Use the app's `Prototype QA: static vs AI interpretation` panel after each recommendation request.
 
-| Case | Persona | Input | Static interpretation | AI interpretation | Changed fields | Static deterministic top | Deterministic top from AI-interpreted signals | Recommendation changed? | PM judgment | Case study notes |
-|---|---|---|---|---|---|---|---|---|---|---|
-| A | Simran | `pizza but not cheese overloaded` | `pizza`, `Pizza`, `avoid_cheese_heavy`; static also inferred `comfort` | Gemini accepted: `pizza`, `Pizza`, `avoid_cheese_heavy`, `budgetSignal.max: 800` | `preferenceSignals`, `budgetSignal` | Thin Crust Veggie Pizza from Slice Street | Thin Crust Veggie Pizza from Slice Street | No | AI helped | Gemini preserved pizza intent and cheese boundary; deterministic scoring kept the same correct top result. |
-| B | Abhyudaya | `spicy but not oily` | `spicy`, `avoid_oily`, `weekend_dinner` | Gemini accepted: `spicy`, `avoid_oily`, `budgetSignal.max: 400`; sometimes adds `exploratory` | `preferenceSignals`, `budgetSignal`, `confidence` | Chilli Garlic Noodles from Urban Wok House | Chilli Garlic Noodles from Urban Wok House | No | static was enough | Gemini separated positive and negative signals correctly; static already covered the important boundary. |
-| C | Kartik | `late night but light` | `late_night`, `light`, `avoid_heavy` | Gemini accepted: `late_night`, `light`, budget signal; missed `avoid_heavy` in latest run | `negativeConstraints`, `budgetSignal`, `confidence` | Chilli Garlic Steamed Dim Sums from Steam House | Chilli Garlic Steamed Dim Sums from Steam House | No | static was enough | Static better encoded light-as-avoid-heavy, though deterministic top stayed safe. |
-| D | Kartik | `healthy but filling` | `Healthy Bowls`, `post_work`, `healthy`, `filling`, `heaviness: heavy` | Gemini accepted: `post_work`, `healthy`, `filling`, `heaviness: medium`, budget signal | `cuisineIntents`, `budgetSignal`, `heaviness` | Paneer Protein Bowl from Bowl Theory | Paneer Protein Bowl from Bowl Theory | No | static was enough | Gemini captured health and satiety but did not add a better outcome than static. |
-| E | Abhyudaya | `spicy fried snack late night` | `snack`, `Street Food`, `late_night`, `spicy` | Gemini accepted: `snack`, `late_night`, `spicy`, budget signal; missed `Street Food` | `cuisineIntents`, `budgetSignal` | Chicken Kathi Roll from Quick Comfort Co. | Chicken Kathi Roll from Quick Comfort Co. | No | static was enough | Local too-oily memory stayed in deterministic scoring; AI did not write or use memory. |
-| F | Abhyudaya | `something nice but not too much` | `weekend_dinner`, `comfort` | Gemini fallback in latest run: `timeout` | None, AI interpretation unavailable | Chilli Garlic Noodles from Urban Wok House | Not available | No | fallback behaved correctly | Vague input remains a useful future test after provider limits are stable. |
-| G | Abhyudaya | `asdf random blah` | `weekend_dinner`, `comfort` | Gemini fallback in latest run: `api_error`, HTTP 429 | None, AI interpretation unavailable | Chilli Garlic Noodles from Urban Wok House | Not available | No | fallback behaved correctly | Provider limit did not break the flow; no fabricated clarification result. |
-| H | Simran | `something filling under 250` | `filling`, `avoid_expensive`, `budgetSignal.max: 250` | Gemini fallback in latest run: `api_error`, HTTP 429 | None, AI interpretation unavailable | Rajma Rice Bowl from Homely Bowls | Not available | No | fallback behaved correctly | Earlier Gemini smoke/evidence calls showed budget extraction can work, but latest current-code pass hit provider limits. |
+| Case | Run source | Persona | Input | Static interpretation | AI interpretation | Changed fields | Static deterministic top | Deterministic top from AI-interpreted signals | Recommendation changed? | PM judgment | Case study notes |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| A | 5D-B partial Gemini run | Simran | `pizza but not cheese overloaded` | `pizza`, `Pizza`, `avoid_cheese_heavy`; static also inferred `comfort` | Gemini accepted: `pizza`, `Pizza`, `avoid_cheese_heavy`, `budgetSignal.max: 800` | `preferenceSignals`, `budgetSignal` | Thin Crust Veggie Pizza from Slice Street | Thin Crust Veggie Pizza from Slice Street | No | AI helped | Gemini preserved pizza intent and cheese boundary; deterministic scoring kept the same correct top result. |
+| B | 5D-B partial Gemini run | Abhyudaya | `spicy but not oily` | `spicy`, `avoid_oily`, `weekend_dinner` | Gemini accepted: `spicy`, `avoid_oily`, `budgetSignal.max: 400`; sometimes adds `exploratory` | `preferenceSignals`, `budgetSignal`, `confidence` | Chilli Garlic Noodles from Urban Wok House | Chilli Garlic Noodles from Urban Wok House | No | static was enough | Gemini separated positive and negative signals correctly; static already covered the important boundary. |
+| C | 5D-B partial Gemini run | Kartik | `late night but light` | `late_night`, `light`, `avoid_heavy` | Gemini accepted: `late_night`, `light`, budget signal; missed `avoid_heavy` in latest accepted row | `negativeConstraints`, `budgetSignal`, `confidence` | Chilli Garlic Steamed Dim Sums from Steam House | Chilli Garlic Steamed Dim Sums from Steam House | No | static was enough | Static better encoded light-as-avoid-heavy, though deterministic top stayed safe. |
+| D | 5D-B partial Gemini run | Kartik | `healthy but filling` | `Healthy Bowls`, `post_work`, `healthy`, `filling`, `heaviness: heavy` | Gemini accepted: `post_work`, `healthy`, `filling`, `heaviness: medium`, budget signal | `cuisineIntents`, `budgetSignal`, `heaviness` | Paneer Protein Bowl from Bowl Theory | Paneer Protein Bowl from Bowl Theory | No | static was enough | Gemini captured health and satiety but did not add a better outcome than static. |
+| E | 5D-B partial Gemini run | Abhyudaya | `spicy fried snack late night` | `snack`, `Street Food`, `late_night`, `spicy` | Gemini accepted: `snack`, `late_night`, `spicy`, budget signal; missed `Street Food` | `cuisineIntents`, `budgetSignal` | Chicken Kathi Roll from Quick Comfort Co. | Chicken Kathi Roll from Quick Comfort Co. | No | static was enough | Local too-oily memory stayed in deterministic scoring; AI did not write or use memory. |
+| F | 5D-C individual rerun | Abhyudaya | `something nice but not too much` | `weekend_dinner`, `comfort` | Gemini fallback: `invalid_schema` / `invalid_output_json` | None, AI interpretation unavailable | Chilli Garlic Noodles from Urban Wok House | Not available | No | fallback behaved correctly | Correct 5D-C result: vague input produced malformed Gemini output, and validation protected deterministic scoring. |
+| G | 5D-C individual rerun | Abhyudaya | `asdf random blah` | `weekend_dinner`, `comfort` | Gemini accepted: `weekend_dinner`, `exploratory`, `budgetSignal.max: 400`, `confidence: high`, `needs_clarification: false` | `preferenceSignals`, `budgetSignal`, `confidence` | Chilli Garlic Noodles from Urban Wok House | Chilli Garlic Noodles from Urban Wok House | No | AI added noise | Confirmed noise: Gemini over-interpreted nonsense as valid high-confidence exploratory intent instead of setting `needs_clarification: true`. |
+| H | 5D-C individual rerun | Simran | `something filling under 250` | `filling`, `avoid_expensive`, `budgetSignal.max: 250` | Gemini accepted: `filling`, `budgetSignal.max: 250`, `confidence: high`; missed `avoid_expensive` | `negativeConstraints`, `confidence` | Rajma Rice Bowl from Homely Bowls | Rajma Rice Bowl from Homely Bowls | No | static was enough | Gemini extracted budget correctly, but static already captured the useful budget/filling signal and the deterministic top stayed unchanged. |
 
 ## Milestone 5D Live-Key Evidence Summary
 
@@ -82,10 +100,11 @@ The live-key pass did not produce accepted AI interpretations, so it cannot supp
 Observed learnings:
 
 - AI helped: Gemini preserved the important pizza and cheese-boundary signals in case A.
-- Static was enough: B-E produced the same deterministic top result, and static was often equally strong or stronger on local taxonomy details.
-- AI added noise: Gemini sometimes added budget signals from UI context and missed static-only taxonomy signals such as `avoid_heavy` or `Street Food`.
-- Fallback behavior: confirmed across OpenAI quota/timeout, Gemini timeout, and Gemini HTTP 429 paths.
-- Product implication: alternate providers can collect some live evidence without changing scoring authority, but a complete 8-case AI-quality claim still needs a stable provider quota window.
+- Static was enough: B-E and H produced the same deterministic top result, and static was often equally strong or stronger on local taxonomy details.
+- AI added noise: Gemini treated nonsense input in case G as a high-confidence exploratory craving instead of requesting clarification; it also missed static-only taxonomy signals such as `avoid_heavy`, `Street Food`, and `avoid_expensive`.
+- Fallback behavior: confirmed across OpenAI quota/timeout, Gemini invalid-output fallback, and Gemini HTTP 429 provider-limit fallback.
+- Recommendation changes: none observed in accepted Gemini cases; deterministic scoring kept the same top result.
+- Product implication: alternate providers can collect meaningful live evidence without changing scoring authority, but the case study should emphasize bounded AI and validation more than "AI is better" claims.
 
 ## What AI Is Allowed To Improve
 

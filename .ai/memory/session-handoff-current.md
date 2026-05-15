@@ -2,7 +2,7 @@
 
 ## Current Portfolio State
 
-Status: CraveWise Gemini alternate-provider support implemented for review.
+Status: CraveWise Milestone 5D-C combined Gemini live evidence implemented for review.
 
 ## Active Project
 
@@ -10,7 +10,7 @@ CraveWise.
 
 ## Active Milestone
 
-Milestone 5D-B Gemini alternate provider for live AI evidence collection.
+Milestone 5D-C complete live AI evidence collection attempt.
 
 ## Latest Decisions
 
@@ -93,6 +93,13 @@ Milestone 5D-B Gemini alternate provider for live AI evidence collection.
 - Gemini smoke test succeeded for `spicy but not oily`.
 - Current-code Gemini evidence pass accepted A-E and fell back for F-H due to timeout / HTTP 429 provider limits.
 - OpenAI path was retested and still fails safely through static fallback while quota-blocked.
+- Milestone 5D-C reran missing cases F-H first.
+- F still fell back with `invalid_schema` / `invalid_output_json`.
+- G accepted but added noise by treating nonsense as high-confidence exploratory intent rather than requesting clarification.
+- H accepted and extracted `budgetSignal.max: 250`, but missed static `avoid_expensive`.
+- A later clean all-8 rerun hit Gemini HTTP 429 provider limits from D onward.
+- No accepted Gemini case changed the deterministic top recommendation.
+- Evidence rows in `AI_EVALUATION_PACK_5C.md` now include run-source annotations so combined evidence is labeled, not implied as one clean run.
 - `projects/01-cravewise/docs/CRAVEWISE_PROJECT_STATE.md` is now the primary Claude/Codex handoff and review entrypoint for CraveWise.
 - No backend database, MCP, auth, Supabase, live restaurant data, ordering/payment, delivery tracking, or cross-device memory were added.
 
@@ -103,7 +110,7 @@ Milestone 5D-B Gemini alternate provider for live AI evidence collection.
 
 ## Next Recommended Action
 
-For broader CraveWise context, read `projects/01-cravewise/docs/CRAVEWISE_PROJECT_STATE.md`. Next recommended milestone: rerun the 8-case evidence pack during a stable Gemini quota window, or resolve OpenAI quota/billing, before writing claims about full AI improvement.
+For broader CraveWise context, read `projects/01-cravewise/docs/CRAVEWISE_PROJECT_STATE.md`. Next recommended milestone: draft the case study with nuanced evidence, or rerun during a stable Gemini quota window only if a single clean 8-case pass is needed.
 
 ## Last Updated
 

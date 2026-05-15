@@ -2,7 +2,7 @@
 
 Last updated: 2026-05-15
 Current milestone: Milestone 5D - live-key AI evidence pass
-Current status: Static prototype, local feedback memory, Simran pizza regression fix, integrity cleanup, browser-only feedback-influenced scoring, feedback reason normalization patch, 30-item dummy catalog expansion, dynamic local insight summaries, local dish taxonomy cleanup, taxonomy QA, score explainability, lightweight static eval harness, Claude review packet, pre-AI guardrail cleanup, optional AI structured craving interpretation, AI-vs-static interpretation comparison, AI evaluation evidence scaffolding, live-key fallback evidence, live route diagnosis, and Gemini alternate-provider support are implemented.
+Current status: Static prototype, local feedback memory, Simran pizza regression fix, integrity cleanup, browser-only feedback-influenced scoring, feedback reason normalization patch, 30-item dummy catalog expansion, dynamic local insight summaries, local dish taxonomy cleanup, taxonomy QA, score explainability, lightweight static eval harness, Claude review packet, pre-AI guardrail cleanup, optional AI structured craving interpretation, AI-vs-static interpretation comparison, AI evaluation evidence scaffolding, live-key fallback evidence, live route diagnosis, Gemini alternate-provider support, and combined live Gemini evidence are implemented.
 
 ---
 
@@ -40,6 +40,7 @@ Completed milestones:
 - Live-key fallback evidence pass
 - Live AI route diagnosis
 - Gemini alternate provider for live evidence
+- Combined Gemini live evidence collection
 
 Current working features:
 
@@ -105,6 +106,8 @@ Milestone 5D runs the curated live-key pass with `OPENAI_API_KEY` loaded server-
 Milestone 5D-A diagnoses the live route. The env file was corrected to `apps/cravewise/.env.local`, the obsolete `.env.local.txt` path is ignored and removed locally, and safe diagnostics were added to the route. A minimal structured-output OpenAI call returned HTTP 429 with `insufficient_quota`, which explains the API-error result and why slower cases can appear as timeouts before the upstream quota error arrives.
 
 Milestone 5D-B adds Gemini as an alternate provider for live evidence collection without changing the architecture. `AI_PROVIDER=openai | gemini` selects the provider, `GEMINI_MODEL` defaults to `gemini-2.5-flash`, and Gemini output is validated through the same local `CravingInterpretation` validator before deterministic scoring. A Gemini live pass produced accepted interpretations for several curated cases but still hit timeout / HTTP 429 provider limits before completing all 8 cases.
+
+Milestone 5D-C reruns the missing Gemini cases and records combined evidence with explicit run-source annotations. Cases G and H returned accepted Gemini interpretations, while F still fell back due to invalid output JSON. Case G is confirmed AI noise: Gemini treated nonsense as high-confidence exploratory intent instead of setting `needs_clarification: true`. A clean all-8 rerun was attempted but hit Gemini HTTP 429 from case D onward, so the evaluation pack contains combined evidence across runs rather than a single uninterrupted 8-case pass. No recommendation changed in accepted Gemini cases.
 
 ---
 
@@ -276,6 +279,16 @@ Milestone 5D-B Gemini evidence:
 - deterministic scoring kept final recommendation authority in every case
 - static evals remain offline and provider-free
 
+Milestone 5D-C Gemini evidence:
+
+- missing cases F-H were rerun first
+- F still fell back with invalid Gemini output JSON
+- G returned an accepted interpretation but added confirmed AI noise by treating nonsense as high-confidence exploratory intent
+- H returned an accepted interpretation and extracted budget correctly, but missed static `avoid_expensive`
+- a later full all-8 rerun hit Gemini HTTP 429 provider limits from D onward
+- no accepted Gemini case changed the deterministic top recommendation
+- evidence rows now include run-source annotations
+
 ---
 
 ## 6. Local Feedback Memory
@@ -364,6 +377,7 @@ Milestone 4A acceptance criteria:
 | Live-key AI evidence pass | Ran the curated AI evaluation pack cases with a server-side key loaded. Recorded timeout/API-error fallback evidence and confirmed deterministic static scoring handled every case. | Treat AI reliability and latency as product evidence, not just success cases. | `projects/01-cravewise/docs/AI_EVALUATION_PACK_5C.md`, `projects/01-cravewise/docs/CASE_STUDY_OUTLINE.md`, state/tracker/handoff/log files | Review |
 | Live AI route diagnosis | Corrected env-file hygiene, added safe fallback diagnostics, confirmed no-key fallback, and diagnosed the live OpenAI failure as `insufficient_quota`. | Keep AI evaluation honest by separating product fallback health from upstream account/quota readiness. | `.gitignore`, `apps/cravewise/app/api/interpret-craving/route.ts`, docs/memory files | Review |
 | Gemini alternate provider | Added `AI_PROVIDER` selection, kept OpenAI path, added Gemini `generateContent` path, and recorded partial Gemini live evidence. | Collect portfolio evidence without spending on OpenAI while keeping AI bounded to structured signal extraction. | `apps/cravewise/app/api/interpret-craving/route.ts`, docs/memory files | Review |
+| Combined Gemini live evidence | Reran missing Gemini cases, recorded accepted G/H interpretations, retained F fallback, and documented provider-limit behavior during a full rerun. | Use live evidence honestly, including noise and fallback, instead of claiming AI is universally better. | `projects/01-cravewise/docs/AI_EVALUATION_PACK_5C.md`, docs/memory files | Review |
 | Future milestone | TBD | TBD | TBD | Planned |
 
 ---
@@ -430,7 +444,7 @@ Local feedback-influenced scoring now penalizes oily/fried late-night options fo
 2. Static logic uses hardcoded scoring rules, though score components are now inspectable and documented at a high level.
 3. Feedback scoring influence is local-only and deterministic.
 4. Catalog is broader but still dummy data, not real supply.
-5. AI interpretation still needs a complete 8-case successful live-response QA pass; OpenAI is blocked by `insufficient_quota`, and Gemini hit provider limits partway through the evidence pass.
+5. AI interpretation has combined Gemini live evidence but still lacks a single clean uninterrupted 8-case pass; OpenAI is blocked by `insufficient_quota`, and Gemini hit provider limits during a full rerun.
 6. AI only extracts signals; comparison is internal QA, not user-facing confidence.
 7. No real restaurant availability.
 8. Case study is outlined but not written as a polished portfolio page yet.
@@ -443,7 +457,7 @@ Local feedback-influenced scoring now penalizes oily/fried late-night options fo
 
 Goal:
 
-Rerun the same evaluation pack during a stable Gemini quota window, or resolve OpenAI quota/billing, before claiming full AI quality improvements.
+Use the combined evidence to draft a nuanced case study, or rerun during a stable Gemini quota window if a single clean pass is required.
 
 ---
 

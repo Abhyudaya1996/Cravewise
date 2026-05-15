@@ -23,6 +23,7 @@
 | Live-key AI evidence pass | REVIEW | Curated cases A-H exercised with server-side key loaded; all cases fell back through timeout/API-error guardrails and deterministic static scoring continued to work | 2026-05-15 |
 | Live AI route diagnosis | REVIEW | Env file corrected to `apps/cravewise/.env.local`, safe route diagnostics added, no-key fallback retested, and minimal OpenAI diagnostic returned `insufficient_quota` | 2026-05-15 |
 | Gemini alternate provider | REVIEW | `AI_PROVIDER=openai | gemini`, Gemini server-side route path, shared validation, safe diagnostics, and partial Gemini live evidence across curated cases | 2026-05-15 |
+| Combined Gemini live evidence | REVIEW | Missing cases rerun: G/H accepted, F invalid-output fallback retained, full rerun hit Gemini HTTP 429 limits; no accepted Gemini case changed deterministic top result | 2026-05-15 |
 | Feedback/scoring loop complete | DONE | local persistence and local feedback-influenced scoring complete; still browser-only and deterministic | 2026-05-13 |
 | Evals complete | REVIEW | `evals/cravewise/STATIC_LOGIC_EVAL_SPEC.md`, `evals/cravewise/STATIC_LOGIC_EVAL_REPORT.md`, expanded `evals/cravewise/sample_cases.json` | 2026-05-13 |
 | Case study complete | TODO | case-studies file | - |
@@ -30,4 +31,4 @@
 
 ## Current Note
 
-Milestone 5D-B adds Gemini as an alternate live-evidence provider. `AI_PROVIDER` selects OpenAI or Gemini, both keys remain server-side, both paths use the same validation layer, and deterministic scoring remains final authority. Gemini worked for a smoke test and several curated cases, but provider limits still prevented a complete 8-case AI-quality pass. Static evals remain offline. No backend database, MCP, auth, live restaurant data, ordering, payments, medical/nutrition advice, cross-device memory, or delivery tracking were added.
+Milestone 5D-C records combined Gemini live evidence. Missing cases were rerun first: G and H accepted, while F still fell back on invalid output JSON. A clean all-8 rerun hit Gemini HTTP 429 provider limits from D onward, so the evidence pack is honest combined evidence rather than a fabricated clean pass. Static evals remain offline. No backend database, MCP, auth, live restaurant data, ordering, payments, medical/nutrition advice, cross-device memory, or delivery tracking were added.

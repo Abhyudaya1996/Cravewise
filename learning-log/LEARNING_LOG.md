@@ -171,3 +171,12 @@ Update after every meaningful task.
 - Technical tradeoff: used direct REST calls instead of adding a Gemini SDK dependency; static evals remain offline and deterministic.
 - Verification: Gemini smoke test succeeded; OpenAI still fails safely under quota; final `npm run lint`, `npm run build`, and `node evals/cravewise/run_static_evals.js` pending.
 - Next action: rerun the 8-case evidence pack during a stable Gemini quota window before making full AI quality claims.
+
+## 2026-05-15 - CraveWise Combined Gemini Live Evidence
+
+- Milestone: CraveWise Milestone 5D-C complete live AI evidence collection attempt.
+- Changed: updated the AI evaluation pack with missing-case Gemini evidence, run-source annotations, and provider-limit behavior during a full rerun.
+- Product tradeoff: recorded AI usefulness, static-rule strength, AI noise, and fallback behavior instead of forcing a clean success narrative.
+- Technical tradeoff: changed only docs/memory; recommendation logic and static eval isolation remained untouched.
+- Verification: pending final `npm run lint`, `npm run build`, and `node evals/cravewise/run_static_evals.js`.
+- Next action: draft the case study from the combined evidence, or rerun during a stable Gemini quota window if a single clean 8-case pass is required.

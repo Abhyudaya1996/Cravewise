@@ -1,8 +1,8 @@
 # CraveWise Project State
 
-Last updated: 2026-05-14
-Current milestone: Milestone 5C - AI evaluation pack and case study evidence
-Current status: Static prototype, local feedback memory, Simran pizza regression fix, integrity cleanup, browser-only feedback-influenced scoring, feedback reason normalization patch, 30-item dummy catalog expansion, dynamic local insight summaries, local dish taxonomy cleanup, taxonomy QA, score explainability, lightweight static eval harness, Claude review packet, pre-AI guardrail cleanup, optional AI structured craving interpretation, AI-vs-static interpretation comparison, and AI evaluation evidence scaffolding are implemented.
+Last updated: 2026-05-15
+Current milestone: Milestone 5D - live-key AI evidence pass
+Current status: Static prototype, local feedback memory, Simran pizza regression fix, integrity cleanup, browser-only feedback-influenced scoring, feedback reason normalization patch, 30-item dummy catalog expansion, dynamic local insight summaries, local dish taxonomy cleanup, taxonomy QA, score explainability, lightweight static eval harness, Claude review packet, pre-AI guardrail cleanup, optional AI structured craving interpretation, AI-vs-static interpretation comparison, AI evaluation evidence scaffolding, live-key fallback evidence, live route diagnosis, and Gemini alternate-provider support are implemented.
 
 ---
 
@@ -37,6 +37,9 @@ Completed milestones:
 - AI structured craving interpretation
 - AI vs static interpretation comparison
 - AI evaluation pack and case study outline
+- Live-key fallback evidence pass
+- Live AI route diagnosis
+- Gemini alternate provider for live evidence
 
 Current working features:
 
@@ -65,6 +68,9 @@ Current working features:
 - Static fallback when AI is unavailable, invalid, slow, or unconfigured
 - Internal static-vs-AI interpretation comparison for QA
 - Manual AI evaluation evidence pack
+- Live-key fallback evidence recorded in the evaluation pack
+- Safe live route diagnostics for fallback investigation
+- Provider selection with OpenAI or Gemini
 - Portfolio case study outline
 
 Not yet built:
@@ -92,7 +98,13 @@ Milestone 5A adds AI only at the signal extraction boundary: user craving -> ser
 
 Milestone 5B adds a comparison layer for QA: static interpretation and AI interpretation can be scored separately by deterministic scoring to compare changed signals and top recommendation differences. This does not let AI choose the final recommendation.
 
-Milestone 5C adds an evidence pack and case study outline. Live-key AI evidence was not collected locally because `OPENAI_API_KEY` was unavailable, so the pack is a structured manual template rather than a fabricated results report.
+Milestone 5C adds an evidence pack and case study outline.
+
+Milestone 5D runs the curated live-key pass with `OPENAI_API_KEY` loaded server-side from the app environment file. The route was exercised, but no accepted AI interpretations were returned: cases A-G timed out under the 5-second guardrail and case H returned API-error fallback. The app still produced deterministic recommendations through local static interpretation and scoring, so this is fallback evidence rather than evidence that AI improved interpretation quality.
+
+Milestone 5D-A diagnoses the live route. The env file was corrected to `apps/cravewise/.env.local`, the obsolete `.env.local.txt` path is ignored and removed locally, and safe diagnostics were added to the route. A minimal structured-output OpenAI call returned HTTP 429 with `insufficient_quota`, which explains the API-error result and why slower cases can appear as timeouts before the upstream quota error arrives.
+
+Milestone 5D-B adds Gemini as an alternate provider for live evidence collection without changing the architecture. `AI_PROVIDER=openai | gemini` selects the provider, `GEMINI_MODEL` defaults to `gemini-2.5-flash`, and Gemini output is validated through the same local `CravingInterpretation` validator before deterministic scoring. A Gemini live pass produced accepted interpretations for several curated cases but still hit timeout / HTTP 429 provider limits before completing all 8 cases.
 
 ---
 
@@ -216,7 +228,11 @@ Milestone 5A AI interpretation:
 
 - `OPENAI_API_KEY` is optional and must stay server-side
 - `OPENAI_MODEL` is optional and defaults to `gpt-4.1-mini`
+- `AI_PROVIDER` selects `openai` or `gemini`
+- `GEMINI_API_KEY` is optional and must stay server-side
+- `GEMINI_MODEL` is optional and defaults to `gemini-2.5-flash`
 - route timeout is 5 seconds
+- fallback diagnostics expose only safe metadata: key configured true/false, model, duration, fallback reason, HTTP status, and OpenAI error type/code when available
 - route returns `ai_interpreted` only after schema and taxonomy validation
 - fallback reasons include `missing_api_key`, `api_error`, `timeout`, `invalid_schema`, `invalid_enum`, `missing_required_field`, `low_quality_output`, and `unsafe_recommendation_field`
 - static eval runner remains offline and includes mocked AI-output validation checks
@@ -235,7 +251,30 @@ Milestone 5C evidence:
 - AI product tradeoffs
 - manual evidence table for live-key runs
 - case study outline for portfolio storytelling
-- no live AI results claimed without `OPENAI_API_KEY`
+- no live AI results claimed without evidence
+
+Milestone 5D evidence:
+
+- `OPENAI_API_KEY` was available through the app env file and stayed server-side
+- curated cases A-H were exercised through the live route
+- all cases fell back to static interpretation due to timeout or API error
+- deterministic scoring continued to own every recommendation
+- no claim is made that AI improved results in this pass
+
+Milestone 5D-A diagnosis:
+
+- Next local env path is now `apps/cravewise/.env.local`
+- `.env.local`, `.env*.local`, app env files, live evidence scratch JSON, and dev-server logs are ignored
+- minimal live OpenAI call returned `insufficient_quota`
+- missing-key route path was retested and returned `missing_api_key`
+- the product timeout remains 5 seconds
+
+Milestone 5D-B Gemini evidence:
+
+- Gemini route smoke test returned a validated `ai_interpreted` result for `spicy but not oily`
+- current-code evidence pass accepted A-E and fell back for F-H due to timeout / Gemini HTTP 429 provider limits
+- deterministic scoring kept final recommendation authority in every case
+- static evals remain offline and provider-free
 
 ---
 
@@ -322,6 +361,9 @@ Milestone 4A acceptance criteria:
 | AI structured craving interpretation | Added an optional server-side OpenAI interpretation route, strict schema output, taxonomy validation, static fallback metadata, small UI status copy, and offline malformed-output validation checks. | Let AI improve messy craving parsing while deterministic scoring remains the recommendation authority. | `apps/cravewise/app/api/interpret-craving/route.ts`, `apps/cravewise/data/cravingInterpretationValidation.ts`, `apps/cravewise/app/page.tsx`, `apps/cravewise/data/sampleData.ts`, evals/docs/memory files | Review |
 | AI vs static interpretation comparison | Added internal comparison of static interpretation vs validated AI interpretation, deterministic top-result comparison, a small debug panel, and offline mock comparison checks. | Evaluate whether AI improves signal extraction without giving AI ranking authority. | `apps/cravewise/data/interpretationComparison.ts`, `apps/cravewise/app/page.tsx`, `apps/cravewise/app/globals.css`, evals/docs/memory files | Review |
 | AI evaluation pack and case study evidence | Added a structured AI evaluation pack and case study outline for portfolio evidence collection. | Prepare honest AI-vs-static evidence without fabricating live AI results or changing product behavior. | `projects/01-cravewise/docs/AI_EVALUATION_PACK_5C.md`, `projects/01-cravewise/docs/CASE_STUDY_OUTLINE.md`, evals/docs/memory files | Review |
+| Live-key AI evidence pass | Ran the curated AI evaluation pack cases with a server-side key loaded. Recorded timeout/API-error fallback evidence and confirmed deterministic static scoring handled every case. | Treat AI reliability and latency as product evidence, not just success cases. | `projects/01-cravewise/docs/AI_EVALUATION_PACK_5C.md`, `projects/01-cravewise/docs/CASE_STUDY_OUTLINE.md`, state/tracker/handoff/log files | Review |
+| Live AI route diagnosis | Corrected env-file hygiene, added safe fallback diagnostics, confirmed no-key fallback, and diagnosed the live OpenAI failure as `insufficient_quota`. | Keep AI evaluation honest by separating product fallback health from upstream account/quota readiness. | `.gitignore`, `apps/cravewise/app/api/interpret-craving/route.ts`, docs/memory files | Review |
+| Gemini alternate provider | Added `AI_PROVIDER` selection, kept OpenAI path, added Gemini `generateContent` path, and recorded partial Gemini live evidence. | Collect portfolio evidence without spending on OpenAI while keeping AI bounded to structured signal extraction. | `apps/cravewise/app/api/interpret-craving/route.ts`, docs/memory files | Review |
 | Future milestone | TBD | TBD | TBD | Planned |
 
 ---
@@ -388,7 +430,7 @@ Local feedback-influenced scoring now penalizes oily/fried late-night options fo
 2. Static logic uses hardcoded scoring rules, though score components are now inspectable and documented at a high level.
 3. Feedback scoring influence is local-only and deterministic.
 4. Catalog is broader but still dummy data, not real supply.
-5. AI interpretation and comparison still need live-key QA in environments with `OPENAI_API_KEY`.
+5. AI interpretation still needs a complete 8-case successful live-response QA pass; OpenAI is blocked by `insufficient_quota`, and Gemini hit provider limits partway through the evidence pass.
 6. AI only extracts signals; comparison is internal QA, not user-facing confidence.
 7. No real restaurant availability.
 8. Case study is outlined but not written as a polished portfolio page yet.
@@ -397,11 +439,11 @@ Local feedback-influenced scoring now penalizes oily/fried late-night options fo
 
 ## 10. Recommended Next Milestones
 
-### Next: Live-Key Evidence Collection
+### Next: AI Route Reliability / Successful Live-Response Evidence
 
 Goal:
 
-Run the AI evaluation pack cases with an API key, record observed differences, and then write the portfolio case study from evidence rather than assumptions.
+Rerun the same evaluation pack during a stable Gemini quota window, or resolve OpenAI quota/billing, before claiming full AI quality improvements.
 
 ---
 

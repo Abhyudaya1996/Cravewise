@@ -38,7 +38,7 @@ Local feedback memory checks must verify that data is stored only under `cravewi
 
 ## AI Interpretation Manual Test Cases
 
-Milestone 5A adds optional AI signal extraction through `apps/cravewise/app/api/interpret-craving/route.ts`. These cases should be reviewed manually in the app because the static eval runner must remain deterministic and must not depend on live OpenAI calls.
+Milestone 5A adds optional AI signal extraction through `apps/cravewise/app/api/interpret-craving/route.ts`. Milestone 5D adds provider selection with `AI_PROVIDER=openai | gemini`. These cases should be reviewed manually in the app because the static eval runner must remain deterministic and must not depend on live OpenAI or Gemini calls.
 
 - Simran + `pizza but not cheese overloaded`: AI may extract `pizza`, `Pizza`, and `avoid_cheese_heavy`, but deterministic scoring must still choose a non-cheese-heavy pizza/Italian option or an honest fallback. It must not return Dal Makhani Rice Bowl.
 - `spicy but not oily`: AI should put `spicy` in `preferenceSignals` and `avoid_oily` in `negativeConstraints`; returned recommendations must avoid oily/fried flags.
@@ -46,7 +46,7 @@ Milestone 5A adds optional AI signal extraction through `apps/cravewise/app/api/
 - `healthy but filling`: AI should include `healthy` and `filling` without making medical or nutrition claims.
 - `fried momos late night` after prior `too_oily` local memory: deterministic scoring should still penalize oily/fried options for the active persona.
 - Nonsense or vague input: the app should fall back gracefully to local rules or show clarification behavior, not invent coverage.
-- No `OPENAI_API_KEY`: the UI should show `AI unavailable, using local rules`, and recommendations should still work.
+- No selected provider key: the UI should show `AI unavailable, using local rules`, and recommendations should still work.
 - Timeout or API error: the route should return `static_fallback` metadata and the client should use `interpretCravingStatic()`.
 - Invalid enum or forbidden recommendation field: validation should reject the output and use static fallback.
 

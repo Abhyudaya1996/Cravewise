@@ -144,3 +144,30 @@ Update after every meaningful task.
 - Technical tradeoff: kept evals offline and did not add new runtime logic, ranking behavior, backend storage, or live dependencies.
 - Verification: pending final `npm run lint`, `npm run build`, and `node evals/cravewise/run_static_evals.js`.
 - Next action: collect live-key comparison evidence, then write the polished case study from observed results.
+
+## 2026-05-15 - CraveWise Live-Key AI Evidence Pass
+
+- Milestone: CraveWise Milestone 5D live-key AI evidence pass.
+- Changed: populated the AI evaluation pack with live-key fallback evidence across the curated A-H cases and updated project handoff docs.
+- Product tradeoff: treated timeout/API-error fallback as evidence instead of forcing unsupported AI quality claims.
+- Technical tradeoff: kept recommendation logic, scoring behavior, evals, and UI unchanged; static evals remain offline.
+- Verification: pending final `npm run lint`, `npm run build`, and `node evals/cravewise/run_static_evals.js`.
+- Next action: diagnose the AI route timeout/API-error behavior, then rerun the same evidence pack for accepted AI interpretations.
+
+## 2026-05-15 - CraveWise Live AI Route Diagnosis
+
+- Milestone: CraveWise Milestone 5D-A live AI route diagnosis.
+- Changed: corrected local env-file hygiene, added safe route diagnostics, retested missing-key fallback, and documented the upstream OpenAI failure.
+- Product tradeoff: kept the 5-second fallback guardrail intact instead of weakening the user flow to wait for a quota-blocked provider response.
+- Technical tradeoff: added non-secret diagnostics to the route response while leaving recommendation scoring and static eval isolation unchanged.
+- Verification: minimal structured-output diagnostic call returned HTTP 429 / `insufficient_quota`; final `npm run lint`, `npm run build`, and `node evals/cravewise/run_static_evals.js` pending.
+- Next action: resolve OpenAI quota/billing, then rerun the curated 5D evidence pack for accepted AI interpretations.
+
+## 2026-05-15 - CraveWise Gemini Alternate Provider
+
+- Milestone: CraveWise Milestone 5D-B Gemini alternate provider for live evidence.
+- Changed: added `AI_PROVIDER=openai | gemini`, kept the OpenAI route path, added a Gemini `generateContent` route path, reused the same validation helper, and documented partial Gemini evidence.
+- Product tradeoff: enabled portfolio evidence collection without spending on OpenAI while preserving AI as signal extraction only.
+- Technical tradeoff: used direct REST calls instead of adding a Gemini SDK dependency; static evals remain offline and deterministic.
+- Verification: Gemini smoke test succeeded; OpenAI still fails safely under quota; final `npm run lint`, `npm run build`, and `node evals/cravewise/run_static_evals.js` pending.
+- Next action: rerun the 8-case evidence pack during a stable Gemini quota window before making full AI quality claims.

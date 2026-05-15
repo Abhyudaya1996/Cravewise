@@ -20,6 +20,9 @@
 | AI structured craving interpretation | REVIEW | Optional server-side `app/api/interpret-craving` route, strict structured output schema, taxonomy validation, static fallback metadata, small UI status copy, and offline malformed-output validation checks | 2026-05-14 |
 | AI vs static interpretation comparison | REVIEW | Internal comparison helper, deterministic static-vs-AI top-result comparison, small debug panel, and offline mock comparison checks | 2026-05-14 |
 | AI evaluation pack and case study evidence | REVIEW | `AI_EVALUATION_PACK_5C.md` and `CASE_STUDY_OUTLINE.md`; live-key evidence template, AI scope boundaries, product tradeoffs, and case study outline | 2026-05-14 |
+| Live-key AI evidence pass | REVIEW | Curated cases A-H exercised with server-side key loaded; all cases fell back through timeout/API-error guardrails and deterministic static scoring continued to work | 2026-05-15 |
+| Live AI route diagnosis | REVIEW | Env file corrected to `apps/cravewise/.env.local`, safe route diagnostics added, no-key fallback retested, and minimal OpenAI diagnostic returned `insufficient_quota` | 2026-05-15 |
+| Gemini alternate provider | REVIEW | `AI_PROVIDER=openai | gemini`, Gemini server-side route path, shared validation, safe diagnostics, and partial Gemini live evidence across curated cases | 2026-05-15 |
 | Feedback/scoring loop complete | DONE | local persistence and local feedback-influenced scoring complete; still browser-only and deterministic | 2026-05-13 |
 | Evals complete | REVIEW | `evals/cravewise/STATIC_LOGIC_EVAL_SPEC.md`, `evals/cravewise/STATIC_LOGIC_EVAL_REPORT.md`, expanded `evals/cravewise/sample_cases.json` | 2026-05-13 |
 | Case study complete | TODO | case-studies file | - |
@@ -27,4 +30,4 @@
 
 ## Current Note
 
-Milestone 5C adds a structured AI evaluation pack and case study outline. Live-key AI evidence was not collected locally because `OPENAI_API_KEY` was unavailable, so the pack is a manual template and not a results claim. Static evals remain offline. No backend database, MCP, auth, live restaurant data, ordering, payments, medical/nutrition advice, cross-device memory, or delivery tracking were added.
+Milestone 5D-B adds Gemini as an alternate live-evidence provider. `AI_PROVIDER` selects OpenAI or Gemini, both keys remain server-side, both paths use the same validation layer, and deterministic scoring remains final authority. Gemini worked for a smoke test and several curated cases, but provider limits still prevented a complete 8-case AI-quality pass. Static evals remain offline. No backend database, MCP, auth, live restaurant data, ordering, payments, medical/nutrition advice, cross-device memory, or delivery tracking were added.

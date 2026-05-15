@@ -2,7 +2,7 @@
 
 ## Current Portfolio State
 
-Status: CraveWise Milestone 5C AI evaluation pack and case study evidence implemented for review.
+Status: CraveWise Gemini alternate-provider support implemented for review.
 
 ## Active Project
 
@@ -10,7 +10,7 @@ CraveWise.
 
 ## Active Milestone
 
-Milestone 5C AI evaluation pack and case study evidence.
+Milestone 5D-B Gemini alternate provider for live AI evidence collection.
 
 ## Latest Decisions
 
@@ -77,7 +77,22 @@ Milestone 5C AI evaluation pack and case study evidence.
 - Static evals remain offline and include mock comparison checks for changed fields, recommendation-change detection, and AI fallback comparison.
 - Milestone 5C adds `projects/01-cravewise/docs/AI_EVALUATION_PACK_5C.md`.
 - Milestone 5C adds `projects/01-cravewise/docs/CASE_STUDY_OUTLINE.md`.
-- Live AI evaluation was not run locally because `OPENAI_API_KEY` was not set. Do not claim AI improved cases until manual evidence is recorded.
+- Milestone 5D ran the curated live-key cases with `OPENAI_API_KEY` loaded server-side from the app env file.
+- Cases A-G returned static fallback due to the 5-second timeout guardrail; case H returned static fallback due to API error.
+- No accepted AI interpretations were recorded in the 5D pass, so do not claim AI improved interpretation quality yet.
+- The recommendation flow stayed functional because static interpretation and `scoreRecommendationStatic()` handled every case.
+- Milestone 5D-A corrected env-file hygiene: the app uses `apps/cravewise/.env.local`, and `.env.local.txt` was removed locally after copying.
+- `.gitignore` now covers `.env*.local`, app-specific env files, live AI evidence scratch JSON, and dev-server logs.
+- The AI route now returns safe fallback diagnostics only: key configured true/false, model, duration, fallback reason, HTTP status, and OpenAI error type/code when available.
+- A minimal server-side structured-output diagnostic call reached OpenAI and returned HTTP 429 with `insufficient_quota`.
+- Missing-key fallback was retested and returned `static_fallback` / `missing_api_key` without crashing.
+- The 5-second route timeout was not changed.
+- Gemini was added as an alternate server-side provider selected by `AI_PROVIDER=gemini`.
+- `GEMINI_API_KEY` stays server-side and `GEMINI_MODEL` defaults to `gemini-2.5-flash`.
+- Gemini uses the same `CravingInterpretation` shape and local validation helper as OpenAI.
+- Gemini smoke test succeeded for `spicy but not oily`.
+- Current-code Gemini evidence pass accepted A-E and fell back for F-H due to timeout / HTTP 429 provider limits.
+- OpenAI path was retested and still fails safely through static fallback while quota-blocked.
 - `projects/01-cravewise/docs/CRAVEWISE_PROJECT_STATE.md` is now the primary Claude/Codex handoff and review entrypoint for CraveWise.
 - No backend database, MCP, auth, Supabase, live restaurant data, ordering/payment, delivery tracking, or cross-device memory were added.
 
@@ -88,9 +103,9 @@ Milestone 5C AI evaluation pack and case study evidence.
 
 ## Next Recommended Action
 
-For broader CraveWise context, read `projects/01-cravewise/docs/CRAVEWISE_PROJECT_STATE.md`. Next recommended milestone: run the AI evaluation pack with `OPENAI_API_KEY` and write the portfolio case study from recorded evidence.
+For broader CraveWise context, read `projects/01-cravewise/docs/CRAVEWISE_PROJECT_STATE.md`. Next recommended milestone: rerun the 8-case evidence pack during a stable Gemini quota window, or resolve OpenAI quota/billing, before writing claims about full AI improvement.
 
 ## Last Updated
 
-2026-05-14
+2026-05-15
 

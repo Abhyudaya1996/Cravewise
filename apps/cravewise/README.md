@@ -1,6 +1,6 @@
 ﻿# CraveWise App
 
-Status: Milestone 5C AI evaluation pack and case study evidence added on top of the PRD v1.2 prototype.
+Status: Milestone 5D alternate-provider AI evidence support added on top of the PRD v1.2 prototype.
 
 This is a mobile-first clickable prototype using dummy/sample data only. AI is optional and limited to structured craving-signal extraction through a server-side route. It does not use MCP, backend databases, auth, live restaurant data, Swiggy/Zomato integrations, payments, or delivery tracking.
 
@@ -28,18 +28,23 @@ node evals/cravewise/run_static_evals.js
 
 ## Optional AI Configuration
 
-CraveWise works without AI. If `OPENAI_API_KEY` is missing, the app falls back to local static interpretation and shows honest fallback copy.
+CraveWise works without AI. If the selected provider key is missing, the app falls back to local static interpretation and shows honest fallback copy.
 
 Optional environment variables:
 
 ```text
+AI_PROVIDER=openai | gemini
 OPENAI_API_KEY=server-side only
 OPENAI_MODEL=gpt-4.1-mini
+GEMINI_API_KEY=server-side only
+GEMINI_MODEL=gemini-2.5-flash
 ```
 
-`OPENAI_MODEL` is optional and defaults to `gpt-4.1-mini`.
+`AI_PROVIDER` defaults to `openai`. `OPENAI_MODEL` is optional and defaults to `gpt-4.1-mini`. `GEMINI_MODEL` is optional and defaults to `gemini-2.5-flash`.
 
-The API key must stay server-side. The client calls `app/api/interpret-craving/route.ts`; it never receives or stores the key.
+Use `apps/cravewise/.env.local` for local development. The API key must stay server-side. The client calls `app/api/interpret-craving/route.ts`; it never receives or stores the key.
+
+The AI route returns safe diagnostics for fallback debugging: provider, key configured true/false, selected model, duration, fallback reason, HTTP status, and provider error type/code when available. It never returns API keys, auth headers, or secret values.
 
 ## Current Flow
 
@@ -61,13 +66,13 @@ The API key must stay server-side. The client calls `app/api/interpret-craving/r
 
 Final recommendation ranking is still local and deterministic.
 
-Milestone 5A adds optional AI structured craving interpretation:
+Milestone 5A adds optional AI structured craving interpretation. Milestone 5D adds Gemini as an alternate provider for live evidence collection when OpenAI is quota-blocked:
 
 ```text
 user craving -> API route -> validated CravingInterpretation -> deterministic scoreRecommendationStatic()
 ```
 
-AI can only fill the existing `CravingInterpretation` fields. It cannot output item IDs, restaurant names, scores, recommendations, rankings, or backups. If the route has no key, errors, times out, returns invalid schema, returns invalid taxonomy values, or tries to recommend an item, the client uses `interpretCravingStatic()`.
+AI can only fill the existing `CravingInterpretation` fields. It cannot output item IDs, restaurant names, scores, recommendations, rankings, or backups. If the selected provider has no key, errors, times out, returns invalid schema, returns invalid taxonomy values, or tries to recommend an item, the client uses `interpretCravingStatic()`.
 
 Milestone 5B adds an internal comparison layer:
 
@@ -178,13 +183,13 @@ This is still static dummy data. It does not represent live restaurant availabil
 - Insights now include local demo pattern summaries derived from saved browser feedback for the active persona.
 - Static craving interpretation now uses local taxonomy signals instead of mixed craving/context flags.
 - Static eval harness covers key taxonomy regressions and memory-influenced behavior.
-- Optional AI interpretation is server-side, schema-validated, and falls back to local rules without changing deterministic scoring.
+- Optional AI interpretation is server-side, provider-selected, schema-validated, and falls back to local rules without changing deterministic scoring.
 - Static vs AI comparison is internal/debug only and is not shown as user-facing confidence.
 - AI evaluation evidence is documented separately; live AI results should not be claimed unless collected with `OPENAI_API_KEY`.
 
 ## Guardrails
 
-- OpenAI API is optional and used only in the server route for structured signal extraction
+- OpenAI/Gemini APIs are optional and used only in the server route for structured signal extraction
 - no restaurant integrations
 - no MCP yet
 - no medical nutrition claims

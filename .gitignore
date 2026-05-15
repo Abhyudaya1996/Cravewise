@@ -3,6 +3,10 @@ node_modules
 *.tsbuildinfo
 .env
 .env.local
+.env*.local
+apps/cravewise/.env.local
+apps/cravewise/.env.local.txt
+apps/cravewise/live-ai-evidence-5d.json
 dist
 build
 coverage

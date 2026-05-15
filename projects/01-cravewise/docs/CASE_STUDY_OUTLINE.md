@@ -88,7 +88,10 @@ Current evidence status:
 - Offline static evals pass.
 - AI validation checks pass.
 - Mock comparison checks pass.
-- Live AI case evidence is not collected locally when `OPENAI_API_KEY` is unavailable.
+- Milestone 5D live-key fallback evidence was collected with the key loaded server-side, but accepted AI interpretations were not returned because the route hit timeout/API-error fallback paths.
+- Milestone 5D-A diagnosed the live failure as upstream OpenAI quota: a tiny structured-output call returned HTTP `429` with `insufficient_quota`.
+- Milestone 5D-B added Gemini as an alternate server-side provider selected by `AI_PROVIDER`. Gemini produced accepted interpretations for several curated cases, but the run still hit timeout / HTTP 429 provider limits before completing all 8 cases.
+- The app stayed usable because local static interpretation and deterministic scoring handled every curated case.
 
 Potential learning themes to fill after manual evidence:
 
@@ -97,6 +100,10 @@ Potential learning themes to fill after manual evidence:
 - Where AI adds noise
 - Where fallback behavior protects the product
 - Whether AI changes deterministic top results in meaningful cases
+
+Current case-study-safe takeaway:
+
+CraveWise has evidence that AI failure modes are contained: slow, quota-blocked, or failed AI interpretation does not break the recommendation flow or give AI ranking authority. It also has early Gemini evidence that AI can preserve important structured signals, but it does not yet have a complete 8-case live AI quality pass.
 
 ## 11. What Would Come Next
 

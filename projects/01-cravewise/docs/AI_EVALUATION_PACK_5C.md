@@ -10,9 +10,32 @@ CraveWise should use AI only to extract structured craving signals. AI must not 
 
 ## Current Evidence Status
 
-Live AI evaluation was not run locally because `OPENAI_API_KEY` was not available in this environment.
+Milestone 5D live-key pass was run locally with `OPENAI_API_KEY` loaded server-side from the app environment file. The app route was exercised through `POST /api/interpret-craving`, but no accepted AI interpretations were returned during this pass:
 
-Do not fabricate AI outputs. Until a key is available, use this pack as the manual evidence template and rely on the offline checks:
+- Cases A-G returned `interpretationSource: "static_fallback"` with `fallbackReason: "timeout"`.
+- Case H returned `interpretationSource: "static_fallback"` with `fallbackReason: "api_error"`.
+- The recommendation flow stayed functional because deterministic static interpretation and `scoreRecommendationStatic()` handled every case.
+- No AI outputs are fabricated in this document.
+
+Milestone 5D-A diagnosis:
+
+- The local env file was corrected to `apps/cravewise/.env.local`; the previous `.env.local.txt` path is ignored and should not be committed.
+- A minimal server-side structured-output diagnostic call reached OpenAI and returned HTTP `429` with safe error metadata: `insufficient_quota`.
+- The 5-second route timeout is still intact. It can mask the upstream quota response when the 429 arrives after the timeout window, which explains the timeout-heavy 5D results.
+- The no-key path was retested and returned `static_fallback` with `fallbackReason: "missing_api_key"` and no crash.
+- Live AI interpretation quality still cannot be claimed until quota is resolved and accepted AI interpretations are recorded.
+
+Milestone 5D-B alternate-provider pass:
+
+- Gemini was added as an alternate server-side interpretation provider, selected by `AI_PROVIDER=gemini`.
+- `GEMINI_API_KEY` and `GEMINI_MODEL` stay server-side; default Gemini model is `gemini-2.5-flash`.
+- Gemini output uses the same `CravingInterpretation` shape and the same local validation helper before deterministic scoring.
+- A Gemini smoke test succeeded for `spicy but not oily` and returned a validated interpretation with `spicy` plus `avoid_oily`.
+- A current-code Gemini evidence pass accepted cases A-E, then hit fallback for F-H because of timeout / HTTP 429 provider limits.
+- OpenAI provider path was retested and still fails safely through static fallback while quota-blocked.
+- Live Gemini evidence is useful but still partial; do not claim complete 8/8 AI quality evidence yet.
+
+Use this pack as live fallback evidence plus the manual evidence template for a future successful AI-response pass. Offline checks remain the deterministic baseline:
 
 ```bash
 node evals/cravewise/run_static_evals.js
@@ -43,14 +66,26 @@ Use the app's `Prototype QA: static vs AI interpretation` panel after each recom
 
 | Case | Persona | Input | Static interpretation | AI interpretation | Changed fields | Static deterministic top | Deterministic top from AI-interpreted signals | Recommendation changed? | PM judgment | Case study notes |
 |---|---|---|---|---|---|---|---|---|---|---|
-| A | Simran | `pizza but not cheese overloaded` | To fill after manual run | Not run locally - no API key | To fill | To fill | To fill | To fill | To fill: AI helped / static was enough / AI added noise / fallback behaved correctly | Check explicit pizza intent and `avoid_cheese_heavy`. |
-| B | Abhyudaya | `spicy but not oily` | To fill after manual run | Not run locally - no API key | To fill | To fill | To fill | To fill | To fill | Check separation of `spicy` and `avoid_oily`. |
-| C | Kartik | `late night but light` | To fill after manual run | Not run locally - no API key | To fill | To fill | To fill | To fill | To fill | Check `late_night`, `light`, and `avoid_heavy`. |
-| D | Kartik | `healthy but filling` | To fill after manual run | Not run locally - no API key | To fill | To fill | To fill | To fill | To fill | Check `healthy` and `filling` without medical claims. |
-| E | Abhyudaya | `spicy fried snack late night` | To fill after manual run | Not run locally - no API key | To fill | To fill | To fill | To fill | To fill | Save prior too-oily memory first; scoring should use browser-local memory only. |
-| F | Abhyudaya | `something nice but not too much` | To fill after manual run | Not run locally - no API key | To fill | To fill | To fill | To fill | To fill | Look for useful ambiguity handling, not overconfident ranking. |
-| G | Abhyudaya | `asdf random blah` | To fill after manual run | Not run locally - no API key | To fill | To fill | To fill | To fill | To fill | Fallback or clarification behavior is a valid success. |
-| H | Simran | `something filling under 250` | To fill after manual run | Not run locally - no API key | To fill | To fill | To fill | To fill | To fill | Check `budgetSignal.max` and avoid fake deal/availability claims. |
+| A | Simran | `pizza but not cheese overloaded` | `pizza`, `Pizza`, `avoid_cheese_heavy`; static also inferred `comfort` | Gemini accepted: `pizza`, `Pizza`, `avoid_cheese_heavy`, `budgetSignal.max: 800` | `preferenceSignals`, `budgetSignal` | Thin Crust Veggie Pizza from Slice Street | Thin Crust Veggie Pizza from Slice Street | No | AI helped | Gemini preserved pizza intent and cheese boundary; deterministic scoring kept the same correct top result. |
+| B | Abhyudaya | `spicy but not oily` | `spicy`, `avoid_oily`, `weekend_dinner` | Gemini accepted: `spicy`, `avoid_oily`, `budgetSignal.max: 400`; sometimes adds `exploratory` | `preferenceSignals`, `budgetSignal`, `confidence` | Chilli Garlic Noodles from Urban Wok House | Chilli Garlic Noodles from Urban Wok House | No | static was enough | Gemini separated positive and negative signals correctly; static already covered the important boundary. |
+| C | Kartik | `late night but light` | `late_night`, `light`, `avoid_heavy` | Gemini accepted: `late_night`, `light`, budget signal; missed `avoid_heavy` in latest run | `negativeConstraints`, `budgetSignal`, `confidence` | Chilli Garlic Steamed Dim Sums from Steam House | Chilli Garlic Steamed Dim Sums from Steam House | No | static was enough | Static better encoded light-as-avoid-heavy, though deterministic top stayed safe. |
+| D | Kartik | `healthy but filling` | `Healthy Bowls`, `post_work`, `healthy`, `filling`, `heaviness: heavy` | Gemini accepted: `post_work`, `healthy`, `filling`, `heaviness: medium`, budget signal | `cuisineIntents`, `budgetSignal`, `heaviness` | Paneer Protein Bowl from Bowl Theory | Paneer Protein Bowl from Bowl Theory | No | static was enough | Gemini captured health and satiety but did not add a better outcome than static. |
+| E | Abhyudaya | `spicy fried snack late night` | `snack`, `Street Food`, `late_night`, `spicy` | Gemini accepted: `snack`, `late_night`, `spicy`, budget signal; missed `Street Food` | `cuisineIntents`, `budgetSignal` | Chicken Kathi Roll from Quick Comfort Co. | Chicken Kathi Roll from Quick Comfort Co. | No | static was enough | Local too-oily memory stayed in deterministic scoring; AI did not write or use memory. |
+| F | Abhyudaya | `something nice but not too much` | `weekend_dinner`, `comfort` | Gemini fallback in latest run: `timeout` | None, AI interpretation unavailable | Chilli Garlic Noodles from Urban Wok House | Not available | No | fallback behaved correctly | Vague input remains a useful future test after provider limits are stable. |
+| G | Abhyudaya | `asdf random blah` | `weekend_dinner`, `comfort` | Gemini fallback in latest run: `api_error`, HTTP 429 | None, AI interpretation unavailable | Chilli Garlic Noodles from Urban Wok House | Not available | No | fallback behaved correctly | Provider limit did not break the flow; no fabricated clarification result. |
+| H | Simran | `something filling under 250` | `filling`, `avoid_expensive`, `budgetSignal.max: 250` | Gemini fallback in latest run: `api_error`, HTTP 429 | None, AI interpretation unavailable | Rajma Rice Bowl from Homely Bowls | Not available | No | fallback behaved correctly | Earlier Gemini smoke/evidence calls showed budget extraction can work, but latest current-code pass hit provider limits. |
+
+## Milestone 5D Live-Key Evidence Summary
+
+The live-key pass did not produce accepted AI interpretations, so it cannot support a claim that AI improved any case yet.
+
+Observed learnings:
+
+- AI helped: Gemini preserved the important pizza and cheese-boundary signals in case A.
+- Static was enough: B-E produced the same deterministic top result, and static was often equally strong or stronger on local taxonomy details.
+- AI added noise: Gemini sometimes added budget signals from UI context and missed static-only taxonomy signals such as `avoid_heavy` or `Street Food`.
+- Fallback behavior: confirmed across OpenAI quota/timeout, Gemini timeout, and Gemini HTTP 429 paths.
+- Product implication: alternate providers can collect some live evidence without changing scoring authority, but a complete 8-case AI-quality claim still needs a stable provider quota window.
 
 ## What AI Is Allowed To Improve
 

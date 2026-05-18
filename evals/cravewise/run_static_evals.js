@@ -191,6 +191,32 @@ function runMachineCase(testCase) {
     }
   }
 
+  if (testCase.backupsMustIncludePreferenceTags) {
+    const backups = recommendations.slice(1);
+    for (const tag of testCase.backupsMustIncludePreferenceTags) {
+      backups.forEach((backup, index) => {
+        if (!backup.item.preferenceTags.includes(tag)) {
+          failures.push(`Backup ${index + 1} (${backup.item.dishName}) missing required preference tag ${tag}.`);
+        }
+      });
+    }
+  }
+
+  if (testCase.backupsMustNotIncludeAvoidFlags) {
+    const backups = recommendations.slice(1);
+    for (const flag of testCase.backupsMustNotIncludeAvoidFlags) {
+      backups.forEach((backup, index) => {
+        if (backup.item.avoidIf.includes(flag) || backup.item.regretRiskFlags.includes(flag)) {
+          failures.push(`Backup ${index + 1} (${backup.item.dishName}) includes forbidden flag ${flag}.`);
+        }
+      });
+    }
+  }
+
+  if (typeof testCase.recommendationsLengthAtMost === "number" && recommendations.length > testCase.recommendationsLengthAtMost) {
+    failures.push(`Expected at most ${testCase.recommendationsLengthAtMost} recommendations, got ${recommendations.length}.`);
+  }
+
   if (testCase.mustChangeWithMemory) {
     const noMemoryTop = data.scoreRecommendationStatic(persona, context, [])[0];
     if (!noMemoryTop || noMemoryTop.item.dishName === top.item.dishName) {

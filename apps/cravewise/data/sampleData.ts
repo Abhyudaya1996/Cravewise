@@ -604,10 +604,10 @@ const rawMenuCatalog: RawMenuItem[] = [
   {
     id: "steam-house-chilli-garlic-dim-sums",
     restaurantName: "Steam House",
-    dishName: "Chilli Garlic Steamed Dim Sums",
+    dishName: "Chilli Garlic Steamed Momos",
     cuisine: "Asian",
     price: 340,
-    tags: ["spicy", "asian", "fried_snack", "light", "fresh", "not_too_heavy"],
+    tags: ["spicy", "asian", "momos", "light", "fresh", "not_too_heavy"],
     spiceLevel: "high",
     heaviness: "light",
     bestFor: ["Late night", "Weekend dinner"],
@@ -1027,12 +1027,12 @@ const rawMenuCatalog: RawMenuItem[] = [
     dishName: "Gulab Jamun Combo",
     cuisine: "North Indian",
     price: 180,
-    tags: ["sweet", "dessert", "comfort", "light"],
+    tags: ["sweet", "dessert", "fried", "rich", "comfort", "light"],
     spiceLevel: "low",
-    heaviness: "light",
+    heaviness: "medium",
     bestFor: ["Weekend dinner", "Post-work"],
     personaFit: ["persona_abhyudaya_weekend_foodie", "persona_simran_budget_office"],
-    regretRisk: "low",
+    regretRisk: "medium",
     reorderSignal: "medium",
     novelty: "familiar",
     estimatedDeliveryMin: 20,
@@ -1064,6 +1064,8 @@ const rawMenuCatalog: RawMenuItem[] = [
 ];
 
 export const menuCatalog: MenuItem[] = rawMenuCatalog.map(enrichMenuItem);
+
+const categoryDefiningPreferences: PreferenceSignal[] = ["sweet", "spicy", "meaty", "healthy", "light", "filling"];
 
 export function getPersona(id: string): Persona {
   return personas.find((persona) => persona.id === id) ?? personas[0];
@@ -1139,7 +1141,7 @@ function inferContextFit(item: RawMenuItem): ContextSignal[] {
 function inferRegretRiskFlags(item: RawMenuItem): RegretRiskFlag[] {
   const text = `${item.dishName} ${item.tags.join(" ")}`.toLowerCase();
   const values: RegretRiskFlag[] = [];
-  if (/fried|greasy|fries|momo|momos|potato/.test(text) || (/oily/.test(text) && !/not oily/.test(text))) values.push("fried_oily");
+  if (/fried|greasy|fries|potato/.test(text) || (/oily/.test(text) && !/not oily/.test(text))) values.push("fried_oily");
   if (/cheese burst|loaded cheese|extra cheese|cheese_overloaded/.test(text)) values.push("cheese_heavy");
   if (/creamy|alfredo/.test(text) || (item.heaviness === "heavy" && item.cuisine === "Italian")) values.push("creamy_heavy");
   if (/deal|discount|budget bites|cheap/.test(text) && item.regretRisk !== "low") values.push("deal_trap");
@@ -1247,7 +1249,7 @@ function hasMeatyIntent(text: string): boolean {
 
 function hasSweetIntent(text: string): boolean {
   if (/\b(not|no|avoid|less|without)\s+(too\s+)?sweet\b/.test(text)) return false;
-  return /\bsweet tooth\b|\bsomething sweet\b|\bcraving sweet\b|\bdessert\b|\bmithai\b|\bmeetha\b|\bkuch meetha\b|\bgulab\b|\bgulab jamun\b|\bchocolate\b|\bbrownie\b|\blava cake\b|\bice cream\b|\bcake\b/.test(text);
+  return /\bsweet\b|\bsweet tooth\b|\bsomething sweet\b|\bcraving sweet\b|\bdessert\b|\bmithai\b|\bmeetha\b|\bkuch meetha\b|\bgulab\b|\bgulab jamun\b|\bchocolate\b|\bbrownie\b|\blava cake\b|\bice cream\b|\bcake\b/.test(text);
 }
 
 function matchPreferenceSignals(text: string): PreferenceSignal[] {
@@ -1279,8 +1281,8 @@ function matchNegativeConstraints(text: string): NegativeConstraint[] {
   if (/expensive|overpriced|not worth|under|budget|not above/.test(text)) values.push("avoid_expensive");
   // "sleepy" is treated as a heaviness constraint because the user is asking to avoid a meal that may feel too heavy for the context.
   if (/too heavy|not heavy|sleepy|light/.test(text)) values.push("avoid_heavy");
-  // "oily" alone is affirmative; constraint requires a negative qualifier. "greasy" is kept as an implicit aversion.
-  if (/\b(not|no|too|avoid)\s+(too\s+)?(oily|oil)|\bgreasy\b/.test(text)) values.push("avoid_oily");
+  // "oily" or "fried" alone is affirmative; constraint requires a negative qualifier. "greasy" is kept as an implicit aversion.
+  if (/\b(not|no|too|avoid)\s+(too\s+)?(oily|oil|fried)|\bgreasy\b/.test(text)) values.push("avoid_oily");
   if (/slow delivery|late delivery|quick|fast|20 mins|20 min/.test(text)) values.push("avoid_slow_delivery");
   // "veg only", "vegetarian", "no meat/chicken/non-veg" signal a dietary constraint against non-vegetarian items.
   if (/\bveg(etarian)?\s+only\b|\bpure\s+veg\b|\b(no|not|without|avoid)\s+(meat|chicken|non.?veg)\b|\bvegetarian\b/.test(text)) values.push("avoid_non_veg");
@@ -1378,7 +1380,14 @@ export function interpretCravingStatic(context: DecisionContext): CravingInterpr
     };
   }
 
-  const vague = text.trim().length < 8 || /^(kuch accha|something good|idk)$/i.test(text.trim());
+  const hasRecognizedCravingSignal = Boolean(
+    explicitDishIntents.length ||
+    cuisineIntents.length ||
+    preferenceSignals.length ||
+    negativeConstraints.length ||
+    budgetSignal
+  );
+  const vague = text.trim().length < 8 || !hasRecognizedCravingSignal || /^(kuch accha|something good|idk)$/i.test(text.trim());
   return {
     explicitDishIntents,
     cuisineIntents,
@@ -1431,9 +1440,11 @@ export function scoreRecommendationStatic(
       if (interpretation.contextSignals.includes("group_order") && item.preferenceTags.includes("group_safe")) breakdown.contextFitScore += 24;
       if (item.personaFit.includes(persona.id)) breakdown.personaPreferenceScore += hasExplicitIntent ? 12 : 25;
       if (item.preferenceTags.some((signal) => interpretation.preferenceSignals.includes(signal))) breakdown.preferenceMatchScore += 30;
-      if (interpretation.preferenceSignals.includes("meaty") && !item.preferenceTags.includes("meaty")) breakdown.preferenceMatchScore -= 35;
-      if (interpretation.preferenceSignals.includes("sweet") && !item.preferenceTags.includes("sweet")) breakdown.preferenceMatchScore -= 35;
-      if (interpretation.preferenceSignals.includes("filling") && !item.preferenceTags.includes("filling") && item.heaviness !== "heavy") breakdown.preferenceMatchScore -= 15;
+      categoryDefiningPreferences.forEach((preference) => {
+        if (interpretation.preferenceSignals.includes(preference) && !item.preferenceTags.includes(preference)) {
+          breakdown.preferenceMatchScore -= 55;
+        }
+      });
       if (item.reorderSignal === "high") breakdown.personaPreferenceScore += context.explorationIntent === "safe" ? 18 : 10;
       if (context.explorationIntent === "somewhat_new" && item.novelty === "somewhat_new") breakdown.explorationScore += 12;
       if (context.explorationIntent === "surprise_me" && item.novelty !== "familiar") breakdown.explorationScore += 12;
@@ -1476,9 +1487,17 @@ export function scoreRecommendationStatic(
     .sort((a, b) => b.score - a.score);
 
   const primary = fallbackScored[0];
-  const safe = fallbackScored.find(({ item }) => item.novelty === "familiar" && item.id !== primary?.item.id);
+  const primaryCoherenceKey = getPrimaryCoherenceKey(interpretation, primary?.item);
+  const safe = fallbackScored.find(({ item }) =>
+    item.novelty === "familiar" &&
+    item.id !== primary?.item.id &&
+    backupIsCoherent(item, primary?.item, primaryCoherenceKey)
+  );
   const explore = fallbackScored.find(({ item }) =>
-    item.novelty !== "familiar" && item.id !== primary?.item.id && item.id !== safe?.item.id
+    item.novelty !== "familiar" &&
+    item.id !== primary?.item.id &&
+    item.id !== safe?.item.id &&
+    backupIsCoherent(item, primary?.item, primaryCoherenceKey)
   );
 
   return [
@@ -1606,11 +1625,15 @@ function makeRecommendation(
   const preferenceCopy = formatPreferenceCopy(interpretation.preferenceSignals);
   const caveats = getRecommendationCaveats(item, context, budgetMax);
   const caveatCopy = caveats.length ? ` ${caveats.join(" ")}` : "";
+  const personaRelevanceCopy = getPersonaRelevanceCopy(item, persona);
+  const constraintCopy = activeConstraints.length
+    ? ` It avoids active constraints: ${activeConstraints.map(formatNegativeConstraint).join(", ")}.`
+    : "";
   const reason = isRush && item.id === "baja-bowl-classic-chicken-burrito"
     ? `${item.dishName} fits because ${persona.name} has a comfort reorder pattern for burritos, the dummy ETA is ${item.estimatedDeliveryMin}-${item.estimatedDeliveryMax} mins, and it is meeting-safe for "${context.upcomingConstraint}".${caveatCopy}`
     : explicitIntentCopy
-      ? `${item.dishName} fits the explicit ${explicitIntentCopy} craving and stays ${budgetFit}.${activeConstraints.length ? ` It avoids active constraints: ${activeConstraints.map(formatNegativeConstraint).join(", ")}.` : " Persona defaults are secondary for this pick."}${caveatCopy}`
-    : `${item.dishName} fits the ${preferenceCopy} ${formatOccasionCopy(context.occasion)} craving and matches ${persona.name}'s ${persona.topCuisines.slice(0, 2).join(" and ")} discovery pattern.${activeConstraints.length ? ` It avoids active constraints: ${activeConstraints.map(formatNegativeConstraint).join(", ")}.` : ""}${caveatCopy}`;
+      ? `${item.dishName} fits the explicit ${explicitIntentCopy} craving and stays ${budgetFit}.${constraintCopy}${personaRelevanceCopy}${caveatCopy}`
+    : `${item.dishName} fits the ${preferenceCopy} ${formatOccasionCopy(context.occasion)} craving and stays ${budgetFit}.${constraintCopy}${personaRelevanceCopy}${caveatCopy}`;
   return {
     item,
     score,
@@ -1745,6 +1768,21 @@ function formatPreferenceCopy(preferences: PreferenceSignal[]): string {
   return preferences.map((preference) => preference.replace("_", " ")).join(", ");
 }
 
+function getPersonaRelevanceCopy(item: MenuItem, persona: Persona): string {
+  if (!item.personaFit.includes(persona.id)) return "";
+  if (persona.topCuisines.includes(item.cuisine)) {
+    return ` Matches ${persona.name}'s ${item.cuisine} comfort pattern.`;
+  }
+  const matchedComfortFood = persona.comfortFoods.find((food) => {
+    const firstWord = food.toLowerCase().split(" ")[0];
+    return firstWord.length > 3 && item.dishName.toLowerCase().includes(firstWord);
+  });
+  if (matchedComfortFood) {
+    return ` This is a known comfort dish for ${persona.name}.`;
+  }
+  return ` Fits ${persona.name}'s usual budget and weekend pattern.`;
+}
+
 function formatOccasionCopy(occasion: Occasion): string {
   return occasion.toLowerCase().replace("weekday rush", "weekday-rush");
 }
@@ -1842,4 +1880,45 @@ function similarToMemoryContext(item: MenuItem, memory: ScoringFeedbackMemory): 
   const text = `${memory.decisionContext.rawCraving} ${memory.selectedRecommendation.dishName}`.toLowerCase();
   return item.tags.some((tag) => text.includes(tag.toLowerCase())) ||
     text.includes(item.cuisine.toLowerCase());
+}
+
+type CoherenceKey =
+  | { kind: "dishType"; value: DishType }
+  | { kind: "cuisine"; value: Cuisine }
+  | { kind: "preference"; value: PreferenceSignal }
+  | null;
+
+function getPrimaryCoherenceKey(
+  interpretation: CravingInterpretation,
+  primaryItem: MenuItem | undefined,
+): CoherenceKey {
+  if (!primaryItem) return null;
+  if (interpretation.explicitDishIntents.length) {
+    return { kind: "dishType", value: interpretation.explicitDishIntents[0] };
+  }
+  if (interpretation.cuisineIntents.length) {
+    return { kind: "cuisine", value: interpretation.cuisineIntents[0] };
+  }
+  const definingPreference = categoryDefiningPreferences.find((preference) =>
+    interpretation.preferenceSignals.includes(preference)
+  );
+  if (definingPreference) {
+    return { kind: "preference", value: definingPreference };
+  }
+  return null;
+}
+
+function backupIsCoherent(
+  candidate: MenuItem,
+  primary: MenuItem | undefined,
+  key: CoherenceKey,
+): boolean {
+  if (!key || !primary) return true;
+  if (key.kind === "dishType") {
+    return candidate.dishType === key.value || candidate.cuisine === primary.cuisine;
+  }
+  if (key.kind === "cuisine") {
+    return candidate.cuisine === key.value;
+  }
+  return candidate.preferenceTags.includes(key.value);
 }

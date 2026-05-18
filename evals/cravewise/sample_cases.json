@@ -774,5 +774,97 @@
     },
     "mustNotIncludePreferenceSignals": ["sweet"],
     "topMustNotIncludePreferenceTags": ["sweet"]
+  },
+  {
+    "id": "intent_coherence_sweet_backups_must_be_sweet",
+    "category": "backup coherence",
+    "persona": "Abhyudaya",
+    "input": "sweet tooth tonight",
+    "machineCheck": true,
+    "context": {
+      "occasion": "Weekend dinner",
+      "budgetBand": "Rs.250-400",
+      "heaviness": "Medium",
+      "explorationIntent": "somewhat_new",
+      "availableTime": "No rush",
+      "upcomingConstraint": "No constraint"
+    },
+    "mustIncludePreferenceSignals": ["sweet"],
+    "topMustIncludePreferenceTags": ["sweet"],
+    "backupsMustIncludePreferenceTags": ["sweet"]
+  },
+  {
+    "id": "intent_coherence_sweet_not_oily_excludes_gulab",
+    "category": "backup coherence",
+    "persona": "Abhyudaya",
+    "input": "in mood of something sweet but not oily",
+    "machineCheck": true,
+    "context": {
+      "occasion": "Weekend dinner",
+      "budgetBand": "Rs.250-400",
+      "heaviness": "Medium",
+      "explorationIntent": "somewhat_new",
+      "availableTime": "No rush",
+      "upcomingConstraint": "No constraint"
+    },
+    "mustIncludePreferenceSignals": ["sweet"],
+    "mustIncludeNegativeConstraints": ["avoid_oily"],
+    "mustAvoidFlags": ["avoid_oily", "fried_oily"],
+    "topMustIncludePreferenceTags": ["sweet"],
+    "mustNotRecommendDishName": "Gulab Jamun Combo",
+    "backupsMustNotIncludeAvoidFlags": ["avoid_oily", "fried_oily"]
+  },
+  {
+    "id": "intent_coherence_not_fried_momos_filtered",
+    "category": "constraint coverage",
+    "persona": "Abhyudaya",
+    "input": "momos but not fried",
+    "machineCheck": true,
+    "context": {
+      "occasion": "Weekend dinner",
+      "budgetBand": "Rs.250-400",
+      "heaviness": "Medium",
+      "explorationIntent": "somewhat_new",
+      "availableTime": "No rush",
+      "upcomingConstraint": "No constraint"
+    },
+    "mustIncludeDishType": "momos",
+    "mustIncludeNegativeConstraints": ["avoid_oily"],
+    "mustAvoidFlags": ["avoid_oily", "fried_oily"]
+  },
+  {
+    "id": "intent_coherence_butter_chicken_not_sweet",
+    "category": "no false sweet trigger",
+    "persona": "Pransih",
+    "input": "butter chicken but not sweet",
+    "machineCheck": true,
+    "context": {
+      "occasion": "Weekend dinner",
+      "budgetBand": "Rs.400-600",
+      "heaviness": "Medium",
+      "explorationIntent": "safe",
+      "availableTime": "No rush",
+      "upcomingConstraint": "No constraint"
+    },
+    "mustIncludeDishType": "curry",
+    "mustNotIncludePreferenceSignals": ["sweet"],
+    "mustNotIncludeDishType": "dessert",
+    "mustNotRecommendDishName": "Gulab Jamun Combo"
+  },
+  {
+    "id": "reason_no_unrelated_persona_projection",
+    "category": "reason copy quality",
+    "persona": "Abhyudaya",
+    "input": "sweet tooth tonight",
+    "machineCheck": true,
+    "context": {
+      "occasion": "Weekend dinner",
+      "budgetBand": "Rs.250-400",
+      "heaviness": "Medium",
+      "explorationIntent": "somewhat_new",
+      "availableTime": "No rush",
+      "upcomingConstraint": "No constraint"
+    },
+    "reasonMustNotInclude": ["Asian and North Indian discovery pattern", "Asian discovery", "discovery pattern"]
   }
 ]

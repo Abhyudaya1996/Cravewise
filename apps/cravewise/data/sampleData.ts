@@ -1021,6 +1021,46 @@ const rawMenuCatalog: RawMenuItem[] = [
     weekdayLunchFit: false,
     meetingSafe: true,
   },
+  {
+    id: "sweet-house-gulab-jamun-combo",
+    restaurantName: "Sweet House",
+    dishName: "Gulab Jamun Combo",
+    cuisine: "North Indian",
+    price: 180,
+    tags: ["sweet", "dessert", "comfort", "light"],
+    spiceLevel: "low",
+    heaviness: "light",
+    bestFor: ["Weekend dinner", "Post-work"],
+    personaFit: ["persona_abhyudaya_weekend_foodie", "persona_simran_budget_office"],
+    regretRisk: "low",
+    reorderSignal: "medium",
+    novelty: "familiar",
+    estimatedDeliveryMin: 20,
+    estimatedDeliveryMax: 30,
+    deliveryReliabilityScore: 82,
+    weekdayLunchFit: false,
+    meetingSafe: false,
+  },
+  {
+    id: "dessert-box-chocolate-lava-cake",
+    restaurantName: "Dessert Box",
+    dishName: "Chocolate Lava Cake",
+    cuisine: "Italian",
+    price: 320,
+    tags: ["sweet", "dessert", "comfort"],
+    spiceLevel: "low",
+    heaviness: "medium",
+    bestFor: ["Weekend dinner"],
+    personaFit: ["persona_abhyudaya_weekend_foodie"],
+    regretRisk: "medium",
+    reorderSignal: "medium",
+    novelty: "somewhat_new",
+    estimatedDeliveryMin: 25,
+    estimatedDeliveryMax: 38,
+    deliveryReliabilityScore: 76,
+    weekdayLunchFit: false,
+    meetingSafe: false,
+  },
 ];
 
 export const menuCatalog: MenuItem[] = rawMenuCatalog.map(enrichMenuItem);
@@ -1057,6 +1097,7 @@ function inferDishType(item: RawMenuItem): DishType {
   if (/burger/.test(text)) return "burger";
   if (/burrito/.test(text)) return "burrito";
   if (/curry|dal|makhani|rajma|butter chicken/.test(text)) return "curry";
+  if (/dessert|gulab|halwa|kheer|ice cream|lava cake|brownie|waffle|cake/.test(text)) return "dessert";
   if (/dim sum|dimsum/.test(text)) return "dim_sum";
   if (/dosa/.test(text)) return "dosa";
   if (/momo|momos/.test(text)) return "momos";
@@ -1080,6 +1121,7 @@ function inferPreferenceTags(item: RawMenuItem): PreferenceSignal[] {
   if (/light|salad|healthy|lean|not_too_heavy/.test(tags) || item.heaviness === "light") values.push("light");
   if (/meaty|meat|chicken|biryani|kathi|non veg|non-veg/.test(`${item.dishName} ${tags}`.toLowerCase())) values.push("meaty");
   if (/healthy|protein|lean|bowl/.test(tags) || item.cuisine === "Healthy Bowls" || item.cuisine === "Mediterranean") values.push("healthy");
+  if (inferDishType(item) === "dessert" || /sweet|dessert|mithai|meetha|gulab|chocolate|ice cream|brownie|lava cake/.test(`${item.dishName} ${tags}`.toLowerCase())) values.push("sweet");
   if (/fresh|not oily|not_oily/.test(tags)) values.push("fresh");
   if (/group|sharing|group_safe/.test(tags) || item.bestFor.includes("Group order")) values.push("group_safe");
   if (/deal|value|budget/.test(tags)) values.push("deal", "value");
@@ -1155,6 +1197,7 @@ function matchDishIntents(text: string): DishType[] {
   if (/burger/.test(text)) values.push("burger");
   if (/burrito/.test(text)) values.push("burrito");
   if (/curry|dal|rajma|butter chicken/.test(text)) values.push("curry");
+  if (hasSweetIntent(text) && /dessert|gulab jamun|mithai|halwa|kheer|ice cream|lava cake|brownie|waffle|cake/.test(text)) values.push("dessert");
   if (/dim sum|dimsum/.test(text)) values.push("dim_sum");
   if (/dosa/.test(text)) values.push("dosa");
   if (/momo|momos/.test(text)) values.push("momos");
@@ -1202,6 +1245,11 @@ function hasMeatyIntent(text: string): boolean {
   return /\b(meaty|meat|chicken|non.?veg|mutton)\b/.test(text);
 }
 
+function hasSweetIntent(text: string): boolean {
+  if (/\b(not|no|avoid|less|without)\s+(too\s+)?sweet\b/.test(text)) return false;
+  return /\bsweet tooth\b|\bsomething sweet\b|\bcraving sweet\b|\bdessert\b|\bmithai\b|\bmeetha\b|\bkuch meetha\b|\bgulab\b|\bgulab jamun\b|\bchocolate\b|\bbrownie\b|\blava cake\b|\bice cream\b|\bcake\b/.test(text);
+}
+
 function matchPreferenceSignals(text: string): PreferenceSignal[] {
   const values: PreferenceSignal[] = [];
   if (/spicy|spicyy|chatpata|schezwan|chilli/.test(text)) values.push("spicy");
@@ -1218,6 +1266,7 @@ function matchPreferenceSignals(text: string): PreferenceSignal[] {
   if (/meeting safe|meeting/.test(text)) values.push("meeting_safe");
   if (/reorder|repeat/.test(text)) values.push("reorder");
   if (/value|budget|worth/.test(text)) values.push("value");
+  if (hasSweetIntent(text)) values.push("sweet");
   return values;
 }
 
@@ -1383,6 +1432,7 @@ export function scoreRecommendationStatic(
       if (item.personaFit.includes(persona.id)) breakdown.personaPreferenceScore += hasExplicitIntent ? 12 : 25;
       if (item.preferenceTags.some((signal) => interpretation.preferenceSignals.includes(signal))) breakdown.preferenceMatchScore += 30;
       if (interpretation.preferenceSignals.includes("meaty") && !item.preferenceTags.includes("meaty")) breakdown.preferenceMatchScore -= 35;
+      if (interpretation.preferenceSignals.includes("sweet") && !item.preferenceTags.includes("sweet")) breakdown.preferenceMatchScore -= 35;
       if (interpretation.preferenceSignals.includes("filling") && !item.preferenceTags.includes("filling") && item.heaviness !== "heavy") breakdown.preferenceMatchScore -= 15;
       if (item.reorderSignal === "high") breakdown.personaPreferenceScore += context.explorationIntent === "safe" ? 18 : 10;
       if (context.explorationIntent === "somewhat_new" && item.novelty === "somewhat_new") breakdown.explorationScore += 12;

@@ -125,6 +125,12 @@ function runMachineCase(testCase) {
     }
   }
 
+  for (const tag of testCase.topMustNotIncludePreferenceTags ?? []) {
+    if (top.item.preferenceTags.includes(tag)) {
+      failures.push(`Top recommendation must not include preference tag ${tag}.`);
+    }
+  }
+
   if (testCase.topEstimatedDeliveryMaxAtMost && top.item.estimatedDeliveryMax > testCase.topEstimatedDeliveryMaxAtMost) {
     failures.push(`Top recommendation ETA max ${top.item.estimatedDeliveryMax} exceeds ${testCase.topEstimatedDeliveryMaxAtMost}.`);
   }

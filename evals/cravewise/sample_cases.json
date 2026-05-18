@@ -669,5 +669,110 @@
     "mustIncludeNegativeConstraints": ["avoid_non_veg"],
     "mustAvoidFlags": ["avoid_non_veg"],
     "topPriceAtMost": 300
+  },
+  {
+    "id": "taxonomy_sweet_tooth_vague",
+    "machineCheck": true,
+    "category": "local dish taxonomy",
+    "persona": "Abhyudaya",
+    "input": "sweet tooth tonight",
+    "context": {
+      "occasion": "Weekend dinner",
+      "heaviness": "Medium",
+      "budgetBand": "Rs.250-400",
+      "explorationIntent": "somewhat_new",
+      "availableTime": "20-30 min",
+      "upcomingConstraint": "No constraint"
+    },
+    "mustIncludePreferenceSignals": ["sweet"],
+    "topMustIncludePreferenceTags": ["sweet"]
+  },
+  {
+    "id": "taxonomy_dessert_explicit_intent",
+    "machineCheck": true,
+    "category": "local dish taxonomy",
+    "persona": "Abhyudaya",
+    "input": "I want dessert",
+    "context": {
+      "occasion": "Weekend dinner",
+      "heaviness": "Light",
+      "budgetBand": "Custom",
+      "customBudget": "500",
+      "explorationIntent": "somewhat_new",
+      "availableTime": "20-30 min",
+      "upcomingConstraint": "No constraint"
+    },
+    "mustIncludeDishType": "dessert",
+    "mustIncludePreferenceSignals": ["sweet"],
+    "topMustIncludePreferenceTags": ["sweet"]
+  },
+  {
+    "id": "taxonomy_affirmative_sweet_light",
+    "machineCheck": true,
+    "category": "local dish taxonomy",
+    "persona": "Simran",
+    "input": "something sweet and light",
+    "context": {
+      "occasion": "Weekday lunch",
+      "heaviness": "Light",
+      "budgetBand": "Rs.200-350",
+      "explorationIntent": "safe",
+      "availableTime": "20-30 min",
+      "upcomingConstraint": "No constraint"
+    },
+    "mustIncludePreferenceSignals": ["sweet", "light"],
+    "topMustIncludePreferenceTags": ["sweet"]
+  },
+  {
+    "id": "taxonomy_not_too_sweet_guard",
+    "machineCheck": true,
+    "category": "signal negation",
+    "persona": "Abhyudaya",
+    "input": "not too sweet",
+    "context": {
+      "occasion": "Weekend dinner",
+      "heaviness": "Medium",
+      "budgetBand": "Rs.250-400",
+      "explorationIntent": "somewhat_new",
+      "availableTime": "20-30 min",
+      "upcomingConstraint": "No constraint"
+    },
+    "mustNotIncludePreferenceSignals": ["sweet"]
+  },
+  {
+    "id": "taxonomy_sweet_meetha_budget",
+    "machineCheck": true,
+    "category": "local dish taxonomy",
+    "persona": "Simran",
+    "input": "kuch meetha under 200",
+    "context": {
+      "occasion": "Weekend dinner",
+      "heaviness": "Light",
+      "budgetBand": "Custom",
+      "customBudget": "200",
+      "explorationIntent": "safe",
+      "availableTime": "20-30 min",
+      "upcomingConstraint": "No constraint"
+    },
+    "mustIncludePreferenceSignals": ["sweet"],
+    "topPriceAtMost": 200,
+    "topMustIncludePreferenceTags": ["sweet"]
+  },
+  {
+    "id": "taxonomy_kartik_no_dessert_without_sweet_craving",
+    "machineCheck": true,
+    "category": "recommendation integrity",
+    "persona": "Kartik",
+    "input": "post-work healthy filling meal",
+    "context": {
+      "occasion": "Post-work",
+      "heaviness": "Filling",
+      "budgetBand": "Rs.400-600",
+      "explorationIntent": "safe",
+      "availableTime": "20-30 min",
+      "upcomingConstraint": "No constraint"
+    },
+    "mustNotIncludePreferenceSignals": ["sweet"],
+    "topMustNotIncludePreferenceTags": ["sweet"]
   }
 ]

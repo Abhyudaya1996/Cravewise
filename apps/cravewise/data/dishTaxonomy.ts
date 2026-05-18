@@ -4,6 +4,7 @@ export const dishTypes = [
   "burger",
   "burrito",
   "curry",
+  "dessert",
   "dim_sum",
   "dosa",
   "momos",
@@ -55,6 +56,7 @@ export const preferenceSignals = [
   "meeting_safe",
   "reorder",
   "spicy",
+  "sweet",
   "value",
 ] as const;
 

@@ -2,7 +2,7 @@
 
 ## Current Portfolio State
 
-Status: CraveWise case study draft complete from Milestone 5D-C combined Gemini live evidence.
+Status: CraveWise Recommender Integrity v2 and portfolio case-study UI are complete and pushed.
 
 ## Active Project
 
@@ -10,7 +10,7 @@ CraveWise.
 
 ## Active Milestone
 
-Case study draft from combined AI evidence.
+Post-6B state update after recommender integrity and portfolio case-study page completion.
 
 ## Latest Decisions
 
@@ -102,6 +102,19 @@ Case study draft from combined AI evidence.
 - Evidence rows in `AI_EVALUATION_PACK_5C.md` now include run-source annotations so combined evidence is labeled, not implied as one clean run.
 - `projects/01-cravewise/docs/CASE_STUDY_DRAFT.md` now contains a polished portfolio narrative covering the problem, one-recommendation thesis, static MVP, local feedback memory, taxonomy/scoring, bounded AI interpretation, OpenAI quota-blocked fallback evidence, Gemini partial evidence, Case G AI noise, and next steps.
 - The case study draft preserves the exact takeaway: "Deterministic scoring is necessary because AI can degrade signal quality."
+- Recommender Integrity v2 is complete and pushed in commit `27c9293fcde462d3d475a7f4a13ce777a49acd95`.
+- CraveWise now has match-quality states: `strong`, `style_match`, `partial`, and `no_responsible_match`.
+- The match-quality gate prevents forced confident recommendations when the small static demo catalog cannot responsibly satisfy an exact request.
+- Unsupported exact asks such as sushi and Tres Leches can return `no_responsible_match` with primary recommendation suppressed.
+- Vague/noise inputs such as `asdf random blah` remain clarification-suppressed and no longer carry hidden `strong` match quality.
+- Recommender Integrity v2 verification passed: static evals 33/33, AI validation checks 5/5, interpretation comparison checks 3/3, `npm run lint`, and `npm run build`.
+- Portfolio case-study UI is complete and pushed in commit `f48c2e01652b137227b6ed45e1e24c7bd0425066`.
+- `/case-study` now presents the CraveWise PM case study with an editorial layout, phone mockup, decision-surface comparison, product flow, static-first foundation, AI boundary diagram, evidence cards, Case G failure card, taxonomy strip, PM judgment panel, and proof links.
+- The prototype home now includes a visible bridge to the case study.
+- The case study includes a persona honesty note: "Personas are illustrative composites for demo scenarios, not interview-derived research."
+- The case study includes proposed production metrics, not measured outcomes: decision time, acceptance rate, regret rate, and repeat intent.
+- Evidence cards now distinguish AI-helped, deterministic-scoring, and fallback/trust-protection evidence.
+- Remaining local untracked artifacts such as `.claude/`, old handoff prompts, and Claude review files are not part of the shipped milestones.
 - `projects/01-cravewise/docs/CRAVEWISE_PROJECT_STATE.md` is now the primary Claude/Codex handoff and review entrypoint for CraveWise.
 - No backend database, MCP, auth, Supabase, live restaurant data, ordering/payment, delivery tracking, or cross-device memory were added.
 
@@ -112,9 +125,9 @@ Case study draft from combined AI evidence.
 
 ## Next Recommended Action
 
-For broader CraveWise context, read `projects/01-cravewise/docs/CRAVEWISE_PROJECT_STATE.md`. Next recommended milestone: convert `projects/01-cravewise/docs/CASE_STUDY_DRAFT.md` into a portfolio page with screenshots and a concise demo script, or rerun Gemini only if a single clean 8-case evidence pass is required.
+For broader CraveWise context, read `projects/01-cravewise/docs/CRAVEWISE_PROJECT_STATE.md`. Next recommended work: deploy/verify the portfolio page, prepare a public proof-of-work post, and queue future technical debt separately rather than expanding CraveWise scope now.
 
 ## Last Updated
 
-2026-05-15
+2026-05-22
 

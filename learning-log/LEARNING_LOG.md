@@ -189,3 +189,23 @@ Update after every meaningful task.
 - Technical tradeoff: changed docs and memory only; no product features, backend, database, live integrations, auth, ordering, payments, delivery, or cross-device memory were added.
 - Verification: documentation-only change; previous verified baseline remains `npm run lint`, `npm run build`, and `node evals/cravewise/run_static_evals.js`.
 - Next action: convert the case study draft into a portfolio page with screenshots and a short demo script.
+
+## 2026-05-22 - CraveWise Recommender Integrity v2
+
+- Milestone: recommender integrity v2.
+- Changed: added match-quality states, candidate sufficiency gating, exact-unavailable handling, style-match and partial-match behavior, honest `no_responsible_match` suppression, state-driven reason copy, and expanded eval coverage.
+- Product tradeoff: chose to suppress weak recommendations when the demo catalog cannot responsibly satisfy the request instead of preserving a falsely confident one-answer experience.
+- Technical tradeoff: kept the fix inside deterministic local scoring and evals; AI still only interprets craving signals and cannot recommend or rank food.
+- Verification: `node evals/cravewise/run_static_evals.js` passed 33/33 static evals, AI validation checks passed 5/5, interpretation comparison checks passed 3/3, `npm run lint` passed, and `npm run build` passed.
+- Commit: `27c9293fcde462d3d475a7f4a13ce777a49acd95`.
+- Next action: keep future recommender tech debt queued separately; do not expand catalog or scoring scope until the portfolio milestone is published.
+
+## 2026-05-22 - CraveWise Portfolio Case-Study UI
+
+- Milestone: portfolio case-study page.
+- Changed: added the `/case-study` route, editorial case-study layout, prototype-to-case-study bridge, AI boundary diagram, evidence hierarchy, Case G failure card, taxonomy coverage strip, PM judgment panel, persona honesty note, proposed production metrics, and proof links.
+- Product tradeoff: presented CraveWise as an AI-native PM case study about deciding where AI should not have authority, not as a generic food delivery product.
+- Technical tradeoff: kept the work in UI/case-study files only; no recommender/scoring/eval/API/provider/schema/taxonomy logic was touched.
+- Verification: `npm run lint` passed and `npm run build` passed.
+- Commit: `f48c2e01652b137227b6ed45e1e24c7bd0425066`.
+- Next action: deploy/verify the portfolio page, prepare a public proof-of-work post, and leave local untracked Claude/handoff artifacts out of shipped milestones.

@@ -93,72 +93,83 @@ function runMachineCase(testCase) {
   const failures = [];
 
   if (!top) {
-    failures.push("No top recommendation returned.");
-    return { id: testCase.id, failures };
-  }
-
-  if (testCase.mustIncludeDishType && top.item.dishType !== testCase.mustIncludeDishType) {
-    failures.push(`Expected top dishType ${testCase.mustIncludeDishType}, got ${top.item.dishType}.`);
-  }
-
-  if (testCase.mustIncludeCuisine && top.item.cuisine !== testCase.mustIncludeCuisine) {
-    failures.push(`Expected top cuisine ${testCase.mustIncludeCuisine}, got ${top.item.cuisine}.`);
-  }
-
-  if (testCase.mustNotIncludeDishType && top.item.dishType === testCase.mustNotIncludeDishType) {
-    failures.push(`Top dishType must not be ${testCase.mustNotIncludeDishType}.`);
-  }
-
-  if (testCase.mustNotRecommendDishName && top.item.dishName === testCase.mustNotRecommendDishName) {
-    failures.push(`Top recommendation must not be ${testCase.mustNotRecommendDishName}.`);
-  }
-
-  for (const flag of testCase.mustAvoidFlags ?? []) {
-    if (top.item.avoidIf.includes(flag) || top.item.regretRiskFlags.includes(flag)) {
-      failures.push(`Top recommendation includes avoided flag ${flag}.`);
+    if (testCase.expectedMatchQuality !== "no_responsible_match") {
+      failures.push("No top recommendation returned.");
     }
   }
 
-  for (const tag of testCase.topMustIncludePreferenceTags ?? []) {
-    if (!top.item.preferenceTags.includes(tag)) {
-      failures.push(`Top recommendation missing preference tag ${tag}.`);
+  if (testCase.expectedMatchQuality === "no_responsible_match" && recommendations.length > 0) {
+    failures.push(`Expected no recommendations for no_responsible_match state, got ${recommendations.length}.`);
+  }
+
+  if (top) {
+    if (testCase.expectedMatchQuality && top.matchQuality !== testCase.expectedMatchQuality) {
+      failures.push(`Expected matchQuality ${testCase.expectedMatchQuality}, got ${top.matchQuality ?? "no top"}.`);
     }
-  }
 
-  for (const tag of testCase.topMustNotIncludePreferenceTags ?? []) {
-    if (top.item.preferenceTags.includes(tag)) {
-      failures.push(`Top recommendation must not include preference tag ${tag}.`);
+    if (testCase.mustIncludeDishType && top.item.dishType !== testCase.mustIncludeDishType) {
+      failures.push(`Expected top dishType ${testCase.mustIncludeDishType}, got ${top.item.dishType}.`);
     }
-  }
 
-  if (testCase.topEstimatedDeliveryMaxAtMost && top.item.estimatedDeliveryMax > testCase.topEstimatedDeliveryMaxAtMost) {
-    failures.push(`Top recommendation ETA max ${top.item.estimatedDeliveryMax} exceeds ${testCase.topEstimatedDeliveryMaxAtMost}.`);
-  }
-
-  if (testCase.topPriceAtMost && top.item.price > testCase.topPriceAtMost) {
-    failures.push(`Top recommendation price ${top.item.price} exceeds ${testCase.topPriceAtMost}.`);
-  }
-
-  for (const text of testCase.reasonMustInclude ?? []) {
-    if (!top.reason.toLowerCase().includes(text.toLowerCase())) {
-      failures.push(`Top recommendation reason must include "${text}".`);
+    if (testCase.mustIncludeCuisine && top.item.cuisine !== testCase.mustIncludeCuisine) {
+      failures.push(`Expected top cuisine ${testCase.mustIncludeCuisine}, got ${top.item.cuisine}.`);
     }
-  }
 
-  for (const text of testCase.reasonMustNotInclude ?? []) {
-    if (top.reason.toLowerCase().includes(text.toLowerCase())) {
-      failures.push(`Top recommendation reason must not include "${text}".`);
+    if (testCase.mustNotIncludeDishType && top.item.dishType === testCase.mustNotIncludeDishType) {
+      failures.push(`Top dishType must not be ${testCase.mustNotIncludeDishType}.`);
     }
-  }
 
-  for (const tag of testCase.topMustIncludeReliabilityTags ?? []) {
-    if (!top.item.reliabilityTags.includes(tag)) {
-      failures.push(`Top recommendation missing reliability tag ${tag}.`);
+    if (testCase.mustNotRecommendDishName && top.item.dishName === testCase.mustNotRecommendDishName) {
+      failures.push(`Top recommendation must not be ${testCase.mustNotRecommendDishName}.`);
     }
-  }
 
-  if (testCase.expectedTopRecommendation && top.item.dishName !== testCase.expectedTopRecommendation) {
-    failures.push(`Expected top recommendation ${testCase.expectedTopRecommendation}, got ${top.item.dishName}.`);
+    for (const flag of testCase.mustAvoidFlags ?? []) {
+      if (top.item.avoidIf.includes(flag) || top.item.regretRiskFlags.includes(flag)) {
+        failures.push(`Top recommendation includes avoided flag ${flag}.`);
+      }
+    }
+
+    for (const tag of testCase.topMustIncludePreferenceTags ?? []) {
+      if (!top.item.preferenceTags.includes(tag)) {
+        failures.push(`Top recommendation missing preference tag ${tag}.`);
+      }
+    }
+
+    for (const tag of testCase.topMustNotIncludePreferenceTags ?? []) {
+      if (top.item.preferenceTags.includes(tag)) {
+        failures.push(`Top recommendation must not include preference tag ${tag}.`);
+      }
+    }
+
+    if (testCase.topEstimatedDeliveryMaxAtMost && top.item.estimatedDeliveryMax > testCase.topEstimatedDeliveryMaxAtMost) {
+      failures.push(`Top recommendation ETA max ${top.item.estimatedDeliveryMax} exceeds ${testCase.topEstimatedDeliveryMaxAtMost}.`);
+    }
+
+    if (testCase.topPriceAtMost && top.item.price > testCase.topPriceAtMost) {
+      failures.push(`Top recommendation price ${top.item.price} exceeds ${testCase.topPriceAtMost}.`);
+    }
+
+    for (const text of testCase.reasonMustInclude ?? []) {
+      if (!top.reason.toLowerCase().includes(text.toLowerCase())) {
+        failures.push(`Top recommendation reason must include "${text}".`);
+      }
+    }
+
+    for (const text of testCase.reasonMustNotInclude ?? []) {
+      if (top.reason.toLowerCase().includes(text.toLowerCase())) {
+        failures.push(`Top recommendation reason must not include "${text}".`);
+      }
+    }
+
+    for (const tag of testCase.topMustIncludeReliabilityTags ?? []) {
+      if (!top.item.reliabilityTags.includes(tag)) {
+        failures.push(`Top recommendation missing reliability tag ${tag}.`);
+      }
+    }
+
+    if (testCase.expectedTopRecommendation && top.item.dishName !== testCase.expectedTopRecommendation) {
+      failures.push(`Expected top recommendation ${testCase.expectedTopRecommendation}, got ${top.item.dishName}.`);
+    }
   }
 
   for (const signal of testCase.mustIncludePreferenceSignals ?? []) {
@@ -219,17 +230,19 @@ function runMachineCase(testCase) {
 
   if (testCase.mustChangeWithMemory) {
     const noMemoryTop = data.scoreRecommendationStatic(persona, context, [])[0];
-    if (!noMemoryTop || noMemoryTop.item.dishName === top.item.dishName) {
+    if (!top || !noMemoryTop || noMemoryTop.item.dishName === top.item.dishName) {
       failures.push("Expected memory to change the top recommendation.");
     }
-    if (!top.memoryNotes.length) {
+    if (!top?.memoryNotes.length) {
       failures.push("Expected memory influence note on top recommendation.");
     }
   }
 
-  const breakdown = top.scoreBreakdown;
-  if (!breakdown || breakdown.finalScore !== top.score) {
-    failures.push("Top recommendation scoreBreakdown.finalScore must match score.");
+  if (top) {
+    const breakdown = top.scoreBreakdown;
+    if (!breakdown || breakdown.finalScore !== top.score) {
+      failures.push("Top recommendation scoreBreakdown.finalScore must match score.");
+    }
   }
 
   return { id: testCase.id, failures };

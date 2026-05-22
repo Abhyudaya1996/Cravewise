@@ -96,6 +96,15 @@ export type CravingInterpretation = {
   needs_clarification: boolean;
 };
 
+export type MatchQuality = "strong" | "style_match" | "partial" | "no_responsible_match";
+
+export type UnmetSignals = {
+  explicitDishIntents: DishType[];
+  cuisineIntents: Cuisine[];
+  preferenceSignals: PreferenceSignal[];
+  unrepresentableConstraints: string[];
+};
+
 type RawMenuItem = Omit<
   MenuItem,
   "dishType" | "preferenceTags" | "contextFit" | "regretRiskFlags" | "reliabilityTags" | "avoidIf" | "budgetTier" | "priceComfortBand"
@@ -112,6 +121,9 @@ export type Recommendation = {
   tradeoff: string;
   memoryNotes: string[];
   scoreBreakdown: ScoreBreakdown;
+  matchQuality: MatchQuality;
+  unmetSignals: UnmetSignals;
+  styleSubstitutionTarget?: string;
 };
 
 export type ScoreBreakdown = {
@@ -131,7 +143,7 @@ export type ScoreBreakdown = {
 };
 
 export type FallbackState = {
-  type: "clarification_needed" | "budget_too_low" | "limited_match" | "high_regret_avoided" | "static_data_limitation" | "none";
+  type: "clarification_needed" | "budget_too_low" | "limited_match" | "closest_available" | "no_responsible_match" | "high_regret_avoided" | "static_data_limitation" | "none";
   severity: "info" | "warning" | "blocking";
   title: string;
   message: string;
@@ -1067,6 +1079,20 @@ export const menuCatalog: MenuItem[] = rawMenuCatalog.map(enrichMenuItem);
 
 const categoryDefiningPreferences: PreferenceSignal[] = ["sweet", "spicy", "meaty", "healthy", "light", "filling"];
 
+const dishFamilies: DishType[][] = [
+  ["burger", "burrito", "wrap", "roll"],
+  ["noodles", "pasta"],
+  ["biryani", "bowl", "curry"],
+  ["dim_sum", "momos"],
+];
+
+const emptyUnmetSignals: UnmetSignals = {
+  explicitDishIntents: [],
+  cuisineIntents: [],
+  preferenceSignals: [],
+  unrepresentableConstraints: [],
+};
+
 export function getPersona(id: string): Persona {
   return personas.find((persona) => persona.id === id) ?? personas[0];
 }
@@ -1199,7 +1225,7 @@ function matchDishIntents(text: string): DishType[] {
   if (/burger/.test(text)) values.push("burger");
   if (/burrito/.test(text)) values.push("burrito");
   if (/curry|dal|rajma|butter chicken/.test(text)) values.push("curry");
-  if (hasSweetIntent(text) && /dessert|gulab jamun|mithai|halwa|kheer|ice cream|lava cake|brownie|waffle|cake/.test(text)) values.push("dessert");
+  if (/dessert|gulab jamun|mithai|halwa|kheer|ice cream|lava cake|brownie|waffle|cake/.test(text)) values.push("dessert");
   if (/dim sum|dimsum/.test(text)) values.push("dim_sum");
   if (/dosa/.test(text)) values.push("dosa");
   if (/momo|momos/.test(text)) values.push("momos");
@@ -1471,22 +1497,27 @@ export function scoreRecommendationStatic(
       return { item, score: breakdown.finalScore, memoryNotes: memoryAdjustment.notes, scoreBreakdown: breakdown };
     })
     .filter(({ item }) => item.regretRisk !== "high")
-    .filter(({ item }) => !hasExplicitIntent || itemMatchesExplicitIntent(item, interpretation))
     .filter(({ item }) => !interpretation.negativeConstraints.some((constraint) => itemMatchesNegativeConstraint(item, constraint)))
     .sort((a, b) => b.score - a.score);
 
-  const fallbackScored = scored.length ? scored : menuCatalog
-    .filter((item) => item.regretRisk !== "high")
-    .map((item) => {
-      const memoryAdjustment = getLocalMemoryScoreAdjustment(item, persona, context, interpretation, activeMemory);
-      const breakdown = createEmptyScoreBreakdown();
-      breakdown.feedbackMemoryScore = memoryAdjustment.score;
-      breakdown.finalScore = -25 + memoryAdjustment.score;
-      return { item, score: breakdown.finalScore, memoryNotes: memoryAdjustment.notes, scoreBreakdown: breakdown };
-    })
+  const exactScored = scored
+    .filter(({ item }) => !hasExplicitIntent || itemMatchesExplicitIntent(item, interpretation))
     .sort((a, b) => b.score - a.score);
+  const hasUnsupportedExactIntent = getUnsupportedExactIntents(interpretation).length > 0;
+  const exactUnavailable = hasExplicitIntent && !exactScored.length;
+  const styleScored = exactUnavailable || hasUnsupportedExactIntent
+    ? scored.filter(({ item }) => styleAdjacent(item, interpretation)).sort((a, b) => b.score - a.score)
+    : [];
+  const fallbackScored = exactScored.length ? exactScored : styleScored;
 
   const primary = fallbackScored[0];
+  const matchAssessment = assessMatchQuality(interpretation, fallbackScored, primary?.item, context, budgetMax);
+  if (matchAssessment.quality === "no_responsible_match") {
+    return [];
+  }
+  const recommendationMatchQuality: MatchQuality = interpretation.needs_clarification && matchAssessment.quality !== "style_match"
+    ? "no_responsible_match"
+    : matchAssessment.quality;
   const primaryCoherenceKey = getPrimaryCoherenceKey(interpretation, primary?.item);
   const safe = fallbackScored.find(({ item }) =>
     item.novelty === "familiar" &&
@@ -1499,11 +1530,12 @@ export function scoreRecommendationStatic(
     item.id !== safe?.item.id &&
     backupIsCoherent(item, primary?.item, primaryCoherenceKey)
   );
+  const finalExplore = matchAssessment.quality === "style_match" ? undefined : explore;
 
   return [
-    primary ? makeRecommendation(primary.item, primary.score, "primary", persona, context, interpretation, budgetMax, primary.memoryNotes, primary.scoreBreakdown) : null,
-    safe ? makeRecommendation(safe.item, safe.score, "safe", persona, context, interpretation, budgetMax, safe.memoryNotes, safe.scoreBreakdown) : null,
-    explore ? makeRecommendation(explore.item, explore.score, "explore", persona, context, interpretation, budgetMax, explore.memoryNotes, explore.scoreBreakdown) : null,
+    primary ? makeRecommendation(primary.item, primary.score, "primary", persona, context, interpretation, budgetMax, primary.memoryNotes, primary.scoreBreakdown, recommendationMatchQuality, matchAssessment.unmetSignals, matchAssessment.styleSubstitutionTarget) : null,
+    safe ? makeRecommendation(safe.item, safe.score, "safe", persona, context, interpretation, budgetMax, safe.memoryNotes, safe.scoreBreakdown, recommendationMatchQuality, matchAssessment.unmetSignals, matchAssessment.styleSubstitutionTarget) : null,
+    finalExplore ? makeRecommendation(finalExplore.item, finalExplore.score, "explore", persona, context, interpretation, budgetMax, finalExplore.memoryNotes, finalExplore.scoreBreakdown, recommendationMatchQuality, matchAssessment.unmetSignals, matchAssessment.styleSubstitutionTarget) : null,
   ].filter((recommendation): recommendation is Recommendation => Boolean(recommendation));
 }
 
@@ -1558,16 +1590,6 @@ export function getPersonaInsightsStatic(persona: Persona): string[] {
 
 export function getFallbackState(persona: Persona, context: DecisionContext, recommendations: Recommendation[], interpretation: CravingInterpretation): FallbackState {
   const budgetMax = parseBudgetMax(context, persona);
-  if (interpretation.needs_clarification) {
-    return {
-      type: "clarification_needed",
-      severity: "blocking",
-      title: "One more craving signal needed",
-      message: "This craving is too vague for a confident recommendation. Add a signal like spicy, comforting, light, or surprise me.",
-      shouldSuppressPrimaryRecommendation: true,
-      suggestedActions: ["Add a craving detail", "Use a quick chip"],
-    };
-  }
   if (budgetMax < persona.budgetMin) {
     return {
       type: "budget_too_low",
@@ -1576,6 +1598,36 @@ export function getFallbackState(persona: Persona, context: DecisionContext, rec
       message: `This budget is below ${persona.name}'s usual low-regret range. Increase budget or choose a budget-safe option before trusting a primary pick.`,
       shouldSuppressPrimaryRecommendation: true,
       suggestedActions: ["Increase budget", "Show budget-safe options"],
+    };
+  }
+  if (!recommendations.length) {
+    const requested = formatRequestedIntent(interpretation, getUnsupportedExactIntents(interpretation));
+    return {
+      type: "no_responsible_match",
+      severity: "blocking",
+      title: "No responsible match in this demo catalog",
+      message: `We do not have a responsible match for ${requested} in the static demo catalog. This is a prototype with dummy items, not a live marketplace.`,
+      shouldSuppressPrimaryRecommendation: true,
+      suggestedActions: ["Try spicy noodles", "Try dessert", "Try pizza", "Try North Indian"],
+    };
+  }
+  if (recommendations[0]?.matchQuality === "style_match") {
+    return {
+      type: "closest_available",
+      severity: "info",
+      title: "Closest available",
+      message: "The exact request is not represented in the demo catalog, so CraveWise is showing the closest responsible style match.",
+      shouldSuppressPrimaryRecommendation: false,
+    };
+  }
+  if (interpretation.needs_clarification) {
+    return {
+      type: "clarification_needed",
+      severity: "blocking",
+      title: "One more craving signal needed",
+      message: "This craving is too vague for a confident recommendation. Add a signal like spicy, comforting, light, or surprise me.",
+      shouldSuppressPrimaryRecommendation: true,
+      suggestedActions: ["Add a craving detail", "Use a quick chip"],
     };
   }
   if (interpretation.explicitDishIntents.includes("pizza") && !recommendations.some((recommendation) => recommendation.item.dishType === "pizza" && !recommendation.item.avoidIf.includes("avoid_cheese_heavy"))) {
@@ -1598,6 +1650,16 @@ export function getFallbackState(persona: Persona, context: DecisionContext, rec
       suggestedActions: ["Review backups", "Add more context"],
     };
   }
+  if (recommendations[0]?.matchQuality === "partial") {
+    return {
+      type: "limited_match",
+      severity: "warning",
+      title: "Closest match with a caveat",
+      message: "The dummy catalog can only partially satisfy this request, so the recommendation names the compromise.",
+      shouldSuppressPrimaryRecommendation: false,
+      suggestedActions: ["Review caveat", "Adjust craving"],
+    };
+  }
   return {
     type: "high_regret_avoided",
     severity: "info",
@@ -1617,6 +1679,9 @@ function makeRecommendation(
   budgetMax: number,
   memoryNotes: string[],
   scoreBreakdown: ScoreBreakdown,
+  matchQuality: MatchQuality,
+  unmetSignals: UnmetSignals,
+  styleSubstitutionTarget?: string,
 ): Recommendation {
   const isRush = context.occasion === "Weekday Rush";
   const budgetFit = item.price <= budgetMax ? `within ${context.budgetBand}` : `slightly above ${context.budgetBand}`;
@@ -1629,11 +1694,22 @@ function makeRecommendation(
   const constraintCopy = activeConstraints.length
     ? ` It avoids active constraints: ${activeConstraints.map(formatNegativeConstraint).join(", ")}.`
     : "";
-  const reason = isRush && item.id === "baja-bowl-classic-chicken-burrito"
-    ? `${item.dishName} fits because ${persona.name} has a comfort reorder pattern for burritos, the dummy ETA is ${item.estimatedDeliveryMin}-${item.estimatedDeliveryMax} mins, and it is meeting-safe for "${context.upcomingConstraint}".${caveatCopy}`
-    : explicitIntentCopy
-      ? `${item.dishName} fits the explicit ${explicitIntentCopy} craving and stays ${budgetFit}.${constraintCopy}${personaRelevanceCopy}${caveatCopy}`
-    : `${item.dishName} fits the ${preferenceCopy} ${formatOccasionCopy(context.occasion)} craving and stays ${budgetFit}.${constraintCopy}${personaRelevanceCopy}${caveatCopy}`;
+  const reason = buildRecommendationReason({
+    item,
+    persona,
+    context,
+    interpretation,
+    budgetFit,
+    explicitIntentCopy,
+    preferenceCopy,
+    constraintCopy,
+    personaRelevanceCopy,
+    caveatCopy,
+    isRush,
+    matchQuality,
+    unmetSignals,
+    styleSubstitutionTarget,
+  });
   return {
     item,
     score,
@@ -1651,7 +1727,86 @@ function makeRecommendation(
           : "Balances craving fit with controlled exploration.",
     memoryNotes,
     scoreBreakdown,
+    matchQuality,
+    unmetSignals,
+    ...(styleSubstitutionTarget ? { styleSubstitutionTarget } : {}),
   };
+}
+
+function buildRecommendationReason({
+  item,
+  persona,
+  context,
+  interpretation,
+  budgetFit,
+  explicitIntentCopy,
+  preferenceCopy,
+  constraintCopy,
+  personaRelevanceCopy,
+  caveatCopy,
+  isRush,
+  matchQuality,
+  unmetSignals,
+  styleSubstitutionTarget,
+}: {
+  item: MenuItem;
+  persona: Persona;
+  context: DecisionContext;
+  interpretation: CravingInterpretation;
+  budgetFit: string;
+  explicitIntentCopy: string;
+  preferenceCopy: string;
+  constraintCopy: string;
+  personaRelevanceCopy: string;
+  caveatCopy: string;
+  isRush: boolean;
+  matchQuality: MatchQuality;
+  unmetSignals: UnmetSignals;
+  styleSubstitutionTarget?: string;
+}): string {
+  if (isRush && item.id === "baja-bowl-classic-chicken-burrito" && matchQuality === "strong") {
+    return `${item.dishName} fits because ${persona.name} has a comfort reorder pattern for burritos, the dummy ETA is ${item.estimatedDeliveryMin}-${item.estimatedDeliveryMax} mins, and it is meeting-safe for "${context.upcomingConstraint}".${caveatCopy}`;
+  }
+
+  if (matchQuality === "no_responsible_match") {
+    return "No confident recommendation is shown because this craving needs one more clear signal.";
+  }
+
+  if (matchQuality === "style_match") {
+    const requested = styleSubstitutionTarget ?? (explicitIntentCopy || "requested dish");
+    return `No exact ${requested} match is available in the demo catalog. ${item.dishName} is the closest available ${getStyleAdjacencyLabel(item, interpretation)} option.${constraintCopy}${caveatCopy}`;
+  }
+
+  if (matchQuality === "partial") {
+    return `${item.dishName} is the closest match. ${getCompromiseCopy(item, context, budgetFit, unmetSignals)}${constraintCopy}${personaRelevanceCopy}${caveatCopy}`;
+  }
+
+  return explicitIntentCopy
+    ? `${item.dishName} fits the explicit ${explicitIntentCopy} craving and stays ${budgetFit}.${constraintCopy}${personaRelevanceCopy}${caveatCopy}`
+    : `${item.dishName} fits the ${preferenceCopy} ${formatOccasionCopy(context.occasion)} craving and stays ${budgetFit}.${constraintCopy}${personaRelevanceCopy}${caveatCopy}`;
+}
+
+function getCompromiseCopy(item: MenuItem, context: DecisionContext, budgetFit: string, unmetSignals: UnmetSignals): string {
+  if (unmetSignals.unrepresentableConstraints.length) {
+    return `Your "${unmetSignals.unrepresentableConstraints[0]}" preference is not represented in the demo catalog.`;
+  }
+  if (unmetSignals.preferenceSignals.length) {
+    return `The demo catalog has limited ${unmetSignals.preferenceSignals.map((signal) => signal.replace("_", " ")).join(", ")} options.`;
+  }
+  if (budgetFit.startsWith("slightly above")) {
+    return `It is over the selected budget at Rs.${item.price}.`;
+  }
+  const timeWindowMax = getAvailableTimeMax(context.availableTime);
+  if (timeWindowMax !== null && item.estimatedDeliveryMax > timeWindowMax) {
+    return `The dummy ETA exceeds the ${context.availableTime} window.`;
+  }
+  return "The demo catalog has limited exact options for this request.";
+}
+
+function getStyleAdjacencyLabel(item: MenuItem, interpretation: CravingInterpretation): string {
+  if (interpretation.cuisineIntents.includes(item.cuisine)) return item.cuisine;
+  const family = dishFamilies.find((values) => values.includes(item.dishType));
+  return family ? "same-style" : item.cuisine;
 }
 
 function getLocalMemoryScoreAdjustment(
@@ -1820,9 +1975,14 @@ function formatNegativeConstraint(constraint: NegativeConstraint): string {
 }
 
 function itemMatchesExplicitIntent(item: MenuItem, interpretation: CravingInterpretation): boolean {
-  const dishMatches = interpretation.explicitDishIntents.length ? itemMatchesDishIntent(item, interpretation) : true;
-  const cuisineMatches = interpretation.cuisineIntents.length ? itemMatchesCuisineIntent(item, interpretation) : true;
-  return dishMatches || cuisineMatches;
+  const hasDishIntent = interpretation.explicitDishIntents.length > 0;
+  const hasCuisineIntent = interpretation.cuisineIntents.length > 0;
+  const dishMatches = hasDishIntent ? itemMatchesDishIntent(item, interpretation) : false;
+  const cuisineMatches = hasCuisineIntent ? itemMatchesCuisineIntent(item, interpretation) : false;
+  if (hasDishIntent && hasCuisineIntent) return dishMatches || cuisineMatches;
+  if (hasDishIntent) return dishMatches;
+  if (hasCuisineIntent) return cuisineMatches;
+  return true;
 }
 
 function itemMatchesDishIntent(item: MenuItem, interpretation: CravingInterpretation): boolean {
@@ -1887,6 +2047,113 @@ type CoherenceKey =
   | { kind: "cuisine"; value: Cuisine }
   | { kind: "preference"; value: PreferenceSignal }
   | null;
+
+type ScoredCandidate = {
+  item: MenuItem;
+  score: number;
+  memoryNotes: string[];
+  scoreBreakdown: ScoreBreakdown;
+};
+
+function assessMatchQuality(
+  interpretation: CravingInterpretation,
+  scoredCandidates: ScoredCandidate[],
+  primaryItem: MenuItem | undefined,
+  context: DecisionContext,
+  budgetMax: number,
+): { quality: MatchQuality; unmetSignals: UnmetSignals; styleSubstitutionTarget?: string } {
+  const unsupportedExactIntents = getUnsupportedExactIntents(interpretation);
+  if (!scoredCandidates.length || !primaryItem) {
+    return {
+      quality: "no_responsible_match",
+      unmetSignals: {
+        ...emptyUnmetSignals,
+        unrepresentableConstraints: unsupportedExactIntents,
+      },
+    };
+  }
+
+  const exactDishMatches = interpretation.explicitDishIntents.length
+    ? scoredCandidates.some(({ item }) => itemMatchesDishIntent(item, interpretation))
+    : true;
+  const exactCuisineMatches = interpretation.cuisineIntents.length && !interpretation.explicitDishIntents.length
+    ? scoredCandidates.some(({ item }) => itemMatchesCuisineIntent(item, interpretation))
+    : true;
+  const dishExact = interpretation.explicitDishIntents.length ? itemMatchesDishIntent(primaryItem, interpretation) : true;
+  const cuisineExact = interpretation.cuisineIntents.length && !interpretation.explicitDishIntents.length ? itemMatchesCuisineIntent(primaryItem, interpretation) : true;
+  const activeCategoryPreferences = categoryDefiningPreferences.filter((preference) =>
+    interpretation.preferenceSignals.includes(preference)
+  );
+  const missingPreferences = activeCategoryPreferences.filter((preference) => !primaryItem.preferenceTags.includes(preference));
+  const unrepresentableConstraints = getUnrepresentableConstraints(interpretation);
+  const unmetSignals: UnmetSignals = {
+    explicitDishIntents: exactDishMatches ? [] : interpretation.explicitDishIntents,
+    cuisineIntents: exactCuisineMatches ? [] : interpretation.cuisineIntents,
+    preferenceSignals: missingPreferences,
+    unrepresentableConstraints: [...unsupportedExactIntents, ...unrepresentableConstraints],
+  };
+  const withinBudget = primaryItem.price <= budgetMax;
+  const timeWindowMax = getAvailableTimeMax(context.availableTime);
+  const withinTime = timeWindowMax === null || primaryItem.estimatedDeliveryMax <= timeWindowMax;
+  const preferencesSatisfied = missingPreferences.length === 0;
+
+  if (dishExact && cuisineExact && preferencesSatisfied && withinBudget && withinTime && !unrepresentableConstraints.length && !unsupportedExactIntents.length) {
+    return { quality: "strong", unmetSignals };
+  }
+
+  if ((interpretation.explicitDishIntents.length || interpretation.cuisineIntents.length || unsupportedExactIntents.length) && (!dishExact || !cuisineExact || unsupportedExactIntents.length)) {
+    if (styleAdjacent(primaryItem, interpretation)) {
+      return {
+        quality: "style_match",
+        unmetSignals,
+        styleSubstitutionTarget: formatRequestedIntent(interpretation, unsupportedExactIntents),
+      };
+    }
+    return { quality: "no_responsible_match", unmetSignals };
+  }
+
+  if (preferencesSatisfied) {
+    if (!withinBudget || !withinTime || unrepresentableConstraints.length) {
+      return { quality: "partial", unmetSignals };
+    }
+    return { quality: "strong", unmetSignals };
+  }
+
+  return { quality: "partial", unmetSignals };
+}
+
+function getUnsupportedExactIntents(interpretation: CravingInterpretation): string[] {
+  const text = interpretation.rawInput.toLowerCase();
+  const values: string[] = [];
+  if (/\bsushi\b/.test(text)) values.push("sushi");
+  if (/\btres\s+leches\b/.test(text)) values.push("Tres Leches");
+  return values;
+}
+
+function getUnrepresentableConstraints(interpretation: CravingInterpretation): string[] {
+  const text = interpretation.rawInput.toLowerCase();
+  const values: string[] = [];
+  if (/\b(not|no|avoid|without)\s+too\s+sweet\b|\bless\s+sweet\b/.test(text)) values.push("not too sweet");
+  if (/\b(not|no|avoid|without)\s+too\s+rich\b|\bless\s+rich\b/.test(text)) values.push("not too rich");
+  return Array.from(new Set(values));
+}
+
+function formatRequestedIntent(interpretation: CravingInterpretation, unsupportedExactIntents: string[] = []): string {
+  const explicit = interpretation.explicitDishIntents.map((value) => value.replace("_", " "));
+  const cuisine = explicit.length || unsupportedExactIntents.length ? [] : interpretation.cuisineIntents;
+  return [...unsupportedExactIntents, ...explicit, ...cuisine].join(" / ") || "requested dish";
+}
+
+function styleAdjacent(item: MenuItem, interpretation: CravingInterpretation): boolean {
+  if (/\btres\s+leches\b/.test(interpretation.rawInput.toLowerCase()) && item.dishType === "dessert") return true;
+  if (interpretation.cuisineIntents.includes(item.cuisine)) return true;
+  return interpretation.explicitDishIntents.some((intent) => sameDishFamily(item.dishType, intent));
+}
+
+function sameDishFamily(a: DishType, b: DishType): boolean {
+  if (a === b) return true;
+  return dishFamilies.some((family) => family.includes(a) && family.includes(b));
+}
 
 function getPrimaryCoherenceKey(
   interpretation: CravingInterpretation,

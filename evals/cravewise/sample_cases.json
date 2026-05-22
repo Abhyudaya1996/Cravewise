@@ -582,6 +582,7 @@
       "availableTime": "No rush",
       "upcomingConstraint": "No constraint"
     },
+    "expectedMatchQuality": "no_responsible_match",
     "mustNotIncludeNegativeConstraints": ["avoid_oily"]
   },
   {
@@ -866,5 +867,90 @@
       "upcomingConstraint": "No constraint"
     },
     "reasonMustNotInclude": ["Asian and North Indian discovery pattern", "Asian discovery", "discovery pattern"]
+  },
+  {
+    "id": "match_quality_strong_spicy_noodles",
+    "category": "match quality",
+    "persona": "Abhyudaya",
+    "input": "spicy noodles",
+    "machineCheck": true,
+    "context": {
+      "occasion": "Weekend dinner",
+      "budgetBand": "Rs.250-400",
+      "heaviness": "Medium",
+      "explorationIntent": "somewhat_new",
+      "availableTime": "No rush",
+      "upcomingConstraint": "No constraint"
+    },
+    "mustIncludeDishType": "noodles",
+    "expectedMatchQuality": "strong",
+    "reasonMustInclude": ["explicit"],
+    "reasonMustNotInclude": ["closest available"]
+  },
+  {
+    "id": "match_quality_style_burger_substitute",
+    "category": "match quality",
+    "persona": "Kushagra",
+    "input": "burger",
+    "machineCheck": true,
+    "context": {
+      "occasion": "Weekend dinner",
+      "budgetBand": "Rs.250-400",
+      "heaviness": "Medium",
+      "explorationIntent": "safe",
+      "availableTime": "No rush",
+      "upcomingConstraint": "No constraint"
+    },
+    "expectedMatchQuality": "style_match",
+    "reasonMustInclude": ["closest available", "No exact burger match"]
+  },
+  {
+    "id": "match_quality_partial_sweet_not_too_sweet",
+    "category": "match quality",
+    "persona": "Abhyudaya",
+    "input": "dessert but not too sweet",
+    "machineCheck": true,
+    "context": {
+      "occasion": "Weekend dinner",
+      "budgetBand": "Rs.250-400",
+      "heaviness": "Medium",
+      "explorationIntent": "somewhat_new",
+      "availableTime": "No rush",
+      "upcomingConstraint": "No constraint"
+    },
+    "mustIncludeDishType": "dessert",
+    "expectedMatchQuality": "partial",
+    "reasonMustInclude": ["not too sweet", "not represented"]
+  },
+  {
+    "id": "match_quality_no_responsible_sushi",
+    "category": "match quality",
+    "persona": "Abhyudaya",
+    "input": "sushi tonight",
+    "machineCheck": true,
+    "context": {
+      "occasion": "Weekend dinner",
+      "budgetBand": "Rs.250-400",
+      "heaviness": "Medium",
+      "explorationIntent": "somewhat_new",
+      "availableTime": "No rush",
+      "upcomingConstraint": "No constraint"
+    },
+    "expectedMatchQuality": "no_responsible_match"
+  },
+  {
+    "id": "match_quality_strong_still_holds_for_pizza_not_cheesy",
+    "category": "match quality",
+    "persona": "Simran",
+    "input": "pizza but not cheese overloaded",
+    "machineCheck": true,
+    "context": {
+      "budgetBand": "Custom",
+      "customBudget": "800",
+      "availableTime": "No rush"
+    },
+    "mustIncludeDishType": "pizza",
+    "mustIncludeNegativeConstraints": ["avoid_cheese_heavy"],
+    "expectedMatchQuality": "strong"
   }
 ]

@@ -19,6 +19,7 @@ import {
   getPersona,
   heavinessOptions,
   interpretCravingStatic,
+  menuCatalog,
   normalizeFailureReasonCodes,
   occasions,
   personas,
@@ -237,6 +238,14 @@ export default function CraveWisePage() {
               <span>Not a chatbot</span>
               <span>One trusted pick</span>
             </div>
+            <div className="case-study-entry">
+              <span>AI PM case study</span>
+              <a className="case-study-entry-link" href="/case-study" aria-label="View the CraveWise AI PM case study">
+                <strong>View case study</strong>
+                <em>Bounded AI · deterministic scoring</em>
+              </a>
+              <p>See the product thinking, bounded AI architecture, and evaluation evidence.</p>
+            </div>
           </section>
           <section className="decision-preview" aria-label="CraveWise decision style">
             <div>
@@ -304,7 +313,11 @@ export default function CraveWisePage() {
         <Screen eyebrow="Tonight's pick" title="One confident answer">
           {fallbackState.shouldSuppressPrimaryRecommendation ? (
             <>
-              <FallbackCard fallbackState={fallbackState} />
+              {fallbackState.type === "no_responsible_match" ? (
+                <NoResponsibleMatchEmptyState fallbackState={fallbackState} interpretation={interpretation} />
+              ) : (
+                <FallbackCard fallbackState={fallbackState} />
+              )}
               {interpretationComparison && <InterpretationComparisonPanel comparison={interpretationComparison} />}
               <div className="action-row">
                 <button className="primary-action" onClick={() => setStep("craving")}>
@@ -670,12 +683,17 @@ function RecommendationHeroCard({
 }) {
   const item = recommendation.item;
   const deliveryCopy = `${item.estimatedDeliveryMin}-${item.estimatedDeliveryMax} min dummy`;
-  const confidenceLabel = getConfidenceLabel(recommendation.confidence);
+  const confidenceLabel = getRecommendationDisplayLabel(recommendation, fallbackState);
+  const cardLabel = fallbackState.type === "closest_available"
+    ? "Closest available"
+    : fallbackState.type === "limited_match"
+      ? "Closest match"
+      : "Tonight's pick";
   return (
     <article className="recommendation-hero-card">
       <div className="hero-card-top">
-        <span>Tonight's pick</span>
-        <strong>{fallbackState.type === "limited_match" ? "Limited confidence" : confidenceLabel}</strong>
+        <span>{cardLabel}</span>
+        <strong>{confidenceLabel}</strong>
       </div>
       <h2>{item.dishName}</h2>
       <p className="restaurant-line">{item.restaurantName}</p>
@@ -685,14 +703,15 @@ function RecommendationHeroCard({
         <Metric label="Regret risk" value={item.regretRisk} />
         <Metric label="Budget fit" value={recommendation.budgetFit} />
         <Metric label="Exploration" value={context.explorationIntent.replace("_", " ")} />
-        <Metric label="Confidence" value={fallbackState.type === "limited_match" ? "Limited confidence" : confidenceLabel} />
+        <Metric label="Confidence" value={confidenceLabel} />
       </div>
       <p className="hero-reason">
         {recommendation.reason}
       </p>
       {recommendation.memoryNotes.length > 0 && <LocalMemoryInfluenceNote notes={recommendation.memoryNotes} />}
       <div className="decision-badges">
-        <span>{fallbackState.type === "limited_match" ? "Limited confidence" : confidenceLabel}</span>
+        <span>{confidenceLabel}</span>
+        {fallbackState.type === "closest_available" && <span>No exact match in demo catalog</span>}
         <span>{personaName}'s taste memory</span>
         <span>Dummy data only</span>
       </div>
@@ -972,6 +991,40 @@ function ChipSelector<T extends string>({
   );
 }
 
+function NoResponsibleMatchEmptyState({
+  fallbackState,
+  interpretation,
+}: {
+  fallbackState: FallbackState;
+  interpretation: CravingInterpretation;
+}) {
+  const heardSignals = [
+    ...interpretation.explicitDishIntents.map((signal) => `dish: ${signal.replace("_", " ")}`),
+    ...interpretation.cuisineIntents.map((signal) => `cuisine: ${signal}`),
+    ...interpretation.preferenceSignals.map((signal) => `preference: ${signal.replace("_", " ")}`),
+  ];
+  const supportedCuisines = Array.from(new Set(menuCatalog.map((item) => item.cuisine))).slice(0, 4);
+  const supportedDishes = Array.from(new Set(menuCatalog.map((item) => item.dishType.replace("_", " ")))).slice(0, 4);
+  return (
+    <section className={`fallback-card ${fallbackState.severity}`}>
+      <span>Recommendation paused</span>
+      <h2>{fallbackState.title}</h2>
+      <p>{fallbackState.message}</p>
+      <div className="reason-grid">
+        <div>
+          <strong>What we heard</strong>
+          <small>{heardSignals.length ? heardSignals.join(", ") : interpretation.rawInput}</small>
+        </div>
+        <div>
+          <strong>Demo catalog supports</strong>
+          <small>{[...supportedCuisines, ...supportedDishes].join(", ")}</small>
+        </div>
+      </div>
+      {fallbackState.suggestedActions && <ChipRow values={fallbackState.suggestedActions} />}
+    </section>
+  );
+}
+
 function ChipRow({ values }: { values: string[] }) {
   return (
     <div className="chip-row">
@@ -1228,4 +1281,10 @@ function getConfidenceLabel(confidence: Recommendation["confidence"]): string {
   if (confidence === "high") return "Strong match";
   if (confidence === "medium") return "Medium match";
   return "Limited confidence";
+}
+
+function getRecommendationDisplayLabel(recommendation: Recommendation, fallbackState: FallbackState): string {
+  if (fallbackState.type === "closest_available" || recommendation.matchQuality === "style_match") return "Closest available";
+  if (fallbackState.type === "limited_match" || recommendation.matchQuality === "partial") return "Limited match";
+  return getConfidenceLabel(recommendation.confidence);
 }

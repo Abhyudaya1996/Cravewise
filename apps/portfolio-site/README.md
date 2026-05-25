@@ -23,8 +23,8 @@ npm run build
 
 - CraveWise repo currently links to `https://github.com/Abhyudaya1996/Cravewise`
 - GitHub profile currently links to `https://github.com/Abhyudaya1996`
-- Email currently links to `mailto:abhyudaya.work96@gmail.com`
+- LinkedIn currently links to `https://www.linkedin.com/in/abhyudayasinghpm/`
+- Email currently links to `mailto:singh.abhyudaya1996@gmail.com`
+- Resume PDF is served from `/resume/abhyudaya-singh-product-resume.pdf`
 - Add deployed CraveWise case-study URL when available
 - Add deployed CraveWise prototype URL when available
-- Add LinkedIn URL when available
-- Add resume URL when ready

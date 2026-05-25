@@ -48,16 +48,18 @@ const contactLinks = [
   },
   {
     label: "LinkedIn",
-    note: "LinkedIn coming soon",
+    href: "https://www.linkedin.com/in/abhyudayasinghpm/",
+    note: "LinkedIn profile",
   },
   {
     label: "Email",
-    href: "mailto:abhyudaya.work96@gmail.com",
-    note: "abhyudaya.work96@gmail.com",
+    href: "mailto:singh.abhyudaya1996@gmail.com",
+    note: "singh.abhyudaya1996@gmail.com",
   },
   {
     label: "Resume",
-    note: "Resume coming soon",
+    href: "/resume/abhyudaya-singh-product-resume.pdf",
+    note: "Product resume PDF",
   },
 ];
 

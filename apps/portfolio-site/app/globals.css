@@ -79,6 +79,18 @@ a:focus-visible {
   outline-offset: 4px;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .portfolio-page {
   width: min(calc(100% - 36px), 1240px);
   margin: 0 auto;
@@ -118,9 +130,12 @@ a:focus-visible {
 }
 
 .site-header nav a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
   border-radius: 999px;
   color: var(--muted);
-  padding: 9px 12px;
+  padding: 0 14px;
   font-size: var(--text-sm);
   font-weight: var(--weight-bold);
 }
@@ -273,8 +288,6 @@ p {
 
 .hero-actions,
 .project-actions,
-.proof-grid,
-.proof-strip,
 .status-row {
   display: flex;
   flex-wrap: wrap;
@@ -440,9 +453,7 @@ p {
 }
 
 .status-chip,
-.type-chip,
-.proof-grid span,
-.proof-strip span {
+.type-chip {
   border-radius: 999px;
   padding: 8px 11px;
   font-size: var(--text-xs);
@@ -465,8 +476,7 @@ p {
 }
 
 .type-chip,
-.proof-grid span,
-.proof-strip span {
+.proof-grid span {
   border: 1px solid var(--line);
   background: var(--surface);
   color: var(--muted);
@@ -500,13 +510,6 @@ p {
 .decision-card li {
   color: var(--dark-muted);
   line-height: 1.55;
-}
-
-.proof-strip {
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-  justify-content: center;
-  padding: 20px 0;
 }
 
 .card-grid {

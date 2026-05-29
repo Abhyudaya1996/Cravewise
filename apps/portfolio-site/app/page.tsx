@@ -1,11 +1,3 @@
-const proofChips = [
-  "Working prototype shipped",
-  "Eval-backed product logic",
-  "AI role is constrained",
-  "Weak matches are refused",
-  "Case study in repo",
-];
-
 const heroAnchors = [
   {
     heading: "3+ years fintech PM",
@@ -139,9 +131,8 @@ export default function PortfolioHomePage() {
           <span className="eyebrow">Fintech PM, AI-native product work</span>
           <h1>I build AI products that know when not to answer.</h1>
           <p>
-            Fintech PM moving into AI-native product work. I ship small, working prototypes with the
-            evals, fallback states, and architecture decisions a hiring manager can inspect in one
-            sitting.
+            I ship working prototypes with visible constraints, evals, and architecture decisions — so
+            hiring managers can inspect the judgment, not just read about it.
           </p>
           <div className="hero-anchors">
             {heroAnchors.map((anchor) => (
@@ -154,6 +145,7 @@ export default function PortfolioHomePage() {
           <div className="hero-actions">
             <a className="primary-link" href="https://github.com/Abhyudaya1996/Cravewise" target="_blank" rel="noreferrer">
               Inspect CraveWise repo
+              <span className="sr-only"> (opens in new tab)</span>
             </a>
             <a className="secondary-link" href="/resume/abhyudaya-singh-product-resume.pdf">
               Open resume
@@ -188,7 +180,6 @@ export default function PortfolioHomePage() {
 
       <section className="featured-project" id="work">
         <div className="section-heading">
-          <span className="eyebrow">Shipped proof</span>
           <h2>CraveWise: AI Food Decision Assistant</h2>
         </div>
         <div className="featured-grid">
@@ -233,6 +224,7 @@ export default function PortfolioHomePage() {
             <div className="project-actions">
               <a href="https://github.com/Abhyudaya1996/Cravewise" target="_blank" rel="noreferrer">
                 View GitHub repo
+                <span className="sr-only"> (opens in new tab)</span>
               </a>
               <span className="disabled-action" aria-disabled="true">Case study deployment coming soon</span>
               <span className="disabled-action" aria-disabled="true">Prototype deployment coming soon</span>
@@ -248,12 +240,6 @@ export default function PortfolioHomePage() {
             </ol>
           </aside>
         </div>
-      </section>
-
-      <section className="proof-strip" aria-label="Portfolio proof strip">
-        {proofChips.map((chip) => (
-          <span key={chip}>{chip}</span>
-        ))}
       </section>
 
       <section className="content-section teardowns-section" id="teardowns">
@@ -304,7 +290,6 @@ export default function PortfolioHomePage() {
 
       <section className="content-section principles-section">
         <div className="section-heading">
-          <span className="eyebrow">Operating principles</span>
           <h2>How I approach AI product work.</h2>
         </div>
         <div className="principles-list">
@@ -373,7 +358,7 @@ export default function PortfolioHomePage() {
 
       <section className="about-section" id="contact">
         <div>
-          <span className="eyebrow">About, resume, contact</span>
+          <span className="eyebrow">Contact</span>
           <h2>Fintech PM building public proof-of-work for senior PM roles.</h2>
           <p>
             I am Abhyudaya Singh, a fintech Product Manager with 3+ years across credit cards, loans,
@@ -385,9 +370,8 @@ export default function PortfolioHomePage() {
         <div className="about-grid">
           <div className="about-copy-column">
             <ul>
-              <li>Fintech PM experience across credit cards, loans, cashback, APIs, and admin systems.</li>
-              <li>Close to implementation: PRDs, API contracts, staging edge cases, and partner constraints.</li>
-              <li>Publicly building AI PM proof-of-work: working prototypes with evals, schemas, and visible failure modes.</li>
+              <li>3+ years fintech PM across credit cards, loans, bank APIs, and B2B2C platforms.</li>
+              <li>Building public proof-of-work — prototypes, teardowns, evals — to earn senior PM roles.</li>
             </ul>
             <div className="resume-block">
               <dl className="resume-summary">
@@ -410,6 +394,7 @@ export default function PortfolioHomePage() {
               <div className="resume-actions">
                 <a href="/resume/abhyudaya-singh-product-resume.pdf" target="_blank" rel="noreferrer" className="primary-link">
                   Download resume PDF
+                  <span className="sr-only"> (opens in new tab)</span>
                 </a>
               </div>
             </div>
@@ -425,6 +410,7 @@ export default function PortfolioHomePage() {
               >
                 <span>{link.label}</span>
                 <small>{link.note}</small>
+                {link.href.startsWith("http") ? <span className="sr-only"> (opens in new tab)</span> : null}
               </a>
             ))}
           </div>

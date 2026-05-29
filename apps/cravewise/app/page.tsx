@@ -242,7 +242,7 @@ export default function CraveWisePage() {
               <span>AI PM case study</span>
               <a className="case-study-entry-link" href="/case-study" aria-label="View the CraveWise AI PM case study">
                 <strong>View case study</strong>
-                <em>Bounded AI · deterministic scoring</em>
+                <em>Bounded AI, deterministic scoring</em>
               </a>
               <p>See the product thinking, bounded AI architecture, and evaluation evidence.</p>
             </div>

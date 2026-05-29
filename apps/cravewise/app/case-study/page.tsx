@@ -95,16 +95,9 @@ const taxonomyExamples = [
 export default function CraveWiseCaseStudyPage() {
   return (
     <main className="case-study-page">
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      <link
-        href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap"
-        rel="stylesheet"
-      />
-
       <nav className="case-nav" aria-label="Case study navigation">
         <a href="/">← Back to prototype</a>
-        <a href="#evidence">Read the evidence ↓</a>
+        <a href="#evidence">Evidence ↓</a>
       </nav>
 
       <section className="cs-hero">
@@ -120,7 +113,7 @@ export default function CraveWiseCaseStudyPage() {
             <span>Evidence: static evals 33/33</span>
             <span>AI validation 5/5</span>
             <span>Suppresses weak recommendations</span>
-            <span>Bounded AI · deterministic scoring</span>
+            <span>Bounded AI, deterministic scoring</span>
           </div>
           <div className="cs-action-row">
             <a className="cs-primary-link" href="/">Try the prototype →</a>
@@ -135,16 +128,16 @@ export default function CraveWiseCaseStudyPage() {
                 <span>9:41</span>
                 <span>●●●</span>
               </div>
-              <div className="cs-phone-appbar">CW · Food decision assistant</div>
+              <div className="cs-phone-appbar">CW, Food decision assistant</div>
               <div className="cs-phone-input">
                 <span>Craving</span>
                 <strong>I have sweet tooth tonight</strong>
               </div>
               <article className="cs-phone-card">
-                <span className="cs-phone-label">Tonight&apos;s pick · strong match ✓</span>
+                <span className="cs-phone-label">Tonight&apos;s pick, strong match</span>
                 <h2>Gulab Jamun Combo</h2>
                 <p>Sweet House</p>
-                <div className="cs-phone-meta">Rs.180 · within Rs.250-400</div>
+                <div className="cs-phone-meta">Rs.180, within Rs.250-400</div>
                 <div className="cs-phone-tags">
                   <span>sweet craving</span>
                   <span>budget fit</span>
@@ -289,7 +282,7 @@ export default function CraveWiseCaseStudyPage() {
             <span className="cs-arch-boundary-line" />
           </div>
           <div className="cs-arch-zone cs-arch-det">
-            <span className="cs-arch-zone-label">Deterministic scoring · final authority</span>
+            <span className="cs-arch-zone-label">Deterministic scoring, final authority</span>
             <div className="cs-arch-nodes">
               <div className="cs-arch-node">Static interpretation baseline</div>
               <div className="cs-arch-node-arrow">↓</div>
@@ -412,15 +405,18 @@ export default function CraveWiseCaseStudyPage() {
         <div className="cs-footer-links">
           <a href="https://github.com/Abhyudaya1996/Cravewise/tree/feature/cravewise-static-logic-evals" target="_blank" rel="noopener">
             GitHub repo ↗
+            <span className="sr-only"> (opens in new tab)</span>
           </a>
           <a href="https://github.com/Abhyudaya1996/Cravewise/blob/feature/cravewise-static-logic-evals/projects/01-cravewise/docs/CASE_STUDY_DRAFT.md" target="_blank" rel="noopener">
             Markdown case study ↗
+            <span className="sr-only"> (opens in new tab)</span>
           </a>
           <a href="https://github.com/Abhyudaya1996/Cravewise/blob/feature/cravewise-static-logic-evals/projects/01-cravewise/docs/AI_EVALUATION_PACK_5C.md" target="_blank" rel="noopener">
             Evaluation evidence ↗
+            <span className="sr-only"> (opens in new tab)</span>
           </a>
         </div>
-        <small className="cs-footer-note">CraveWise · AI PM portfolio project · Static demo</small>
+        <small className="cs-footer-note">CraveWise, AI PM portfolio project, static demo</small>
       </footer>
     </main>
   );
@@ -430,13 +426,13 @@ function CaseGFailureCard() {
   return (
     <article className="cs-case-g">
       <div className="cs-case-g-header">
-        <span className="cs-case-g-label">Case G · AI noise evidence</span>
+        <span className="cs-case-g-label">Case G, AI noise evidence</span>
         <span className="cs-case-g-verdict">Architecture held</span>
       </div>
       <h3 className="cs-case-g-headline">AI accepted nonsense. Architecture still held.</h3>
       <p className="cs-case-g-body">
         Input: “asdf random blah.” Gemini returned high-confidence exploratory intent with{" "}
-        <code>needs_clarification: false</code> — confident about nothing. Deterministic scoring ignored
+        <code>needs_clarification: false</code>, confident about nothing. Deterministic scoring ignored
         the noise signal. The top recommendation was unchanged.
       </p>
       <div className="cs-case-g-footer">

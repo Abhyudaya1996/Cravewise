@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./case-study.css";
 
+const cravewiseAppUrl = process.env.NEXT_PUBLIC_CRAVEWISE_DEMO_URL?.trim();
+
 export const metadata: Metadata = {
   title: "CraveWise — Bounded-AI Food Decision Assistant | Case Study | Abhyudaya Singh",
   description:
@@ -312,6 +314,12 @@ export default function CraveWiseCaseStudyPage() {
           <a className="back-link" href="/">
             ← Back to portfolio
           </a>
+          {cravewiseAppUrl ? (
+            <a href={cravewiseAppUrl} target="_blank" rel="noreferrer">
+              Open demo
+              <span className="sr-only"> (opens in new tab)</span>
+            </a>
+          ) : null}
           <a
             href="https://github.com/Abhyudaya1996/Cravewise"
             target="_blank"

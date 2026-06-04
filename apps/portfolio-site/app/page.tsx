@@ -1,8 +1,7 @@
-// CraveWise prototype deployment URL: fill in after deploying to Vercel.
-// Leave empty to keep the prototype off the artifact links.
 import { ThemeToggle } from "./theme-toggle";
 
-const cravewiseAppUrl = "";
+const cravewiseAppUrl = process.env.NEXT_PUBLIC_CRAVEWISE_DEMO_URL?.trim();
+const loungeFinderUrl = process.env.NEXT_PUBLIC_LOUNGE_FINDER_DEMO_URL?.trim();
 
 type Cta = {
   label: string;
@@ -13,10 +12,10 @@ type Cta = {
 const heroAnchors = [
   {
     heading: "Production fintech systems",
-    line: "Eligibility engines, bank APIs, and a B2B2C lead platform with 2,000+ agents.",
+    line: "Great.Cards card recommendations, loan eligibility engines, and bank API integrations.",
   },
   {
-    heading: "Close to implementation",
+    heading: "In the details",
     line: "API contracts, status tracking, partner constraints, QA, and staging edge cases.",
   },
 ];
@@ -44,7 +43,7 @@ const selectedWork = [
       "Converted bank-status jargon into plain-English reporting agents could act on.",
       "The system surfaced a low-quality lead pattern traced to an incentive gap.",
     ],
-    outcome: "2,000+ agents; conversion improved from 6% to 12%.",
+    outcome: "Lifted lead conversion from 6% to 12% across the field-sales network.",
     ctas: [{ href: "/case-studies/agent-bankkaro", label: "Read the case study" }],
   },
   {
@@ -54,7 +53,7 @@ const selectedWork = [
       "A two-tier rules engine that models how the lender universe prices and qualifies, then recommends the best-fit loan.",
     points: [
       "Two tiers: a fast eligibility gate, then deeper pricing and limit logic per lender type.",
-      "Eligibility stays estimated from declared and available profile signals — real CIBIL and Account Aggregator data aren't pulled.",
+      "Eligibility stays estimated from declared and available profile signals. Real CIBIL and Account Aggregator data are not pulled.",
     ],
     outcome: "Cut incorrect product mappings by 70%.",
     ctas: [
@@ -93,7 +92,9 @@ const artifacts = [
       "An AI food decision assistant where AI interprets craving signals, deterministic scoring owns the recommendation, and the product refuses weak matches.",
     why: "A bounded-AI proof point: clear logic, visible constraints, evals, and honest fallback behavior.",
     ctas: [
-      ...(cravewiseAppUrl ? [{ href: cravewiseAppUrl, label: "Try it live", external: true }] : []),
+      cravewiseAppUrl
+        ? { href: cravewiseAppUrl, label: "Open demo", external: true }
+        : { label: "Demo coming soon" },
       { href: "/case-studies/cravewise", label: "Read the case study" },
       { href: "https://github.com/Abhyudaya1996/Cravewise", label: "View on GitHub", external: true },
     ],
@@ -102,8 +103,11 @@ const artifacts = [
     title: "Airport Lounge Finder",
     type: "Utility build",
     description: "Maps lounge eligibility across 200+ airports by credit-card type.",
-    why: "Built solo to validate demand fast — no eng or design dependency.",
+    why: "Built solo to validate demand fast, with no eng or design dependency.",
     ctas: [
+      loungeFinderUrl
+        ? { href: loungeFinderUrl, label: "Open demo", external: true }
+        : { label: "Demo coming soon" },
       { href: "https://github.com/Abhyudaya1996/lounge-hopper-india", label: "View on GitHub", external: true },
     ],
   },
@@ -141,9 +145,10 @@ const careerRoles = [
     company: "CashKaro / BankKaro",
     period: "Aug 2022 to Present",
     highlights: [
-      "Product across Great.Cards, Agent BankKaro, BankKaro Loans, and partner bank API integrations.",
-      "Owned PRDs, API contracts, success metrics, QA, and fraud/dispute workflows across discovery, launch, and iteration.",
-      "2x BankKaro Superstar Award (2022, 2025) for measurable outcomes and cross-functional impact.",
+      "Came up through the operational side of BankKaro: customer support, data, and reporting for the field-sales team. I build for ops and edge cases, not just the happy path.",
+      "Grew that ground-level view into product ownership across Great.Cards, Agent BankKaro, BankKaro Loans, and partner bank-API journeys: discovery, PRDs, launch metrics, QA, and iteration.",
+      "Work directly with bank tech, risk, engineering, ops, and compliance on data contracts, eligibility rules, failure handling, and fraud/dispute workflows.",
+      "2× BankKaro Superstar Award (2022, 2025) for measurable outcomes and cross-functional impact.",
     ],
   },
   {
@@ -151,8 +156,8 @@ const careerRoles = [
     company: "Better Mortgage",
     period: "Oct 2021 to Mar 2022",
     highlights: [
-      "Supported U.S. mortgage verification workflows aligned with Fannie Mae guidelines.",
-      "Created SOPs and validation checklists. Improved turnaround by 30%.",
+      "Ran U.S. mortgage verification workflows under Fannie Mae guidelines: regulated, detail-heavy operations.",
+      "Wrote SOPs and validation checklists that cut turnaround by 30% while holding compliance.",
     ],
   },
 ];
@@ -382,14 +387,21 @@ export default function PortfolioHomePage() {
       <section className="content-section experience-section" id="experience">
         <div className="section-heading">
           <span className="eyebrow">Experience</span>
-          <h2>Closest to the messy middle of fintech execution.</h2>
+          <h2>I start where the mess is and build outward until it holds.</h2>
           <p>
-            My work sits where product promises meet operational reality: bank eligibility rules,
-            partner API behavior, cashback and rewards logic, field-sales incentives, admin tooling, and
-            the status flows that decide whether a lead moves or dies. I am strongest when the problem is
-            not just a screen, but a system of rules, dependencies, and edge cases that has to work for ops,
-            partners, and users at the same time. That is why I stay close to staging, QA, debugging, and
-            the exact API contract behind the user-facing decision.
+            I joined to operationally support BankKaro&apos;s field-sales team: customer support, data, and
+            reporting, the unglamorous middle of a new card-selling business. The deeper in I got, the
+            clearer the real problem became. Agents couldn&apos;t see their own funnel, so I rebuilt the
+            reporting, then the platform around it. That is how I work. I start where the operational pain is,
+            learn the system from the inside, and keep building until the thing holds in production.
+          </p>
+          <p>
+            Since then I&apos;ve owned the decision systems behind cards, loans, and bank-API journeys: a
+            spend-based card engine, a two-tier loan eligibility engine, and integrations where one quiet
+            bank-side failure can kill conversions. What I&apos;m good at is the messy middle: modeling the real
+            rules instead of guessing them, making opaque partner systems observable, reading the incentives
+            behind behavior, and staying close to the API contract, the staging bug, and the edge case behind
+            every user-facing decision. Now I bring that same discipline to AI products.
           </p>
         </div>
         <div className="career-timeline">
@@ -426,36 +438,36 @@ export default function PortfolioHomePage() {
           <div className="resume-block">
             <dl className="resume-summary">
               <div className="resume-row">
-                <dt>Operating range</dt>
+                <dt>What I work on</dt>
                 <dd>Recommendation engines, eligibility logic, partner APIs, B2B2C platforms, bounded-AI products.</dd>
               </div>
               <div className="resume-row">
                 <dt>Background</dt>
-                <dd>3+ years fintech PM. Rapid prototyper. Close to implementation.</dd>
+                <dd>3+ years fintech PM. Rapid prototyper. In the details, not above them.</dd>
               </div>
             </dl>
-            <div className="resume-actions">
-              <a href="/resume/abhyudaya-singh-product-resume.pdf" target="_blank" rel="noreferrer" className="primary-link">
-                Download resume PDF
-                <span className="sr-only"> (opens in new tab)</span>
-              </a>
-            </div>
           </div>
-          <div className="contact-card">
-            {contactLinks.map((link) => (
-              <a
-                key={link.label}
-                href={link.href}
-                title={link.note}
-                target={link.href.startsWith("http") ? "_blank" : undefined}
-                rel={link.href.startsWith("http") ? "noreferrer" : undefined}
-              >
-                <Icon name={link.icon} />
-                <span>{link.label}</span>
-                <small>{link.note}</small>
-                {link.href.startsWith("http") ? <span className="sr-only"> (opens in new tab)</span> : null}
-              </a>
-            ))}
+          <div className="contact-side">
+            <div className="contact-card">
+              {contactLinks.map((link) => (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  title={link.note}
+                  target={link.href.startsWith("http") ? "_blank" : undefined}
+                  rel={link.href.startsWith("http") ? "noreferrer" : undefined}
+                >
+                  <Icon name={link.icon} />
+                  <span>{link.label}</span>
+                  <small>{link.note}</small>
+                  {link.href.startsWith("http") ? <span className="sr-only"> (opens in new tab)</span> : null}
+                </a>
+              ))}
+            </div>
+            <a href="/resume/abhyudaya-singh-product-resume.pdf" target="_blank" rel="noreferrer" className="primary-link contact-resume-cta">
+              Download resume PDF
+              <span className="sr-only"> (opens in new tab)</span>
+            </a>
           </div>
         </div>
       </section>

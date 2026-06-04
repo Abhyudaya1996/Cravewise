@@ -232,7 +232,7 @@ a:focus-visible {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(330px, 0.85fr);
   gap: 34px;
-  align-items: end;
+  align-items: center;
   margin-top: 22px;
   border-radius: 18px;
   background:
@@ -423,6 +423,11 @@ p {
   min-width: 0;
 }
 
+.project-actions {
+  align-self: end;
+  margin-top: auto;
+}
+
 .primary-link,
 .secondary-link,
 .project-actions a {
@@ -522,7 +527,7 @@ p {
   stroke: none;
 }
 
-.hero-social a[aria-label="Email"] svg,
+.hero-social a[aria-label="Email Abhyudaya"] svg,
 .contact-card a[href^="mailto:"] svg,
 .contact-card a[href$=".pdf"] svg {
   fill: none;
@@ -548,6 +553,7 @@ p {
 .hero-panel {
   display: grid;
   gap: 14px;
+  align-self: center;
   border-color: var(--dark-border);
   background: var(--dark-surface-soft);
   padding: 24px;
@@ -975,6 +981,17 @@ p {
 
 .resume-actions {
   margin-top: 1.25rem;
+}
+
+.contact-side {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+}
+
+.contact-resume-cta {
+  justify-self: stretch;
+  width: 100%;
 }
 
 .contact-card {

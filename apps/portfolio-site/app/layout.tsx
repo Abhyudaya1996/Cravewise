@@ -4,7 +4,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Abhyudaya Singh — Fintech Product Manager (builds with AI)",
   description:
-    "Fintech PM who ships recommendation engines, eligibility logic, and bank API integrations — and now builds AI products with the same discipline.",
+    "Fintech PM who ships recommendation engines, eligibility logic, and bank API integrations — now building AI products with the same discipline.",
 };
 
 export default function RootLayout({
@@ -13,8 +13,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){try{var t=localStorage.getItem('portfolio-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t;}catch(e){}})();",
+          }}
+        />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link

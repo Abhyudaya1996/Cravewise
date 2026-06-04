@@ -12,7 +12,7 @@ Secondary users include peers, recruiters, and future collaborators who want to 
 
 ## Product Purpose
 
-This portfolio exists to position Abhyudaya Singh as a fintech operator who ships production systems and now builds with AI through practical proof, not slideware. The site should show working prototypes, case studies, evals, architecture decisions, and honest boundaries.
+This portfolio exists to position Abhyudaya Singh as a fintech operator who ships production systems and now builds with AI. The site should show working prototypes, case studies, evals, architecture decisions, and honest boundaries.
 
 Success means a visitor can quickly understand:
 

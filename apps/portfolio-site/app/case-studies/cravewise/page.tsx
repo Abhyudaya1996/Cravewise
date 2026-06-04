@@ -260,6 +260,29 @@ export default function CraveWiseCaseStudyPage() {
           </section>
 
           <section>
+            <h2>Why the strongest decision was &quot;no recommendation&quot;</h2>
+            <p>
+              CraveWise became more trustworthy when it learned not to answer weak-match cases. Most
+              recommendation surfaces protect coverage by relaxing constraints until something appears. A
+              decision product has a different job: return an answer users can rely on, or say the catalog
+              cannot responsibly satisfy the request.
+            </p>
+            <p>
+              That refusal is built as a product path, not an error. Match quality can resolve to strong,
+              style-adjacent, partial, or no responsible match. When no responsible match triggers, the
+              primary recommendation is suppressed and the UI explains the gap instead of forcing a nearby
+              dish into the slot.
+            </p>
+            <div className="cs-key-finding">
+              <p>The refusal works because no layer is allowed to overrule it.</p>
+              <small>
+                AI interprets craving signals only. Deterministic scoring owns the final call, and static
+                evals cover the cases where the right answer is no answer.
+              </small>
+            </div>
+          </section>
+
+          <section>
             <h2>The PM judgment</h2>
             <p>
               Deterministic scoring is not only a safety mechanism. It is a trust and explainability

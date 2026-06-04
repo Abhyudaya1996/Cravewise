@@ -13,3 +13,4 @@ coverage
 .DS_Store
 Thumbs.db
 apps/cravewise/dev-server*.log
+projects/operator-stories/EXTRACTION.md

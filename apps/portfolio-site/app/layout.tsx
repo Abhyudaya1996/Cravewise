@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Abhyudaya Singh - AI Product Portfolio",
+  title: "Abhyudaya Singh — Fintech Product Manager (builds with AI)",
   description:
-    "AI Product Portfolio by Abhyudaya Singh, a fintech Product Manager building structured product experiments with bounded AI, deterministic trust layers, and honest evidence.",
+    "Fintech PM who ships recommendation engines, eligibility logic, and bank API integrations — and now builds AI products with the same discipline.",
 };
 
 export default function RootLayout({

@@ -1,0 +1,257 @@
+.note-page {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  padding: 18px;
+}
+
+.note-article {
+  width: min(100%, 980px);
+  margin: 0 auto;
+  padding: 18px 0 56px;
+}
+
+.note-hero,
+.note-body,
+.note-body section,
+.thesis-callout,
+.final-lesson,
+.note-footer {
+  display: grid;
+  gap: 18px;
+}
+
+.note-hero,
+.note-body,
+.thesis-callout,
+.final-lesson,
+.note-footer {
+  width: min(100%, 70ch);
+  margin-inline: auto;
+}
+
+.note-hero {
+  padding: clamp(34px, 7vw, 72px) 0 22px;
+}
+
+.note-hero h1,
+.note-body h2,
+.final-lesson p {
+  font-family: var(--font-heading);
+  font-weight: var(--weight-heading);
+  letter-spacing: 0;
+  text-wrap: balance;
+}
+
+.note-hero h1 {
+  max-width: 24ch;
+  color: var(--ink);
+  font-size: clamp(2.25rem, 1.5rem + 2.2vw, 3.25rem);
+  line-height: 1.05;
+}
+
+.note-subtitle {
+  max-width: 58ch;
+  color: var(--ink-soft);
+  font-size: var(--text-md);
+  line-height: 1.65;
+}
+
+.note-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.note-meta > span:not(.status-chip) {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  padding: 0 11px;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+}
+
+.back-link,
+.note-footer a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-self: start;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  text-decoration: none;
+}
+
+.back-link:hover,
+.note-footer a:hover {
+  color: var(--accent-dark);
+}
+
+.thesis-callout {
+  border: 1px solid var(--accent-border);
+  border-radius: 16px;
+  background: var(--accent-soft);
+  box-shadow: inset 4px 0 0 var(--accent);
+  padding: 22px;
+}
+
+.thesis-callout strong {
+  color: var(--accent-dark);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.thesis-callout p {
+  color: var(--ink);
+  font-size: var(--text-base);
+  line-height: 1.72;
+}
+
+.note-body {
+  padding-top: 42px;
+}
+
+.note-body section {
+  padding: 34px 0;
+  border-top: 1px solid var(--line);
+}
+
+.note-body .note-intro {
+  border-top: 0;
+  padding-top: 6px;
+}
+
+.note-body .note-intro p:first-child {
+  color: var(--ink-soft);
+  font-size: var(--text-md);
+  line-height: 1.6;
+}
+
+.note-body h2 {
+  max-width: 18ch;
+  color: var(--ink);
+  font-size: 2rem;
+  line-height: 1.08;
+}
+
+.note-body p,
+.note-body li {
+  font-size: var(--text-base);
+  line-height: 1.7;
+}
+
+.note-body p {
+  color: var(--muted);
+}
+
+.note-body ul,
+.note-body ol {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.note-body li {
+  color: var(--ink-soft);
+}
+
+.note-body code {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--accent-dark);
+  padding: 0.08rem 0.28rem;
+  font-family: var(--font-body);
+  font-size: 0.95em;
+  font-weight: var(--weight-bold);
+}
+
+.state-list {
+  list-style: none;
+  padding-left: 0 !important;
+  gap: 0.85rem !important;
+}
+
+.state-list li {
+  display: grid;
+  gap: 0.3rem;
+  border-left: 2px solid var(--line);
+  padding-left: 14px;
+}
+
+.state-list li code {
+  justify-self: start;
+}
+
+.state-list li span {
+  color: var(--muted);
+  font-size: var(--text-base);
+  line-height: 1.6;
+}
+
+.final-lesson {
+  margin-top: 28px;
+  border: 1px solid var(--accent-border);
+  border-radius: 18px;
+  background:
+    linear-gradient(135deg, var(--accent-glow), transparent 52%),
+    var(--dark);
+  color: white;
+  padding: clamp(24px, 5vw, 36px);
+}
+
+.final-lesson .eyebrow {
+  color: var(--hero-kicker);
+}
+
+.final-lesson p {
+  color: white;
+  font-size: clamp(1.5rem, 1.1rem + 1.4vw, 2.25rem);
+  line-height: 1.15;
+}
+
+.note-footer {
+  gap: 10px;
+  margin-top: 34px;
+  border-top: 1px solid var(--line);
+  padding-top: 20px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .note-page,
+  .note-page * {
+    scroll-behavior: auto;
+  }
+}
+
+@media (max-width: 760px) {
+  .note-page {
+    padding: 14px;
+  }
+
+  .note-article {
+    padding-top: 8px;
+  }
+
+  .note-hero {
+    padding-top: 28px;
+  }
+
+  .note-hero h1 {
+    font-size: clamp(2rem, 9vw, 2.75rem);
+  }
+
+  .note-body h2 {
+    font-size: 1.75rem;
+  }
+}

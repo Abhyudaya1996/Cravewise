@@ -377,14 +377,6 @@ p {
   max-width: 68ch;
 }
 
-.availability-note {
-  max-width: 58ch;
-  color: var(--dark-muted);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-bold);
-  line-height: 1.45;
-}
-
 .hero-anchors {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -617,7 +609,8 @@ p {
 }
 
 .compact-work-card {
-  align-content: start;
+  align-content: stretch;
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto auto;
 }
 
 .card-summary {
@@ -776,8 +769,12 @@ p {
 
 .lab-card,
 .writing-card {
-  align-content: start;
+  align-content: stretch;
   min-height: 220px;
+}
+
+.lab-card {
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
 }
 
 .teardown-card {
@@ -980,6 +977,9 @@ p {
 }
 
 .resume-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
   margin-top: 1.25rem;
 }
 
@@ -990,8 +990,7 @@ p {
 }
 
 .contact-resume-cta {
-  justify-self: stretch;
-  width: 100%;
+  width: auto;
 }
 
 .contact-card {
@@ -1094,8 +1093,7 @@ p {
 
   .hero-copy,
   .hero-panel,
-  .hero-copy > p,
-  .availability-note {
+  .hero-copy > p {
     width: 100%;
     max-width: 100%;
   }
@@ -1106,10 +1104,6 @@ p {
   .request-link {
     width: 100%;
     max-width: 100%;
-  }
-
-  .availability-note {
-    padding-right: 0;
   }
 
   .card-grid,

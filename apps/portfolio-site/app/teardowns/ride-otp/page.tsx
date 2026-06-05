@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./teardown.css";
 
 export const metadata: Metadata = {
-  title: "Reusable OTP vs Fresh Ride PIN — PM Teardown | Abhyudaya Singh",
+  title: "Reusable OTP vs Fresh Ride PIN | PM Teardown | Abhyudaya Singh",
   description:
     "A PM teardown of reusable ride OTPs versus fresh ride-level PINs, focused on pickup speed, trust, and real risk.",
 };
@@ -68,7 +68,7 @@ export default function RideOtpTeardownPage() {
           <h1>Reusable OTP vs Fresh Ride PIN</h1>
           <p className="teardown-subtitle">
             A ride OTP verifies pickup handoff, not account access. When reusable OTP is the right
-            default — and when it isn&apos;t.
+            default, and when it isn&apos;t.
           </p>
           <div className="teardown-meta" aria-label="Teardown status and reading time">
             <span className="status-chip drafted">Drafted</span>
@@ -80,7 +80,7 @@ export default function RideOtpTeardownPage() {
           <strong>Thesis</strong>
           <p>
             Reusable ride OTPs get read as a security flaw. But a ride OTP only verifies the start of an
-            already-assigned trip — it is not account access or payment authorization. Reusable OTP can be
+            already-assigned trip. It is not account access or payment authorization. Reusable OTP can be
             a defensible default for high-frequency rides if fake-start data is low and the surrounding
             controls are strong. A fresh per-ride PIN should earn default status through incident data, not
             the assumption that fresh is automatically safer.
@@ -91,7 +91,7 @@ export default function RideOtpTeardownPage() {
           <section className="teardown-intro">
             <p>
               The ride OTP sits at one specific moment: pickup handoff. Understanding what it actually
-              does — and what it does not — changes the whole product question.
+              does, and what it does not, changes the whole product question.
             </p>
             <p>
               The instinct is understandable. In banking, a reusable OTP would be an obvious red flag.

@@ -4,7 +4,7 @@ import "./case-study.css";
 const cravewiseAppUrl = process.env.NEXT_PUBLIC_CRAVEWISE_DEMO_URL?.trim();
 
 export const metadata: Metadata = {
-  title: "CraveWise — Bounded-AI Food Decision Assistant | Case Study | Abhyudaya Singh",
+  title: "CraveWise: Bounded-AI Food Decision Assistant | Case Study | Abhyudaya Singh",
   description:
     "A case study on CraveWise: a bounded-AI food decision assistant where AI interprets signals, deterministic scoring owns the recommendation, and refusal is a tested product path.",
 };
@@ -58,7 +58,7 @@ const pmTakeaways = [
   },
   {
     title: "Fallback design is product design",
-    body: "Timeouts, invalid output, and quota limits return to static rules by contract — not as an afterthought.",
+    body: "Timeouts, invalid output, and quota limits return to static rules by contract, not as an afterthought.",
   },
   {
     title: "Taxonomy coverage made AI testable",
@@ -93,6 +93,14 @@ export default function CraveWiseCaseStudyPage() {
             <span>Weak matches suppressed</span>
             <span>Bounded AI · deterministic scoring</span>
           </div>
+          {cravewiseAppUrl ? (
+            <div className="cs-hero-actions">
+              <a href={cravewiseAppUrl} target="_blank" rel="noreferrer">
+                Open demo
+                <span className="sr-only"> (opens in new tab)</span>
+              </a>
+            </div>
+          ) : null}
         </header>
 
         <aside className="thesis-callout" aria-label="Key takeaway">
@@ -100,7 +108,7 @@ export default function CraveWiseCaseStudyPage() {
           <p>
             The PM decision was not &quot;add AI.&quot; It was deciding where AI should not have authority. AI
             interprets the craving into signals; a deterministic scoring engine makes the final call and can
-            refuse to recommend when no honest match exists. The food domain is the vehicle — the
+            refuse to recommend when no honest match exists. The food domain is the vehicle. The
             transferable skill is constraining AI and using evidence to decide whether it improves the
             product at all.
           </p>
@@ -110,7 +118,7 @@ export default function CraveWiseCaseStudyPage() {
           <section className="cs-intro">
             <p>
               Food apps are optimized for browsing. CraveWise explores the opposite bet: reduce the decision
-              surface when a user already knows fragments of what they want — and what they would regret.
+              surface when a user already knows fragments of what they want, and what they would regret.
             </p>
             <p>
               The painful moment is not finding food. It is choosing. CraveWise turns a craving, a few
@@ -121,7 +129,7 @@ export default function CraveWiseCaseStudyPage() {
           <section>
             <h2>The problem: choosing, not finding</h2>
             <p>
-              People rarely arrive with nothing. They arrive with fragments — a direction and a boundary at
+              People rarely arrive with nothing. They arrive with fragments, a direction and a boundary at
               the same time:
             </p>
             <div className="cs-fragment-grid" aria-label="Craving examples">
@@ -152,7 +160,7 @@ export default function CraveWiseCaseStudyPage() {
             <h2>Static first. AI only when it earns its place.</h2>
             <p>
               The decision-support thesis was tested with deterministic scoring before any AI was added.
-              That created a comparison baseline — and a regression in pizza-constraint handling was caught
+              That created a comparison baseline, and a regression in pizza-constraint handling was caught
               and fixed with no AI involved. AI was introduced only as an interpretation layer, then measured
               against the static baseline rather than assumed to be better.
             </p>
@@ -176,8 +184,8 @@ export default function CraveWiseCaseStudyPage() {
             <h2>The architecture boundary: where AI can act, where it cannot</h2>
             <p>
               The boundary is enforced, not just documented. AI never reaches the recommendation. A
-              validation gate rejects any model output that tries to set fields it should not — the
-              recommendation, the restaurant, or the backups — and falls back to static rules on anything
+              validation gate rejects any model output that tries to set fields it should not: the
+              recommendation, the restaurant, or the backups. It falls back to static rules on anything
               invalid, slow, or unsafe.
             </p>
             <div className="cs-boundary" aria-label="Architecture boundary">
@@ -185,7 +193,7 @@ export default function CraveWiseCaseStudyPage() {
                 <span className="cs-zone-label">AI interpretation layer</span>
                 <ol>
                   <li>User craving input</li>
-                  <li>Optional AI interpretation — signals only, no dish ranking</li>
+                  <li>Optional AI interpretation: signals only, no dish ranking</li>
                   <li>Schema validation rejects unsafe or malformed output</li>
                 </ol>
                 <p className="cs-zone-fallback">
@@ -226,7 +234,7 @@ export default function CraveWiseCaseStudyPage() {
               <h3>AI accepted nonsense. The architecture still held.</h3>
               <p>
                 Input: &quot;asdf random blah.&quot; The model returned high-confidence exploratory intent with{" "}
-                <code>needs_clarification: false</code> — confident about nothing. Deterministic scoring
+                <code>needs_clarification: false</code>, confident about nothing. Deterministic scoring
                 ignored the noise signal and the top recommendation was unchanged. This is not a failure of
                 the architecture; it is why the architecture has a deterministic scoring layer.
               </p>
@@ -305,7 +313,7 @@ export default function CraveWiseCaseStudyPage() {
         <aside className="final-lesson" aria-label="The PM lesson">
           <span className="eyebrow">The PM Lesson</span>
           <p>
-            The decision was not &quot;add AI.&quot; It was deciding where AI should not have authority — and
+            The decision was not &quot;add AI.&quot; It was deciding where AI should not have authority, and
             using evidence to prove the boundary held.
           </p>
         </aside>
@@ -314,12 +322,6 @@ export default function CraveWiseCaseStudyPage() {
           <a className="back-link" href="/">
             ← Back to portfolio
           </a>
-          {cravewiseAppUrl ? (
-            <a href={cravewiseAppUrl} target="_blank" rel="noreferrer">
-              Open demo
-              <span className="sr-only"> (opens in new tab)</span>
-            </a>
-          ) : null}
           <a
             href="https://github.com/Abhyudaya1996/Cravewise"
             target="_blank"

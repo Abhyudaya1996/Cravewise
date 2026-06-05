@@ -31,8 +31,11 @@ const selectedWork = [
       "Added an eligibility layer built on direct bank data before showing a card as a fit.",
     ],
     outcome:
-      "India's first spend-based card recommendation engine. 25% lift in applications, measurable incremental revenue, zero marketing spend.",
-    ctas: [{ href: "https://great.cards", label: "Visit great.cards", external: true }],
+      "India's first spend-based card recommendation engine. 25% lift in applications, measurable incremental revenue, zero extra marketing spend.",
+    ctas: [
+      { href: "/case-studies/great-cards", label: "Read the case study" },
+      { href: "https://great.cards", label: "Visit great.cards", external: true },
+    ],
   },
   {
     title: "Agent BankKaro",
@@ -57,6 +60,7 @@ const selectedWork = [
     ],
     outcome: "Cut incorrect product mappings by 70%.",
     ctas: [
+      { href: "/case-studies/bankkaro-loans", label: "Read the case study" },
       { href: "https://loans.bankkaro.com/login", label: "See the live product (login)", external: true },
     ],
   },
@@ -71,6 +75,7 @@ const selectedWork = [
     ],
     outcome: "Made opaque partner flows observable, recoverable, and safer for operations teams.",
     ctas: [
+      { href: "/case-studies/bank-api-integrations", label: "Read the case study" },
       { href: "https://sbi.bankkaro.com", label: "View integration", external: true },
       { href: "https://axis.bankkaro.com", label: "View integration", external: true },
     ],
@@ -92,10 +97,8 @@ const artifacts = [
       "An AI food decision assistant where AI interprets craving signals, deterministic scoring owns the recommendation, and the product refuses weak matches.",
     why: "A bounded-AI proof point: clear logic, visible constraints, evals, and honest fallback behavior.",
     ctas: [
-      cravewiseAppUrl
-        ? { href: cravewiseAppUrl, label: "Open demo", external: true }
-        : { label: "Demo coming soon" },
       { href: "/case-studies/cravewise", label: "Read the case study" },
+      ...(cravewiseAppUrl ? [{ href: cravewiseAppUrl, label: "Open demo", external: true }] : []),
       { href: "https://github.com/Abhyudaya1996/Cravewise", label: "View on GitHub", external: true },
     ],
   },
@@ -105,9 +108,7 @@ const artifacts = [
     description: "Maps lounge eligibility across 200+ airports by credit-card type.",
     why: "Built solo to validate demand fast, with no eng or design dependency.",
     ctas: [
-      loungeFinderUrl
-        ? { href: loungeFinderUrl, label: "Open demo", external: true }
-        : { label: "Demo coming soon" },
+      ...(loungeFinderUrl ? [{ href: loungeFinderUrl, label: "Open demo", external: true }] : []),
       { href: "https://github.com/Abhyudaya1996/lounge-hopper-india", label: "View on GitHub", external: true },
     ],
   },
@@ -298,22 +299,21 @@ export default function PortfolioHomePage() {
               <Icon name="email" />
             </a>
           </div>
-          <span className="availability-note">Great.Cards is live in the CashKaro app.</span>
         </div>
         <aside className="hero-panel" aria-label="Where I am most useful">
-          <span className="panel-kicker">Where I become useful</span>
+          <span className="panel-kicker">What I&apos;m good at</span>
           <ul className="panel-modes">
             <li className="panel-mode">
-              <strong>Recommendation and eligibility logic</strong>
-              <span>Turning messy inputs into one trusted, explainable decision.</span>
+              <strong>Recommendation logic</strong>
+              <span>Turn spend, eligibility, and constraints into explainable product decisions.</span>
             </li>
             <li className="panel-mode">
-              <strong>API and integration systems</strong>
-              <span>Bank integrations, data contracts, status tracking, failure handling.</span>
+              <strong>Partner API systems</strong>
+              <span>Make bank journeys observable, recoverable, and safer for operations.</span>
             </li>
             <li className="panel-mode">
-              <strong>Operations and incentives</strong>
-              <span>Field tooling, funnels, lead quality, and the incentives behind behavior.</span>
+              <strong>Field operations</strong>
+              <span>Translate incentives, funnel leaks, and edge cases into product controls.</span>
             </li>
           </ul>
         </aside>
@@ -321,7 +321,7 @@ export default function PortfolioHomePage() {
 
       <section className="content-section selected-work-section" id="work">
         <div className="section-heading">
-          <h2>Systems I shipped in the messy reality of fintech.</h2>
+          <h2>Systems I&apos;ve shipped in fintech.</h2>
         </div>
         <div className="work-stack">
           {selectedWork.map((work) => (
@@ -389,19 +389,15 @@ export default function PortfolioHomePage() {
           <span className="eyebrow">Experience</span>
           <h2>I start where the mess is and build outward until it holds.</h2>
           <p>
-            I joined to operationally support BankKaro&apos;s field-sales team: customer support, data, and
-            reporting, the unglamorous middle of a new card-selling business. The deeper in I got, the
-            clearer the real problem became. Agents couldn&apos;t see their own funnel, so I rebuilt the
-            reporting, then the platform around it. That is how I work. I start where the operational pain is,
-            learn the system from the inside, and keep building until the thing holds in production.
+            I came up through BankKaro&apos;s operating layer: customer support, data, reporting, and
+            field-sales workflows. That gave me a ground-level view of where leads broke, where agents lost
+            visibility, and where partner systems created silent failures.
           </p>
           <p>
-            Since then I&apos;ve owned the decision systems behind cards, loans, and bank-API journeys: a
-            spend-based card engine, a two-tier loan eligibility engine, and integrations where one quiet
-            bank-side failure can kill conversions. What I&apos;m good at is the messy middle: modeling the real
-            rules instead of guessing them, making opaque partner systems observable, reading the incentives
-            behind behavior, and staying close to the API contract, the staging bug, and the edge case behind
-            every user-facing decision. Now I bring that same discipline to AI products.
+            From there I moved into product ownership across Great.Cards, Agent BankKaro, BankKaro Loans,
+            and bank-API journeys. My strongest work sits in the implementation-heavy middle: eligibility
+            rules, data contracts, QA, failure handling, incentive gaps, and the edge cases behind
+            user-facing decisions. Now I bring that same discipline to AI products.
           </p>
         </div>
         <div className="career-timeline">
@@ -443,9 +439,15 @@ export default function PortfolioHomePage() {
               </div>
               <div className="resume-row">
                 <dt>Background</dt>
-                <dd>3+ years fintech PM. Rapid prototyper. In the details, not above them.</dd>
+                <dd>3+ years fintech PM. Rapid prototyper. Hands-on from discovery to debugging.</dd>
               </div>
             </dl>
+            <div className="resume-actions">
+              <a href="/resume/abhyudaya-singh-product-resume.pdf" target="_blank" rel="noreferrer" className="primary-link contact-resume-cta">
+                Download resume PDF
+                <span className="sr-only"> (opens in new tab)</span>
+              </a>
+            </div>
           </div>
           <div className="contact-side">
             <div className="contact-card">
@@ -464,10 +466,6 @@ export default function PortfolioHomePage() {
                 </a>
               ))}
             </div>
-            <a href="/resume/abhyudaya-singh-product-resume.pdf" target="_blank" rel="noreferrer" className="primary-link contact-resume-cta">
-              Download resume PDF
-              <span className="sr-only"> (opens in new tab)</span>
-            </a>
           </div>
         </div>
       </section>

@@ -96,6 +96,27 @@
   font-weight: var(--weight-bold);
 }
 
+.cs-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.cs-hero-actions a {
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--accent-dark);
+  padding: 0 18px;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  text-decoration: none;
+}
+
 .back-link,
 .cs-footer a {
   display: inline-flex;

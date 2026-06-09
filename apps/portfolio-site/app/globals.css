@@ -114,7 +114,7 @@
 
 html {
   scroll-behavior: smooth;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 body {
@@ -125,7 +125,7 @@ body {
   font-kerning: normal;
   font-optical-sizing: auto;
   font-size: var(--text-base);
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 a {
@@ -316,6 +316,39 @@ a:focus-visible {
 .hero-section .eyebrow,
 .hero-section .panel-kicker {
   color: var(--hero-kicker);
+}
+
+.hero-photo-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.hero-photo {
+  width: 88px;
+  height: 88px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--dark-border-strong);
+  background: var(--dark-surface-faint);
+}
+
+.hero-photo-meta {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.hero-photo-meta strong {
+  color: white;
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
+}
+
+.hero-photo-meta span {
+  color: var(--dark-muted);
+  font-size: var(--text-sm);
 }
 
 h1,
@@ -1066,8 +1099,7 @@ p {
   }
 
   .site-header {
-    position: static;
-    align-items: flex-start;
+    align-items: center;
   }
 
   .hero-section,
@@ -1132,11 +1164,17 @@ p {
 
 @media (max-width: 560px) {
   .site-header {
-    display: grid;
+    padding: 10px 0;
   }
 
   .site-header nav {
     justify-content: flex-start;
+    gap: 2px;
+  }
+
+  .site-header nav a {
+    padding: 0 10px;
+    font-size: var(--text-xs);
   }
 
   h1 {

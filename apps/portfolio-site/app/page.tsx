@@ -300,7 +300,21 @@ export default function PortfolioHomePage() {
             </a>
           </div>
         </div>
-        <aside className="hero-panel" aria-label="Where I am most useful">
+        <aside className="hero-panel" aria-label="About Abhyudaya Singh">
+          <div className="hero-photo-row">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              className="hero-photo"
+              src="/abhyudaya.jpg"
+              width={88}
+              height={88}
+              alt="Abhyudaya Singh"
+            />
+            <div className="hero-photo-meta">
+              <strong>Abhyudaya Singh</strong>
+              <span>Fintech PM, builds with AI</span>
+            </div>
+          </div>
           <span className="panel-kicker">What I&apos;m good at</span>
           <ul className="panel-modes">
             <li className="panel-mode">

@@ -7,149 +7,135 @@ type Cta = {
   label: string;
   href?: string;
   external?: boolean;
+  primary?: boolean;
 };
-
-const heroAnchors = [
-  {
-    heading: "Production fintech systems",
-    line: "Great.Cards card recommendations, loan eligibility engines, and bank API integrations.",
-  },
-  {
-    heading: "In the details",
-    line: "API contracts, status tracking, partner constraints, QA, and staging edge cases.",
-  },
-];
 
 const selectedWork = [
   {
     title: "Great.Cards",
-    type: "Recommendation engine",
-    summary:
-      "A bank RM or mall sales rep sells you a card without knowing how you spend, so you often get the wrong one.",
-    points: [
-      "Built a spend-based engine that recommends the best-fit card in real rupee value, with no affiliate bias.",
-      "Added an eligibility layer built on direct bank data before showing a card as a fit.",
-    ],
-    outcome:
-      "India's first spend-based card recommendation engine. 25% lift in applications, measurable incremental revenue, zero extra marketing spend.",
+    type: "India's smartest card recommendation engine",
+    metric: "₹25 L",
+    metricLabel: "incremental revenue, zero ad spend",
+    problem: "Card picks are usually pushed by sales incentives, not user fit.",
+    built: "An engine that reads your spends and returns the best-fit card, with eligibility logic and no affiliate bias.",
+    role: "Lead PM. Owned the recommendation logic and execution end to end.",
     ctas: [
-      { href: "/case-studies/great-cards", label: "Read the case study" },
       { href: "https://great.cards", label: "Visit great.cards", external: true },
+      { href: "/case-studies/great-cards", label: "Read case study" },
     ],
   },
   {
     title: "Agent BankKaro",
-    type: "B2B2C platform",
-    summary:
-      "Turned a chaotic, no-visibility field-sales operation into a platform for onboarding, lead punching, payments, and lead-quality scoring.",
-    points: [
-      "Converted bank-status jargon into plain-English reporting agents could act on.",
-      "The system surfaced a low-quality lead pattern traced to an incentive gap.",
-    ],
-    outcome: "Lifted lead conversion from 6% to 12% across the field-sales network.",
-    ctas: [{ href: "/case-studies/agent-bankkaro", label: "Read the case study" }],
+    type: "B2B2C field-sales platform",
+    metric: "2×",
+    metricLabel: "agent conversion (6% to 12%)",
+    problem: "Leads, agents, payouts, and bank statuses lived across disconnected workflows.",
+    built: "An operating platform for onboarding, lead punching, payments, and lead-quality visibility.",
+    role: "Defined the platform model and the lead-quality controls. 500+ agents onboarded.",
+    ctas: [{ href: "/case-studies/agent-bankkaro", label: "Read case study" }],
   },
   {
     title: "BankKaro Loans",
-    type: "Eligibility engine",
-    summary:
-      "A two-tier rules engine that models how the lender universe prices and qualifies, then recommends the best-fit loan.",
-    points: [
-      "Two tiers: a fast eligibility gate, then deeper pricing and limit logic per lender type.",
-      "Eligibility stays estimated from declared and available profile signals. Real CIBIL and Account Aggregator data are not pulled.",
-    ],
-    outcome: "Cut incorrect product mappings by 70%.",
+    type: "Personal-loan BRE and matching",
+    metric: "₹5 Cr",
+    metricLabel: "monthly loan disbursal",
+    problem: "Loan matching breaks when lender rules and eligibility live scattered across partners.",
+    built: "A business rules engine (BRE) built during partner onboarding that routes each user to the right offer.",
+    role: "Designed the BRE and the matching logic. Drove roughly ₹5 Cr in monthly loan disbursal.",
     ctas: [
-      { href: "/case-studies/bankkaro-loans", label: "Read the case study" },
-      { href: "https://loans.bankkaro.com/login", label: "See the live product (login)", external: true },
+      { href: "https://loans.bankkaro.com/login", label: "See it live (login)", external: true },
+      { href: "/case-studies/bankkaro-loans", label: "Read case study" },
     ],
   },
   {
-    title: "Bank API integrations",
-    type: "Partner APIs",
-    summary:
-      "Worked across partner bank journeys where API failures, logging gaps, and retry flows directly affected lead conversion.",
-    points: [
-      "Owned application flows, status tracking, and failure handling with bank tech and risk teams.",
-      "A bank-side 504 spike was caught early and affected leads were re-ingested through retry flows with zero lead loss.",
-    ],
-    outcome: "Made opaque partner flows observable, recoverable, and safer for operations teams.",
+    title: "Axis & SBI API integrations",
+    type: "Bank partner APIs",
+    metric: "27%",
+    metricLabel: "conversion, up from 10%",
+    problem: "Redirection-based bank journeys converted at roughly 10%, and teams could not see where applicants dropped.",
+    built: "Integrated the Axis and SBI APIs, then added drop-off nudges before and after application, with error flagging and partner-status visibility.",
+    role: "Specced the integration and the recovery flow. Conversion rose from 10% to 27%.",
     ctas: [
-      { href: "/case-studies/bank-api-integrations", label: "Read the case study" },
-      { href: "https://sbi.bankkaro.com", label: "View integration", external: true },
-      { href: "https://axis.bankkaro.com", label: "View integration", external: true },
+      { href: "https://axis.bankkaro.com", label: "View Axis integration", external: true },
+      { href: "https://sbi.bankkaro.com", label: "View SBI integration", external: true },
+      { href: "/case-studies/bank-api-integrations", label: "Read case study" },
     ],
   },
 ] satisfies Array<{
   title: string;
   type: string;
-  summary: string;
-  points: string[];
-  outcome: string;
+  metric: string;
+  metricLabel: string;
+  problem: string;
+  built: string;
+  role: string;
   ctas: Cta[];
 }>;
 
-const artifacts = [
+const buildItems = [
   {
+    logo: "CW",
     title: "CraveWise",
-    type: "AI decision product",
-    description:
-      "An AI food decision assistant where AI interprets craving signals, deterministic scoring owns the recommendation, and the product refuses weak matches.",
-    why: "A bounded-AI proof point: clear logic, visible constraints, evals, and honest fallback behavior.",
+    type: "Built with AI",
+    tag: true,
+    points: [
+      "AI interprets the craving signal: mood, budget, taste, and past regrets.",
+      "Deterministic scoring owns the recommendation, including when not to recommend.",
+      "33 of 33 evals pass before anything ships.",
+    ],
+    note: "AI proposes, deterministic logic can refuse when the inputs do not support a confident pick.",
     ctas: [
+      ...(cravewiseAppUrl ? [{ href: cravewiseAppUrl, label: "Open demo", external: true, primary: true }] : []),
       { href: "/case-studies/cravewise", label: "Read the case study" },
-      ...(cravewiseAppUrl ? [{ href: cravewiseAppUrl, label: "Open demo", external: true }] : []),
-      { href: "https://github.com/Abhyudaya1996/Cravewise", label: "View on GitHub", external: true },
     ],
   },
   {
-    title: "Airport Lounge Finder",
-    type: "Utility build",
-    description: "Maps lounge eligibility across 200+ airports by credit-card type.",
-    why: "Built solo to validate demand fast, with no eng or design dependency.",
+    logo: "LH",
+    title: "Lounge Hopper",
+    type: "Airport lounge finder",
+    points: [
+      "Tells you which of your cards gets you into a specific airport lounge, before you reach the desk.",
+      "Ends the awkward queue ritual of tapping card after card hoping one works.",
+      "Search by airport and card; covers domestic and international access rules.",
+    ],
+    note: "A small utility, shipped and usable. Built to kill one specific travel annoyance.",
     ctas: [
-      ...(loungeFinderUrl ? [{ href: loungeFinderUrl, label: "Open demo", external: true }] : []),
+      ...(loungeFinderUrl ? [{ href: loungeFinderUrl, label: "Open demo", external: true, primary: true }] : []),
       { href: "https://github.com/Abhyudaya1996/lounge-hopper-india", label: "View on GitHub", external: true },
     ],
   },
   {
-    title: "Mobikwik x Great.Cards demo",
-    type: "Integration demo",
-    description:
-      "A working partner-style Great.Cards integration that shows the spend-based recommendation flow in action.",
-    why: "A demo surface for the recommendation engine, separate from the live product.",
-    ctas: [{ href: "https://mobikwik-gc.vercel.app/", label: "View demo", external: true }],
+    logo: "MG",
+    title: "Mobikwik x Great.Cards",
+    type: "Partner pitch concept",
+    points: [
+      "Embeds Great.Cards inside MobiKwik: each user sees the best-fit card for their real spends, in-app.",
+      "Marketing: a personalized ‘which card should I get’ moment at the point of intent, no extra acquisition spend.",
+      "Revenue: every approved application is an affiliate payout MobiKwik shares in, with zero credit or inventory risk.",
+    ],
+    note: "A partner-facing concept and live demo of how the recommendation flow would sit inside MobiKwik.",
+    ctas: [{ href: "https://mobikwik-gc.vercel.app/", label: "Open demo", external: true, primary: true }],
   },
 ] satisfies Array<{
+  logo: string;
   title: string;
   type: string;
-  description: string;
-  why: string;
+  tag?: boolean;
+  points?: string[];
+  note?: string;
   ctas: Cta[];
 }>;
-
-const pmTeardowns = [
-  {
-    category: "Ride-hailing verification",
-    status: "Drafted",
-    title: "Reusable OTP vs Fresh Ride PIN",
-    thesis:
-      "A ride OTP verifies pickup handoff, not account access. Reusable OTP can be a smart default if surrounding controls and incident data support it.",
-    note: "PM teardown, not a shipped product",
-    href: "/teardowns/ride-otp",
-  },
-];
 
 const careerRoles = [
   {
     title: "Assistant Manager, Product Management",
     company: "CashKaro / BankKaro",
     period: "Aug 2022 to Present",
+    award: "2× BankKaro Superstar Award (2022, 2025)",
     highlights: [
-      "Came up through the operational side of BankKaro: customer support, data, and reporting for the field-sales team. I build for ops and edge cases, not just the happy path.",
-      "Grew that ground-level view into product ownership across Great.Cards, Agent BankKaro, BankKaro Loans, and partner bank-API journeys: discovery, PRDs, launch metrics, QA, and iteration.",
-      "Work directly with bank tech, risk, engineering, ops, and compliance on data contracts, eligibility rules, failure handling, and fraud/dispute workflows.",
-      "2× BankKaro Superstar Award (2022, 2025) for measurable outcomes and cross-functional impact.",
+      "Lead and mentor a team of 4 Associate Product Managers (APMs) and 2 interns.",
+      "Own product execution across Great.Cards, Agent BankKaro, BankKaro Loans, and the Axis and SBI bank-API journeys.",
+      "Translate bank-partner constraints into data contracts, rules, and QA that hold when integrations fail, working across tech, risk, engineering, ops, and compliance.",
     ],
   },
   {
@@ -163,30 +149,23 @@ const careerRoles = [
   },
 ];
 
+const experienceFocus = [
+  "recommendation and eligibility systems",
+  "lending rules engines (BRE)",
+  "bank API and recovery flows",
+  "team leadership",
+];
+
 const contactLinks = [
-  {
-    label: "GitHub",
-    icon: "github",
-    href: "https://github.com/Abhyudaya1996",
-    note: "Public GitHub profile",
-  },
   {
     label: "LinkedIn",
     icon: "linkedin",
     href: "https://www.linkedin.com/in/abhyudayasinghpm/",
-    note: "LinkedIn profile",
   },
   {
-    label: "Email",
-    icon: "email",
-    href: "mailto:singh.abhyudaya1996@gmail.com",
-    note: "singh.abhyudaya1996@gmail.com",
-  },
-  {
-    label: "Resume",
-    icon: "resume",
-    href: "/resume/abhyudaya-singh-product-resume.pdf",
-    note: "Product resume PDF",
+    label: "GitHub",
+    icon: "github",
+    href: "https://github.com/Abhyudaya1996",
   },
 ];
 
@@ -233,6 +212,7 @@ function CtaGroup({ ctas }: { ctas: Cta[] }) {
         return cta.href ? (
           <a
             key={ctaKey}
+            className={cta.primary ? "cta-primary" : undefined}
             href={cta.href}
             target={cta.external ? "_blank" : undefined}
             rel={cta.external ? "noreferrer" : undefined}
@@ -250,6 +230,14 @@ function CtaGroup({ ctas }: { ctas: Cta[] }) {
   );
 }
 
+function Monogram({ label }: { label: string }) {
+  return (
+    <span className="monogram" aria-hidden="true">
+      {label}
+    </span>
+  );
+}
+
 export default function PortfolioHomePage() {
   return (
     <main className="portfolio-page">
@@ -260,35 +248,29 @@ export default function PortfolioHomePage() {
         <nav>
           <a href="#work">Work</a>
           <a href="#build">Build</a>
-          <a href="#teardowns">Teardowns</a>
-          <a href="#experience">Experience</a>
+          <a href="#operate">How I operate</a>
+          <a href="#teardowns">Teardown</a>
           <a href="#contact">Contact</a>
-          <ThemeToggle />
         </nav>
+        <ThemeToggle />
       </header>
 
       <section className="hero-section" id="top">
         <div className="hero-copy">
-          <span className="eyebrow">Fintech Product Manager, builds with AI</span>
-          <h1>I build the decision systems behind credit cards, loans, and bank APIs.</h1>
-          <p>
-            3+ years shipping fintech systems: recommendation engines, eligibility logic, bank APIs.
-            Now building AI products with the same discipline.
+          <span className="eyebrow hero-rise">Fintech PM, 3+ years at CashKaro / BankKaro</span>
+          <h1 className="hero-rise hero-rise-1">I turn messy fintech rules into systems teams can run.</h1>
+          <p className="hero-rise hero-rise-2">
+            Recommendation engines, loan eligibility, and bank API integrations, shipped to production. Now I build with AI, holding the same bar.
           </p>
-          <div className="hero-anchors">
-            {heroAnchors.map((anchor) => (
-              <div className="hero-anchor" key={anchor.heading}>
-                <strong>{anchor.heading}</strong>
-                <span>{anchor.line}</span>
-              </div>
-            ))}
-          </div>
-          <div className="hero-actions">
+          <div className="hero-actions hero-rise hero-rise-3">
             <a className="primary-link" href="#work">
-              See selected work
+              See the work
+            </a>
+            <a className="secondary-link" href="#contact">
+              Get in touch
             </a>
           </div>
-          <div className="hero-social" aria-label="Profiles and contact">
+          <div className="hero-social hero-rise hero-rise-4" aria-label="Profiles and contact">
             <a href="https://www.linkedin.com/in/abhyudayasinghpm/" target="_blank" rel="noreferrer" aria-label="LinkedIn (opens in new tab)">
               <Icon name="linkedin" />
             </a>
@@ -300,14 +282,14 @@ export default function PortfolioHomePage() {
             </a>
           </div>
         </div>
-        <aside className="hero-panel" aria-label="About Abhyudaya Singh">
+        <aside className="hero-panel hero-rise hero-rise-2" aria-label="About Abhyudaya Singh">
           <div className="hero-photo-row">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               className="hero-photo"
               src="/abhyudaya.jpg"
-              width={88}
-              height={88}
+              width={120}
+              height={120}
               alt="Abhyudaya Singh"
             />
             <div className="hero-photo-meta">
@@ -315,108 +297,101 @@ export default function PortfolioHomePage() {
               <span>Fintech PM, builds with AI</span>
             </div>
           </div>
-          <span className="panel-kicker">What I&apos;m good at</span>
           <ul className="panel-modes">
             <li className="panel-mode">
               <strong>Recommendation logic</strong>
-              <span>Turn spend, eligibility, and constraints into explainable product decisions.</span>
+              <span>I take your spends and tell you the best credit card.</span>
             </li>
             <li className="panel-mode">
               <strong>Partner API systems</strong>
-              <span>Make bank journeys observable, recoverable, and safer for operations.</span>
+              <span>Integrate bank APIs and win back the drop-offs in bank journeys.</span>
             </li>
             <li className="panel-mode">
-              <strong>Field operations</strong>
-              <span>Translate incentives, funnel leaks, and edge cases into product controls.</span>
+              <strong>Lending logic</strong>
+              <span>Build rules engines (BRE) that route users to the right loan offer.</span>
             </li>
           </ul>
         </aside>
       </section>
 
       <section className="content-section selected-work-section" id="work">
-        <div className="section-heading">
+        <div className="section-heading centered reveal">
           <h2>Systems I&apos;ve shipped in fintech.</h2>
         </div>
         <div className="work-stack">
           {selectedWork.map((work) => (
-            <article
-              className={`project-card compact-work-card ${work.ctas.some((cta) => "href" in cta && cta.href) ? "linked-card" : ""}`}
-              key={work.title}
-            >
-              <span className="type-chip">{work.type}</span>
-              <h3>{work.title}</h3>
-              <p className="card-summary">{work.summary}</p>
-              <ul className="compact-points">
-                {work.points.map((point) => (
-                  <li key={point}>{point}</li>
-                ))}
-              </ul>
-              <p className="outcome-line">{work.outcome}</p>
+            <article className="work-card linked-card reveal" key={work.title}>
+              <div className="work-metric">
+                <span className="work-metric-value">{work.metric}</span>
+                <span className="work-metric-label">{work.metricLabel}</span>
+              </div>
+              <div className="work-head">
+                <h3>{work.title}</h3>
+                <span className="work-type">{work.type}</span>
+              </div>
+              <dl className="proof-lines">
+                <div>
+                  <dt>Problem</dt>
+                  <dd>{work.problem}</dd>
+                </div>
+                <div>
+                  <dt>Built</dt>
+                  <dd>{work.built}</dd>
+                </div>
+                <div>
+                  <dt>My role</dt>
+                  <dd>{work.role}</dd>
+                </div>
+              </dl>
               <CtaGroup ctas={work.ctas} />
             </article>
           ))}
         </div>
       </section>
 
-      <section className="content-section" id="build">
-        <div className="section-heading">
-          <h2>Prototypes and tools people can inspect.</h2>
+      <section className="content-section build-section" id="build">
+        <div className="section-heading centered reveal">
+          <h2>Prototypes and tools I build.</h2>
         </div>
-        <div className="card-grid three-card-grid">
-          {artifacts.map((artifact) => (
-            <article className={`lab-card linked-card`} key={artifact.title}>
-              <span className="type-chip">{artifact.type}</span>
-              <h3>{artifact.title}</h3>
-              <p>{artifact.description}</p>
-              <p className="why-this">
-                <strong>Why this exists</strong>
-                {artifact.why}
-              </p>
-              <CtaGroup ctas={artifact.ctas} />
+        <div className="build-carousel" aria-label="Things I build (scroll horizontally for more)">
+          {buildItems.map((item) => (
+            <article className="build-card linked-card" key={item.title}>
+              <div className="build-card-head">
+                <Monogram label={item.logo} />
+                <div className="build-card-title">
+                  <h3>{item.title}</h3>
+                  <span className="work-type">{item.type}</span>
+                </div>
+                {item.tag ? <span className="ai-tag">Built with AI</span> : null}
+              </div>
+              <ul className="ai-points">
+                {item.points?.map((point) => (
+                  <li key={point}>{point}</li>
+                ))}
+              </ul>
+              {item.note ? <p className="ai-note">{item.note}</p> : null}
+              <CtaGroup ctas={item.ctas} />
             </article>
           ))}
         </div>
       </section>
 
-      <section className="content-section teardowns-section" id="teardowns">
-        <div className="section-heading">
-          <span className="eyebrow">PM teardowns</span>
-          <h2>Structured reasoning on real product decisions.</h2>
-        </div>
-        <div className="card-grid">
-          {pmTeardowns.map((td) => (
-            <article className="teardown-card linked-card" key={td.title}>
-              <span className="type-chip">{td.category}</span>
-              <h3>{td.title}</h3>
-              <p>{td.thesis}</p>
-              <span className="teardown-note">{td.note}</span>
-              <a className="primary-link" href={td.href}>
-                Read the teardown
-              </a>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="content-section experience-section" id="experience">
-        <div className="section-heading">
-          <span className="eyebrow">Experience</span>
+      <section className="content-section operate-section" id="operate">
+        <div className="section-heading reveal">
           <h2>I start where the mess is and build outward until it holds.</h2>
           <p>
-            I came up through BankKaro&apos;s operating layer: customer support, data, reporting, and
-            field-sales workflows. That gave me a ground-level view of where leads broke, where agents lost
-            visibility, and where partner systems created silent failures.
+            I work closest to the messy middle of fintech execution: data contracts, rules, QA, partner failures, and the edge cases that decide whether a system holds.
           </p>
-          <p>
-            From there I moved into product ownership across Great.Cards, Agent BankKaro, BankKaro Loans,
-            and bank-API journeys. My strongest work sits in the implementation-heavy middle: eligibility
-            rules, data contracts, QA, failure handling, incentive gaps, and the edge cases behind
-            user-facing decisions. Now I bring that same discipline to AI products.
-          </p>
+          <ul className="experience-focus">
+            {experienceFocus.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
         </div>
+
         <div className="career-timeline">
           {careerRoles.map((role) => (
-            <article className="career-role" key={role.title + role.company}>
+            <article className="career-role reveal" key={role.title + role.company}>
               <div className="role-header">
                 <div>
                   <strong className="role-title">{role.title}</strong>
@@ -424,6 +399,7 @@ export default function PortfolioHomePage() {
                 </div>
                 <span className="role-period">{role.period}</span>
               </div>
+              {role.award ? <span className="role-award">{role.award}</span> : null}
               <ul className="role-highlights">
                 {role.highlights.map((highlight) => (
                   <li key={highlight}>{highlight}</li>
@@ -434,53 +410,79 @@ export default function PortfolioHomePage() {
         </div>
       </section>
 
-      <section className="about-section" id="contact">
-        <div>
-          <span className="eyebrow">Contact</span>
-          <h2>Fintech operator who ships production systems and now builds with AI.</h2>
-          <p>
-            I am Abhyudaya Singh, a Product Manager with 3+ years in fintech. This portfolio is the public
-            proof of how I think: shipped systems, bounded AI prototypes, PM teardown work, and clear
-            operating constraints.
-          </p>
+      <section className="content-section teardowns-section" id="teardowns">
+        <div className="section-heading centered reveal">
+          <h2>How I reason about product decisions.</h2>
         </div>
-        <div className="about-grid">
-          <div className="resume-block">
-            <dl className="resume-summary">
-              <div className="resume-row">
-                <dt>What I work on</dt>
-                <dd>Recommendation engines, eligibility logic, partner APIs, B2B2C platforms, bounded-AI products.</dd>
-              </div>
-              <div className="resume-row">
-                <dt>Background</dt>
-                <dd>3+ years fintech PM. Rapid prototyper. Hands-on from discovery to debugging.</dd>
-              </div>
-            </dl>
-            <div className="resume-actions">
-              <a href="/resume/abhyudaya-singh-product-resume.pdf" target="_blank" rel="noreferrer" className="primary-link contact-resume-cta">
+        <article className="reasoning-card reveal">
+          <span className="reasoning-kicker">Ride-hailing teardown</span>
+          <h3>Reusable OTP vs Fresh Ride PIN</h3>
+          <p>
+            Rapido reuses a ride OTP; Uber issues a fresh PIN per trip. A ride OTP verifies pickup handoff, not account access, so reusable can be the smarter default when surrounding controls and incident data support it.
+          </p>
+          <a className="ghost-link" href="/teardowns/ride-otp">
+            Read the teardown
+          </a>
+        </article>
+      </section>
+
+      <section className="contact-section" id="contact">
+        <div className="contact-card-band reveal">
+          <div className="contact-copy">
+            <h2>If this maps to a role you&apos;re hiring for, let&apos;s talk.</h2>
+            <p>
+              Best fit: product roles where fintech systems, AI product judgment, and implementation-close execution matter. I reply to every genuine message.
+            </p>
+            <div className="contact-actions">
+              <a className="primary-link" href="mailto:singh.abhyudaya1996@gmail.com">
+                Get in touch
+              </a>
+              <a
+                className="ghost-link"
+                href="/resume/abhyudaya-singh-product-resume.pdf"
+                target="_blank"
+                rel="noreferrer"
+              >
                 Download resume PDF
                 <span className="sr-only"> (opens in new tab)</span>
               </a>
             </div>
-          </div>
-          <div className="contact-side">
-            <div className="contact-card">
+            <div className="contact-links">
               {contactLinks.map((link) => (
                 <a
                   key={link.label}
                   href={link.href}
-                  title={link.note}
-                  target={link.href.startsWith("http") ? "_blank" : undefined}
-                  rel={link.href.startsWith("http") ? "noreferrer" : undefined}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={`${link.label} (opens in new tab)`}
                 >
                   <Icon name={link.icon} />
                   <span>{link.label}</span>
-                  <small>{link.note}</small>
-                  {link.href.startsWith("http") ? <span className="sr-only"> (opens in new tab)</span> : null}
                 </a>
               ))}
             </div>
           </div>
+          <aside className="contact-aside" aria-label="What I bring">
+            <span className="panel-kicker">What I bring</span>
+            <ul className="contact-brings">
+              <li>
+                <strong>Deep fintech expertise</strong>
+                <span>Hands-on across credit cards, lending, BRE logic, rewards ecosystems, cashback platforms, and bank API integrations. I understand the operational nuances, partner dependencies, and failure points that determine whether fintech products scale.</span>
+              </li>
+              <li>
+                <strong>Implementation-close product management</strong>
+                <span>I operate at the intersection of product, data, and engineering, owning data contracts, API integrations, QA, edge cases, and production incident resolution. I build systems that work reliably beyond the happy path.</span>
+              </li>
+              <li>
+                <strong>AI-enabled product thinking</strong>
+                <span>I use AI to accelerate product discovery, analysis, and execution, while maintaining deterministic controls and clear evaluation frameworks for critical decision-making workflows.</span>
+              </li>
+              <li>
+                <strong>Leadership and cross-functional execution</strong>
+                <span>Lead and mentor a team of 4 Associate Product Managers (APMs) and 2 interns, while driving delivery across banking partners, risk, engineering, operations, and compliance stakeholders.</span>
+              </li>
+            </ul>
+          </aside>
         </div>
       </section>
     </main>

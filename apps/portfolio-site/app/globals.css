@@ -628,7 +628,7 @@ p {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  justify-content: center;
+  justify-content: flex-start;
   min-width: 0;
 }
 
@@ -1480,7 +1480,7 @@ h2 {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  justify-content: center;
+  justify-content: flex-start;
   margin-top: 8px;
 }
 

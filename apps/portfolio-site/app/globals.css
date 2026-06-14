@@ -1630,6 +1630,26 @@ h2 {
     border-top: 1px solid var(--line);
   }
 
+  .build-carousel {
+    display: flex;
+    grid-template-columns: none;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-left: 14px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+  }
+
+  .build-carousel::-webkit-scrollbar {
+    display: none;
+  }
+
+  .build-card {
+    flex: 0 0 84%;
+    scroll-snap-align: start;
+  }
+
   .hero-section {
     width: 100%;
     margin-right: 0;

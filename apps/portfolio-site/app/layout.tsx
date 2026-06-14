@@ -1,10 +1,15 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Abhyudaya Singh, Fintech Product Manager (builds with AI)",
   description:
     "Fintech PM who ships recommendation engines, eligibility logic, and bank API integrations. Now building AI products with the same discipline.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({

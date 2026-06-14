@@ -212,6 +212,24 @@
   padding-left: 14px;
 }
 
+.abk-cta {
+  margin-top: 4px;
+}
+
+.abk-cta .primary-link {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  padding: 0 22px;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  box-shadow: var(--shadow-card);
+}
+
 .abk-footer {
   margin-top: 34px;
   border-top: 1px solid var(--line);

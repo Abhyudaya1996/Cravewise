@@ -4,30 +4,30 @@ import "./agent-bankkaro.css";
 export const metadata: Metadata = {
   title: "Agent BankKaro Case Study | Abhyudaya Singh",
   description:
-    "A public-safe case study on turning a low-visibility field-sales operation into a B2B2C product platform with reporting, payouts, and lead-quality signals.",
+    "A public-safe case study on improving an existing field-sales platform by sitting close to agents: readable reporting, sub-DSA support, follow-up visibility, and lead quality.",
 };
 
 const platformPieces = [
-  "Agent and sub-agent onboarding",
-  "Lead punching and status tracking",
   "Plain-English bank reporting",
-  "Payment verification and commission withdrawal",
+  "Sub-DSA onboarding and hierarchy",
+  "Lead status and follow-up visibility",
+  "Lead-quality signals from bank statuses",
+  "Payment and commission clarity",
   "Card-pitch repository for field teams",
-  "Lead-quality scoring from bank status signals",
 ];
 
 const lessons = [
   {
-    title: "Visibility changed behavior",
-    body: "Agents did not need another motivational dashboard. They needed to see where each lead stood, what the bank response meant, and which action came next.",
+    title: "The roadmap came from the agents",
+    body: "I did not start from a planning doc. I started by understanding where agents got stuck. Almost every improvement that mattered came from a pain they described, not a feature we assumed.",
   },
   {
-    title: "Ops language became product language",
-    body: "Bank statuses were translated into terms agents and managers could use without interpreting a partner report line by line.",
+    title: "Sub-DSA support unlocked the growth",
+    body: "Agents wanted to recruit their own sub-agents to scale earnings. I designed the hierarchy and commission backend so they could, which is a big part of how the base grew past 500 agents.",
   },
   {
-    title: "Incentives showed up in the data",
-    body: "The system surfaced a low-quality lead pattern traced to an incentive gap. That was a product finding, not a blame story.",
+    title: "Visibility turned effort into conversion",
+    body: "Readable reports and clear follow-up cues meant agents chased the right leads at the right time. Conversion moved from 6% to 12% without asking anyone to work harder.",
   },
 ];
 
@@ -41,16 +41,16 @@ export default function AgentBankKaroCaseStudyPage() {
 
         <header className="abk-hero">
           <span className="eyebrow">Case study, Agent BankKaro</span>
-          <h1>From field-sales opacity to an operating platform.</h1>
+          <h1>Field agents had a platform. They didn&apos;t have a way to grow on it.</h1>
           <p>
-            Agent BankKaro started as an operations-support problem: field agents were selling credit cards
-            without clear visibility into lead status, bank responses, payouts, or quality signals. The work
-            became a B2B2C platform that made the sales motion easier to run.
+            Agent BankKaro was already live when I came to it. My contribution was not inventing the platform,
+            it was getting close to the people using it, then designing the parts they were missing, including
+            the backend that let an agent build and run their own sub-agent team.
           </p>
           <div className="abk-metrics" aria-label="Agent BankKaro outcomes">
             <article>
-              <strong>2,000+</strong>
-              <span>agents onboarded</span>
+              <strong>500+</strong>
+              <span>field agents onboarded</span>
             </article>
             <article>
               <strong>6% to 12%</strong>
@@ -62,28 +62,28 @@ export default function AgentBankKaroCaseStudyPage() {
         <aside className="thesis-callout" aria-label="Case study thesis">
           <strong>Product thesis</strong>
           <p>
-            Agents were not failing on effort. They were failing on visibility. Give them readable data, a
-            clear funnel, and a reason to care about quality, and conversion follows.
+            The agents were not failing on effort. They were failing on visibility and on tooling that did not
+            match how they actually worked. Proximity to the user, not a bigger feature list, was the unlock.
           </p>
         </aside>
 
         <div className="abk-body">
           <section>
-            <h2>The starting problem</h2>
+            <h2>Where I came in</h2>
             <p>
-              The offline card-sales motion had almost no shared operating surface. Leads were punched into
-              scattered flows, bank reports came back in jargon, and managers could not easily see where a
-              funnel was leaking. The result was avoidable follow-up misses, lower trust, and a weak feedback
-              loop between field teams and product teams.
+              The product was built before me. What it lacked was a tight loop with the field. As the person
+              closest to the agents, I treated their day as the source of truth: how they punched leads, how
+              they read bank responses, how they decided who to follow up, and where they quietly gave up.
             </p>
           </section>
 
           <section>
-            <h2>What the platform needed to do</h2>
+            <h2>The pain the agents described</h2>
             <p>
-              The product had to cover the full working loop, not just lead entry. It needed to help agents
-              onboard, punch leads, understand bank statuses, verify payments, withdraw commissions, and
-              learn which cards to pitch.
+              Three things came up again and again. Agents could not understand the bank reports, so they did
+              not know what a status meant or what to do next. They wanted to recruit sub-agents but the product
+              did not support that. And they had no clear view of which leads to follow up, or how lead quality
+              affected their payout.
             </p>
             <div className="abk-piece-grid">
               {platformPieces.map((piece) => (
@@ -93,26 +93,31 @@ export default function AgentBankKaroCaseStudyPage() {
           </section>
 
           <section>
-            <h2>Jargon became plain-English reporting</h2>
+            <h2>What I changed</h2>
             <p>
-              A major unlock was translating bank status reports into language field teams could act on.
-              Instead of making agents decode partner terms, the product surfaced readable funnel states and
-              drop-off signals. That made follow-up more consistent and gave managers a clearer operating
-              view.
+              I had bank statuses translated into plain language agents could act on, added sub-DSA onboarding
+              so agents could build their own teams, and made follow-up state and lead quality visible. Lead
+              quality used bank signals such as unresolved in-principle approvals and completed KYC, which also
+              surfaced an incentive gap: fixed-salary sub-agents had no payout reason to care about quality.
+            </p>
+            <p className="abk-safety-note">
+              Public-safe framing: the insight is about detection and incentive design, not public accusation or
+              internal screenshots.
             </p>
           </section>
 
           <section>
-            <h2>Lead quality became visible</h2>
+            <h2>Designing the sub-DSA backend</h2>
             <p>
-              Lead-quality scoring used bank status signals such as unresolved in-principle approvals and
-              completed KYC to separate weak leads from stronger ones. The system surfaced a low-quality
-              lead pattern traced to an incentive gap: fixed-salary sub-agents had no payout reason to
-              optimize for quality.
+              Agents kept asking to recruit their own sub-agents, so the product team asked me to spec it. I drew
+              the backend: how each level of the hierarchy links to the next, the parent agent to the agent, the
+              agent to the sub-agent, how leads and performance roll up that tree, how reports are generated at
+              each level, and how commissions are calculated and validated end to end, from a tracked lead
+              through to a verified payout.
             </p>
-            <p className="abk-safety-note">
-              Public-safe framing matters here. The product insight is about detection and incentive design,
-              not public accusation or internal screenshots.
+            <p>
+              That structure is a big part of how the base grew past 500 agents without the commission math
+              breaking. An agent could build a team and trust that every lead and every rupee was accounted for.
             </p>
           </section>
 
@@ -132,8 +137,9 @@ export default function AgentBankKaroCaseStudyPage() {
         <aside className="final-lesson" aria-label="The PM lesson">
           <span className="eyebrow">The PM Lesson</span>
           <p>
-            The platform worked because it treated field sales as a system: visibility, workflow, incentives,
-            and bank feedback all had to move together.
+            I did not need to own the original build to make the product better. The unlock was proximity:
+            sitting with agents, hearing the same pains, and turning them into visibility, hierarchy, and
+            incentives that worked.
           </p>
         </aside>
 

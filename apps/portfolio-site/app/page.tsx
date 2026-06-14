@@ -31,7 +31,7 @@ const selectedWork = [
     metricLabel: "agent conversion (6% to 12%)",
     problem: "Leads, agents, payouts, and bank statuses lived across disconnected workflows.",
     built: "An operating platform for onboarding, lead punching, payments, and lead-quality visibility.",
-    role: "Defined the platform model and the lead-quality controls. 500+ agents onboarded.",
+    role: "Came in after launch and rebuilt it around agent pain: readable reports, sub-DSA support, follow-up visibility, and lead quality. Grew it to 500+ agents.",
     ctas: [{ href: "/case-studies/agent-bankkaro", label: "Read case study" }],
   },
   {

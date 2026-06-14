@@ -4,30 +4,30 @@ import "../agent-bankkaro/agent-bankkaro.css";
 export const metadata: Metadata = {
   title: "Bank API Integrations Case Study | Abhyudaya Singh",
   description:
-    "A public-safe case study on making partner bank journeys observable and recoverable through status tracking, retry flows, and failure handling.",
+    "A public-safe case study on moving bank journeys from T-1 batch reporting to real-time API status, with safe rollout, error monitoring, and local event tracking.",
 };
 
 const platformPieces = [
-  "Partner application flows",
-  "API contracts and status mapping",
-  "Failure detection",
+  "Axis and SBI API integration",
+  "Real-time status vs T-1 reporting",
+  "Drop-off targeting via CleverTap",
+  "Journey Tracks session-event monitoring",
+  "Error flagging on OpenObserve and Teams",
   "Retry and re-ingestion flows",
-  "Bank tech and risk coordination",
-  "Operations-safe recovery paths",
 ];
 
 const lessons = [
   {
-    title: "Opaque APIs need product instrumentation",
-    body: "When partner systems do not expose enough error detail, the product still needs its own operating surface for detection and recovery.",
+    title: "Real-time changed the whole funnel",
+    body: "T-1 batch reports meant we nudged drop-offs a day late, worse around holidays. Real-time API status let us reach a user while intent was still warm. That is most of the move from 10% to 27%.",
   },
   {
-    title: "Retries are product design",
-    body: "A retry API is not only backend plumbing. It decides whether affected leads are recoverable and whether operations can trust the journey.",
+    title: "If you cannot see the error, you cannot fix it",
+    body: "Every error flag from the API logs pushed into OpenObserve and a Teams channel, so failures pinged us the moment they happened. Queries and escalations got solved proactively, not after users complained.",
   },
   {
-    title: "Neutral public framing matters",
-    body: "The useful story is not naming or criticizing a bank partner. It is showing how a fragile partner flow became observable and recoverable.",
+    title: "Build the tracking locally to understand it",
+    body: "Journey Tracks let us monitor each event in a user's session. GA or CleverTap could do parts of it, but building our own taught us how events are defined, which params we store, and which ones are actually useful.",
   },
 ];
 
@@ -41,20 +41,21 @@ export default function BankApiIntegrationsCaseStudyPage() {
 
         <header className="abk-hero">
           <span className="eyebrow">Case study, bank API integrations</span>
-          <h1>Making bank partner journeys observable and recoverable.</h1>
+          <h1>From next-day bank reports to real-time, recoverable journeys.</h1>
           <p>
-            Partner bank journeys can fail quietly: status gaps, retry constraints, and API changes can break
-            conversion before teams understand the issue. This work made failures easier to detect,
-            diagnose, and recover from.
+            CashKaro sends users into bank journeys by redirection, and the bank reports came back T-1, the next
+            day, and later still around holidays and events. That delay meant we nudged drop-offs too late.
+            Integrating the Axis and SBI APIs made status real-time, so we could target drop-offs in the moment,
+            roll out safely, and recover failures before they cost leads.
           </p>
           <div className="abk-metrics" aria-label="Bank API integration outcomes">
             <article>
-              <strong>0</strong>
-              <span>lead loss in recovery incident</span>
+              <strong>10% to 27%</strong>
+              <span>conversion on redirection journeys</span>
             </article>
             <article>
-              <strong>504</strong>
-              <span>bank-side timeout class handled</span>
+              <strong>Real-time</strong>
+              <span>status, replacing next-day (T-1) bank reports</span>
             </article>
           </div>
         </header>
@@ -62,26 +63,28 @@ export default function BankApiIntegrationsCaseStudyPage() {
         <aside className="thesis-callout" aria-label="Case study thesis">
           <strong>Product thesis</strong>
           <p>
-            A bank integration is not done when the happy path works. It is done when failures are visible,
-            recoverable, and understandable to the teams operating the journey.
+            A bank integration is not done when the happy path works. It is done when status is real-time,
+            failures are visible, and affected leads are recoverable by the teams operating the journey.
           </p>
         </aside>
 
         <div className="abk-body">
           <section>
-            <h2>The starting problem</h2>
+            <h2>Why the API mattered</h2>
             <p>
-              Credit-card applications depended on partner bank APIs where logging gaps, status ambiguity,
-              and bank-side changes could directly affect lead conversion. Product work had to cover the
-              journey around the API, not just the API call.
+              With T-1 reporting, we only learned a user had dropped off a day later, and any nudge landed after
+              the moment had passed. Direct API access gave real-time status, which unlocked the actual lever:
+              targeting drop-offs while intent was still live. Higher conversion followed because we could finally
+              act in time.
             </p>
           </section>
 
           <section>
-            <h2>What the system needed to do</h2>
+            <h2>What the system had to do</h2>
             <p>
-              The system needed clear status tracking, proactive failure detection, partner coordination, and
-              retry flows that could recover affected leads without creating operational confusion.
+              The work was the journey around the API, not just the call: integrate Axis and SBI, map status in
+              real time, target drop-offs, watch for failures, and recover affected leads without operational
+              confusion.
             </p>
             <div className="abk-piece-grid">
               {platformPieces.map((piece) => (
@@ -91,14 +94,25 @@ export default function BankApiIntegrationsCaseStudyPage() {
           </section>
 
           <section>
-            <h2>The incident pattern</h2>
+            <h2>Rolling out safely</h2>
             <p>
-              When a bank-side change started throwing gateway timeouts across a large share of users, the
-              flagging system caught it early. Affected leads were re-ingested through retry flows, cutting
-              impact sharply with zero lead loss.
+              An integration spec can never anticipate every real-world edge case or compliance scenario. So
+              instead of switching the whole base over, we opened the API path to a limited cohort first, let the
+              unhandled cases surface, handled them, and widened from there. That kept the risk contained while we
+              learned what the spec did not cover.
+            </p>
+          </section>
+
+          <section>
+            <h2>Seeing and recovering failures</h2>
+            <p>
+              We built error flagging on top of the API logs: every error pushed to OpenObserve and into a Teams
+              channel, so the team saw failures in real time. When a partner-side change started throwing gateway
+              timeouts across a share of users, the flagging caught it early, and affected leads were re-ingested
+              through retry flows with zero lead loss.
             </p>
             <p className="abk-safety-note">
-              Public copy keeps the partner narrative de-named. The case study focuses on the product system:
+              Public copy keeps the partner narrative neutral. The story is the product system: real-time status,
               detection, recovery, and operational safety.
             </p>
           </section>
@@ -119,8 +133,9 @@ export default function BankApiIntegrationsCaseStudyPage() {
         <aside className="final-lesson" aria-label="The PM lesson">
           <span className="eyebrow">The PM Lesson</span>
           <p>
-            The durable product work was making the invisible parts of partner integrations visible enough
-            for teams to act before users and leads were lost.
+            The durable work was making the invisible parts of a partner integration visible: real-time status to
+            act on, error flagging to catch failures, and local event tracking to understand users, all before a
+            lead was lost.
           </p>
         </aside>
 
